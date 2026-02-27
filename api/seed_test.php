@@ -27,12 +27,13 @@ try {
     $clientId = $stmt->fetchColumn();
     if (!$clientId) {
       $hash = password_hash('Senha123!', PASSWORD_DEFAULT);
-      $pdo->prepare('INSERT INTO users (role, email, password_hash) VALUES (?, ?, ?)')->execute(['client', $clientEmail, $hash]);
+      $pdo->prepare('INSERT INTO users (role, email, password_hash, status) VALUES (?, ?, ?, ?)')->execute(['client', $clientEmail, $hash, 'active']);
       $clientId = (int)$pdo->lastInsertId();
       $pdo->prepare('INSERT INTO profiles_cliente (user_id, nome) VALUES (?, ?)')->execute([$clientId, $clientName]);
     } else {
       $clientId = (int)$clientId;
       $pdo->prepare('UPDATE profiles_cliente SET nome = ? WHERE user_id = ?')->execute([$clientName, $clientId]);
+      $pdo->prepare('UPDATE users SET status = ? WHERE id = ?')->execute(['active', $clientId]);
     }
 
     // Ensure freelancer user
@@ -43,7 +44,7 @@ try {
     $freelId = $stmt->fetchColumn();
     if (!$freelId) {
       $hash = password_hash('Senha123!', PASSWORD_DEFAULT);
-      $pdo->prepare('INSERT INTO users (role, email, password_hash) VALUES (?, ?, ?)')->execute(['freelancer', $freelEmail, $hash]);
+      $pdo->prepare('INSERT INTO users (role, email, password_hash, status) VALUES (?, ?, ?, ?)')->execute(['freelancer', $freelEmail, $hash, 'active']);
       $freelId = (int)$pdo->lastInsertId();
       $pdo->prepare('INSERT INTO profiles_freelancer (user_id, titulo, bio) VALUES (?, ?, ?)')->execute([$freelId, $freelTitle, 'Profissional para testes do sistema.']);
       $pdo->prepare('INSERT INTO connections_wallet (freelancer_id, saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel) VALUES (?, 0, 0, 0)')->execute([$freelId]);
@@ -51,6 +52,7 @@ try {
     } else {
       $freelId = (int)$freelId;
       $pdo->prepare('UPDATE profiles_freelancer SET titulo = ? WHERE user_id = ?')->execute([$freelTitle, $freelId]);
+      $pdo->prepare('UPDATE users SET status = ? WHERE id = ?')->execute(['active', $freelId]);
     }
 
     // Ensure test project

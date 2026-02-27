@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, ChevronDown, ChevronUp, Menu, Search, X } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
+import AppShell from '../components/AppShell';
 import { useAuth } from '../contexts/AuthContext';
 import { apiListProjectsPublicNew, hasApi, type ApiProject } from '../lib/api';
 import { setSEO } from '../lib/seo';
@@ -328,26 +329,7 @@ export default function Projects() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="bg-99dark text-white">
-        <div className="max-w-7xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button type="button" className="md:hidden p-2 -ml-2" onClick={() => setShowMobileMenu(true)}>
-              <Menu className="w-6 h-6" />
-            </button>
-            <BrandLogo to="/" heightClassName="h-10" darkBg />
-          </div>
-          <nav className="hidden md:flex items-center gap-5 text-sm">
-            <Link to="/">Página inicial</Link>
-            <Link to="/projects">Projetos</Link>
-            <Link to="/freelancers">Freelancers</Link>
-            <Link to="/profile">Perfil</Link>
-            <Link to="/account">Conta</Link>
-            <Link to="/tools">Ferramentas</Link>
-            <Link to="/ajuda">Ajuda</Link>
-          </nav>
-        </div>
-      </header>
+    <AppShell wide>
 
       {showMobileMenu && (
         <>
@@ -368,7 +350,7 @@ export default function Projects() {
         </>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-light text-gray-800">Resultado da pesquisa</h1>
@@ -525,16 +507,7 @@ export default function Projects() {
             )}
           </section>
         </div>
-      </main>
-
-      <footer className="bg-99dark text-white py-8 mt-10">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-300">
-          @2014-2026 MeuFreelas. Todos os direitos reservados.
-          <div className="mt-2">
-            <Link to="/termos" className="hover:text-white">Termos de uso</Link> | <Link to="/privacidade" className="hover:text-white">Política de privacidade</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </AppShell>
   );
 }

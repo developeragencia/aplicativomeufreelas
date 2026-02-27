@@ -3,14 +3,20 @@ require_once __DIR__ . '/../db.php';
 $pdo = db_get_pdo();
 $id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
 if ($id) {
-  $stmt = $pdo->prepare("SELECT 
-    p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at, 
-    p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
-    FROM projects p
-    LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
-    WHERE p.id = ?");
-  $stmt->execute([$id]);
-  $row = $stmt->fetch();
+  try {
+    $stmt = $pdo->prepare("SELECT 
+      p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at, 
+      p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
+      FROM projects p
+      LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
+      WHERE p.id = ?");
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+  } catch (Throwable $e) {
+    $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+  }
   if (!$row) {
     json_response(['ok' => false, 'error' => 'Not found'], 404);
     exit;
@@ -51,7 +57,7 @@ switch ($sort) {
   default:
     $order = 'ORDER BY created_at DESC';
 }
-$stmt = $pdo->prepare("
+$queryWithJoin = "
   SELECT 
     p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at,
     p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
@@ -60,8 +66,21 @@ $stmt = $pdo->prepare("
   $sqlWhere
   $order
   LIMIT ? OFFSET ?
-");
-$stmt->execute(array_merge($params, [$per, $offset]));
+";
+$querySimple = "
+  SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, client_id, client_name, descricao, budget
+  FROM projects
+  $sqlWhere
+  $order
+  LIMIT ? OFFSET ?
+";
+try {
+  $stmt = $pdo->prepare($queryWithJoin);
+  $stmt->execute(array_merge($params, [$per, $offset]));
+} catch (Throwable $e) {
+  $stmt = $pdo->prepare($querySimple);
+  $stmt->execute(array_merge($params, [$per, $offset]));
+}
 $items = $stmt->fetchAll();
 $countStmt = $pdo->prepare("SELECT COUNT(*) AS c FROM projects $sqlWhere");
 $countStmt->execute($params);
