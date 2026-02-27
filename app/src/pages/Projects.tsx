@@ -122,7 +122,7 @@ export default function Projects() {
     async function load() {
       setLoading(true);
       if (hasApi()) {
-        const res = await apiListProjectsPublicNew({ sort: 'recent' });
+        const res = await apiListProjectsPublicNew({ sort: 'recent', page: currentPage, per_page: pageSize });
         if (!cancelled && res.ok && Array.isArray(res.items)) {
           const mapped = res.items.map((it: any) =>
             mapApiProject({
@@ -144,6 +144,7 @@ export default function Projects() {
             } as ApiProject)
           );
           setProjects(mapped);
+          setTotalServer(typeof res.total === 'number' ? res.total : mapped.length);
         }
       }
       if (!hasApi()) {
@@ -180,7 +181,7 @@ export default function Projects() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentPage, pageSize]);
 
   const filteredProjects = useMemo(() => {
     let list = projects.filter((p) => {
@@ -228,8 +229,10 @@ export default function Projects() {
     return list;
   }, [projects, keyword, category, featuredOnly, urgentOnly, dateFilter, rankingFilter, levelFilter, sortBy]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
+  const [totalServer, setTotalServer] = useState<number>(0);
+  const totalPages = Math.max(1, Math.ceil((hasApi() ? totalServer : filteredProjects.length) / pageSize));
   const paginatedProjects = useMemo(() => {
+    if (hasApi()) return filteredProjects; // já vem paginado do servidor
     const start = (currentPage - 1) * pageSize;
     return filteredProjects.slice(start, start + pageSize);
   }, [filteredProjects, currentPage]);

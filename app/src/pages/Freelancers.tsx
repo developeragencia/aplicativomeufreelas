@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Star, ChevronDown, ChevronUp, Filter, CheckCircle, Shield, Menu, X, User, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import BrandLogo from '../components/BrandLogo';
-import { apiListFreelancersPublic, hasApi, type ApiFreelancerPublic } from '../lib/api';
+import { apiListFreelancersPublicNew, hasApi, type ApiFreelancerPublic } from '../lib/api';
 
 // --- Types ---
 
@@ -129,6 +129,7 @@ export default function Freelancers() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const [totalServer, setTotalServer] = useState<number>(0);
 
   // Mobile
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -142,13 +143,10 @@ export default function Freelancers() {
         let loadedFreelancers: Freelancer[] = [];
 
         if (hasApi()) {
-          const res = await apiListFreelancersPublic();
-          if (res.ok && res.freelancers) {
-            loadedFreelancers = res.freelancers.map(mapApiFreelancer);
-          } else if (res.error) {
-            console.error("API Error:", res.error);
-            // Don't show error to user immediately if we can fallback, but here we want to be honest if API fails
-            // But let's try fallback first
+          const res = await apiListFreelancersPublicNew({ page: currentPage, per_page: pageSize, q: keyword || undefined });
+          if (res.ok && res.items) {
+            loadedFreelancers = res.items.map(mapApiFreelancer);
+            setTotalServer(typeof res.total === 'number' ? res.total : loadedFreelancers.length);
           }
         } 
         
@@ -231,7 +229,7 @@ export default function Freelancers() {
     return () => {
       window.removeEventListener('meufreelas:profile-updated', handleProfileUpdate);
     };
-  }, [user]);
+  }, [user, currentPage, pageSize, keyword]);
 
   const filteredFreelancers = useMemo(() => {
     return freelancers.filter(f => {
@@ -244,11 +242,12 @@ export default function Freelancers() {
   }, [freelancers, keyword, category, ratingFilter]);
 
   const paginatedFreelancers = useMemo(() => {
+    if (hasApi()) return filteredFreelancers; // Server-side já paginado
     const start = (currentPage - 1) * pageSize;
     return filteredFreelancers.slice(start, start + pageSize);
   }, [filteredFreelancers, currentPage]);
 
-  const totalPages = Math.ceil(filteredFreelancers.length / pageSize);
+  const totalPages = Math.ceil((hasApi() ? totalServer : filteredFreelancers.length) / pageSize);
 
   const publishHref = !isAuthenticated ? '/login' : user?.type === 'client' ? '/project/new' : '/freelancer/dashboard';
 

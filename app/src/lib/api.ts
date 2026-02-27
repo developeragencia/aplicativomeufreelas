@@ -184,6 +184,31 @@ export async function apiListFreelancersPublic(): Promise<{ ok: boolean; freelan
   }
 }
 
+export async function apiListFreelancersPublicNew(params?: { page?: number; per_page?: number; q?: string; rating_min?: number }): Promise<{ ok: boolean; items?: ApiFreelancerPublic[]; total?: number; page?: number; per_page?: number; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const usp = new URLSearchParams();
+    if (params?.page) usp.set('page', String(params.page));
+    if (params?.per_page) usp.set('per_page', String(params.per_page));
+    if (params?.q) usp.set('q', params.q);
+    if (typeof params?.rating_min === 'number') usp.set('rating_min', String(params.rating_min));
+    const url = `${base}/freelancers/${usp.toString() ? `?${usp.toString()}` : ''}`;
+    const res = await fetch(url, { credentials: 'omit' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    return {
+      ok: true,
+      items: (data.items as ApiFreelancerPublic[] | undefined) || [],
+      total: typeof data.total === 'number' ? data.total : undefined,
+      page: typeof data.page === 'number' ? data.page : undefined,
+      per_page: typeof data.per_page === 'number' ? data.per_page : undefined,
+    };
+  } catch (e) {
+    console.error('apiListFreelancersPublicNew', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
 export async function apiListProjectsPublicNew(params?: { page?: number; per_page?: number; category?: string; level?: string; sort?: 'recent' | 'relevance' }): Promise<{ ok: boolean; items?: any[]; total?: number; error?: string }> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
   try {
