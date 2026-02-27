@@ -432,17 +432,23 @@ export default function Projects() {
                 ))}
               </div>
             ) : errorMsg ? (
-              <div className="border border-red-300 bg-red-50 p-6 text-center text-red-700">{errorMsg}</div>
+              <div className="bg-red-50 rounded-xl border border-red-100 p-8 text-center text-red-600">
+                <p className="font-medium mb-2">Ops! Ocorreu um erro.</p>
+                <p className="text-sm">{errorMsg}</p>
+              </div>
             ) : paginatedProjects.length === 0 ? (
-              <div className="border border-gray-300 p-10 text-center text-gray-500">Nenhum projeto encontrado.</div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                <p className="text-gray-900 font-medium mb-1">Nenhum projeto encontrado</p>
+                <p className="text-gray-500 text-sm">Tente ajustar seus filtros de busca.</p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {paginatedProjects.map((p) => {
                   const isExpanded = expanded.includes(p.id);
                   const desc = isExpanded ? p.description : p.description.slice(0, 150) + (p.description.length > 150 ? '...' : '');
                   return (
-                    <article key={p.id} className="border border-gray-300 bg-white flex flex-col h-full hover:shadow-md transition-shadow">
-                      <div className="p-4 border-b border-gray-100 flex-1">
+                    <article key={p.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full hover:shadow-md transition-shadow">
+                      <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           {p.tags.map((t) => (
                             <span key={t} className="text-[10px] uppercase font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-sm">{t}</span>
@@ -473,7 +479,7 @@ export default function Projects() {
                           </div>
                         )}
                       </div>
-                      <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-sm">
+                      <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 overflow-hidden">
                            <span className="truncate text-99blue font-medium capitalize">{p.clientName.toLowerCase()}</span>
                            {p.clientRating > 0 && <span className="text-yellow-500 text-xs">★ {p.clientRating.toFixed(1)}</span>}

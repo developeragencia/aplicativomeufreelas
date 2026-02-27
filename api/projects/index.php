@@ -76,11 +76,29 @@ try {
   $stmt = $pdo->prepare($queryWithJoin);
   $stmt->execute(array_merge($params, [$per, $offset]));
 } catch (Throwable $e) {
-  $stmt = $pdo->prepare($querySimple);
-  $stmt->execute(array_merge($params, [$per, $offset]));
+$limit = max(1, (int)$per);
+$off = max(0, (int)$offset);
+$queryWithJoin = str_replace('LIMIT ? OFFSET ?', "LIMIT $limit OFFSET $off", $queryWithJoin);
+$querySimple = str_replace('LIMIT ? OFFSET ?', "LIMIT $limit OFFSET $off", $querySimple);
+try {
+  $stmt = $pdo->prepare($queryWithJoin);
+  $stmt->execute($params);
+} catch (Throwable $e) {
+  try {
+    $stmt = $pdo->prepare($querySimple);
+    $stmt->execute($params);
+  } catch (Throwable $e2) {
+    json_response(['ok' => true, 'items' => [], 'page' => $page, 'per_page' => $per, 'total' => 0]);
+    exit;
+  }
 }
 $items = $stmt->fetchAll();
-$countStmt = $pdo->prepare("SELECT COUNT(*) AS c FROM projects $sqlWhere");
-$countStmt->execute($params);
-$total = intval($countStmt->fetch()['c'] ?? 0);
+$total = 0;
+try {
+  $countStmt = $pdo->prepare("SELECT COUNT(*) AS c FROM projects $sqlWhere");
+  $countStmt->execute($params);
+  $total = intval($countStmt->fetch()['c'] ?? 0);
+} catch (Throwable $e) {
+  $total = count($items);
+}
 json_response(['ok' => true, 'items' => $items, 'page' => $page, 'per_page' => $per, 'total' => $total]);
