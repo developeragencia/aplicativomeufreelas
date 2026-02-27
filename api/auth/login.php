@@ -34,5 +34,5 @@ try {
   $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([$row['id']]);
   json_response(['ok' => true, 'user' => ['id' => (int)$row['id'], 'email' => $row['email'], 'name' => $row['email'], 'type' => $row['role']]]);
 } catch (Throwable $e) {
-  json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+  json_response(['ok' => false, 'error' => 'Falha de conexão com o servidor'], 500);
 }

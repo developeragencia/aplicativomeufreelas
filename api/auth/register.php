@@ -44,5 +44,5 @@ try {
 
   json_response(['ok' => true, 'user' => ['id' => $userId, 'email' => $email, 'name' => $name, 'type' => $role]]);
 } catch (Throwable $e) {
-  json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+  json_response(['ok' => false, 'error' => 'Falha de conexão com o servidor'], 500);
 }
