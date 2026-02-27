@@ -5,7 +5,7 @@ $id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
 if ($id) {
   try {
     $stmt = $pdo->prepare("SELECT 
-      p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at, 
+      p.id, p.titulo, p.categoria, p.nivel, p.status, p.created_at,
       p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
       FROM projects p
       LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
@@ -31,7 +31,7 @@ $params = [];
 $where = [];
 $category = $_GET['category'] ?? null;
 $level = $_GET['level'] ?? null;
-$status = $_GET['status'] ?? 'Open';
+$status = $_GET['status'] ?? null;
 if ($category) { $where[] = 'categoria = ?'; $params[] = $category; }
 if ($level) { $where[] = 'nivel = ?'; $params[] = $level; }
 if ($status) { $where[] = 'status = ?'; $params[] = $status; }
@@ -39,8 +39,6 @@ $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 $sort = $_GET['sort'] ?? 'recent';
 switch ($sort) {
   case 'relevance':
-    $order = 'ORDER BY approved_at DESC, created_at DESC';
-    break;
   case 'newest':
   case 'recent':
     $order = 'ORDER BY created_at DESC';
@@ -59,7 +57,7 @@ switch ($sort) {
 }
 $queryWithJoin = "
   SELECT 
-    p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at,
+    p.id, p.titulo, p.categoria, p.nivel, p.status, p.created_at,
     p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
   FROM projects p
   LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id

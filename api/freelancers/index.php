@@ -8,18 +8,23 @@ $offset = ($page - 1) * $per;
 $keyword = trim((string)($_GET['q'] ?? ''));
 $ratingMin = isset($_GET['rating_min']) ? floatval($_GET['rating_min']) : null;
 
-$where = ["u.role = 'freelancer'"];
-$params = [];
+$whereFreel = ["u.role = 'freelancer'"];
+$whereUsers = ["u.role = 'freelancer'"];
+$paramsFreel = [];
+$paramsUsers = [];
 if ($keyword !== '') {
-  $where[] = "(pf.titulo LIKE ? OR pf.bio LIKE ? OR u.email LIKE ?)";
+  $whereFreel[] = "(pf.titulo LIKE ? OR pf.bio LIKE ? OR u.email LIKE ?)";
   $kw = '%' . $keyword . '%';
-  $params[] = $kw; $params[] = $kw; $params[] = $kw;
+  $paramsFreel[] = $kw; $paramsFreel[] = $kw; $paramsFreel[] = $kw;
+  $whereUsers[] = "(u.email LIKE ?)";
+  $paramsUsers[] = $kw;
 }
 if ($ratingMin !== null) {
-  $where[] = "pf.avaliacoes_avg >= ?";
-  $params[] = $ratingMin;
+  $whereFreel[] = "pf.avaliacoes_avg >= ?";
+  $paramsFreel[] = $ratingMin;
 }
-$sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+$sqlWhereFreel = $whereFreel ? ('WHERE ' . implode(' AND ', $whereFreel)) : '';
+$sqlWhereUsers = $whereUsers ? ('WHERE ' . implode(' AND ', $whereUsers)) : '';
 
 if ($id) {
   $stmt = $pdo->prepare("
@@ -89,7 +94,7 @@ $primaryQuery = "
     pf.recomendacao_pct
   FROM users u
   LEFT JOIN profiles_freelancer pf ON pf.user_id = u.id
-  $sqlWhere
+  $sqlWhereFreel
   ORDER BY pf.avaliacoes_avg DESC, u.id DESC
   LIMIT ? OFFSET ?
 ";
@@ -98,16 +103,16 @@ $fallbackQuery = "
     u.id,
     u.email
   FROM users u
-  $sqlWhere
+  $sqlWhereUsers
   ORDER BY u.id DESC
   LIMIT ? OFFSET ?
 ";
 try {
   $stmt = $pdo->prepare($primaryQuery);
-  $stmt->execute(array_merge($params, [$per, $offset]));
+  $stmt->execute(array_merge($paramsFreel, [$per, $offset]));
 } catch (Throwable $e) {
   $stmt = $pdo->prepare($fallbackQuery);
-  $stmt->execute(array_merge($params, [$per, $offset]));
+  $stmt->execute(array_merge($paramsUsers, [$per, $offset]));
 }
 $rows = $stmt->fetchAll();
 
@@ -115,14 +120,14 @@ $countSql = "
   SELECT COUNT(*) AS c
   FROM users u
   LEFT JOIN profiles_freelancer pf ON pf.user_id = u.id
-  $sqlWhere
+  $sqlWhereFreel
 ";
 try {
   $countStmt = $pdo->prepare($countSql);
-  $countStmt->execute($params);
+  $countStmt->execute($paramsFreel);
 } catch (Throwable $e) {
-  $countStmt = $pdo->prepare("SELECT COUNT(*) AS c FROM users u $sqlWhere");
-  $countStmt->execute($params);
+  $countStmt = $pdo->prepare("SELECT COUNT(*) AS c FROM users u $sqlWhereUsers");
+  $countStmt->execute($paramsUsers);
 }
 $total = intval($countStmt->fetch()['c'] ?? 0);
 
