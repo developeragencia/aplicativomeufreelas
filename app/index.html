@@ -51,6 +51,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        var h = window.location.hash || '';
+        if (h && h.indexOf('#/') === 0) {
+          var newPath = h.substring(1);
+          try {
+            window.history.replaceState(null, '', newPath);
+          } catch (e) {
+            window.location.href = newPath;
+          }
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     
     <!-- No JavaScript fallback -->
