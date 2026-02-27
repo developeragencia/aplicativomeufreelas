@@ -3,7 +3,12 @@ require_once __DIR__ . '/../db.php';
 $pdo = db_get_pdo();
 $id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
 if ($id) {
-  $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
+  $stmt = $pdo->prepare("SELECT 
+    p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at, 
+    p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
+    FROM projects p
+    LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
+    WHERE p.id = ?");
   $stmt->execute([$id]);
   $row = $stmt->fetch();
   if (!$row) {
@@ -47,8 +52,11 @@ switch ($sort) {
     $order = 'ORDER BY created_at DESC';
 }
 $stmt = $pdo->prepare("
-  SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at
-  FROM projects
+  SELECT 
+    p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.approved_at,
+    p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
+  FROM projects p
+  LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
   $sqlWhere
   $order
   LIMIT ? OFFSET ?

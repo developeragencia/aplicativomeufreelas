@@ -41,6 +41,8 @@ export default function HelpCenter() {
   useEffect(() => {
     const initialQ = params.get('q') || '';
     setSearchTerm(initialQ);
+    const initialCat = params.get('cat') || '';
+    if (initialCat) setOpenCategory(initialCat);
   }, []);
   useEffect(() => {
     const currentQ = params.get('q') || '';
@@ -51,6 +53,16 @@ export default function HelpCenter() {
       setParams(next, { replace: true });
     }
   }, [searchTerm]);
+  useEffect(() => {
+    const currentCat = params.get('cat') || '';
+    const desired = openCategory || '';
+    if (desired !== currentCat) {
+      const next = new URLSearchParams(params);
+      if (desired) next.set('cat', desired);
+      else next.delete('cat');
+      setParams(next, { replace: true });
+    }
+  }, [openCategory]);
 
   const categories: FAQCategory[] = [
     {

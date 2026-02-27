@@ -4,6 +4,7 @@ import { Briefcase, ChevronDown, ChevronUp, Menu, Search, X } from 'lucide-react
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { apiListProjectsPublicNew, hasApi, type ApiProject } from '../lib/api';
+import { setSEO } from '../lib/seo';
 
 type ProjectCard = {
   id: string;
@@ -122,6 +123,7 @@ export default function Projects() {
     let cancelled = false;
     async function load() {
       setLoading(true);
+      setSEO({ title: 'Projetos - MeuFreelas', description: 'Explore projetos disponíveis e envie propostas.', canonicalPath: '/projects' });
       if (hasApi()) {
         const sortParam = sortBy === 'relevance' || sortBy === 'newest' ? 'recent' : 'recent';
         const levelParam =
@@ -135,7 +137,7 @@ export default function Projects() {
             mapApiProject({
               id: String(it.id),
               clientId: String(it.client_id || ''),
-              clientName: String(it.clientName || ''),
+              clientName: String(it.client_name || it.clientName || ''),
               title: String(it.titulo || it.title || ''),
               description: String(it.descricao || it.description || ''),
               budget: String(it.budget || 'Aberto'),
@@ -428,7 +430,25 @@ export default function Projects() {
             </div>
 
             {loading ? (
-              <div className="border border-gray-300 p-10 text-center text-gray-500">Carregando projetos...</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="border border-gray-300 bg-white animate-pulse">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="h-4 bg-gray-200 w-1/3 mb-3" />
+                      <div className="h-3 bg-gray-200 w-2/3 mb-2" />
+                      <div className="h-3 bg-gray-200 w-1/2 mb-4" />
+                      <div className="flex gap-2">
+                        <span className="h-6 w-16 bg-gray-200 rounded" />
+                        <span className="h-6 w-20 bg-gray-200 rounded" />
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                      <span className="h-4 w-24 bg-gray-200" />
+                      <span className="h-4 w-16 bg-gray-200" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : errorMsg ? (
               <div className="border border-red-300 bg-red-50 p-6 text-center text-red-700">{errorMsg}</div>
             ) : paginatedProjects.length === 0 ? (
