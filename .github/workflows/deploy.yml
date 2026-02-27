@@ -145,3 +145,17 @@ jobs:
         if: ${{ github.event_name == 'push' && secrets.DEPLOY_TOKEN != '' }}
         run: |
           curl -sS "https://meufreelas.com.br/api/seed_test.php?token=${{ secrets.DEPLOY_TOKEN }}"
+      - name: verify-forgot-password
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          set -e
+          BODY=$(curl -sS -X POST -H "Content-Type: application/json" -d "{\"email\":\"cliente.teste@meufreelas.com.br\"}" "https://meufreelas.com.br/api/forgot_password.php")
+          echo "$BODY"
+          echo "$BODY" | grep -q '"ok":true'
+      - name: verify-reset-password
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          set -e
+          BODY=$(curl -sS -X POST -H "Content-Type: application/json" -d "{\"token\":\"dummy\",\"password\":\"Senha123!\"}" "https://meufreelas.com.br/api/reset_password.php")
+          echo "$BODY"
+          echo "$BODY" | grep -q '"ok":true'

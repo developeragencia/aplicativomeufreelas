@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { setSEO } from '../lib/seo';
 import { ChevronDown, Search, User, LogOut, Briefcase, CheckCircle, Menu, X } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
+import { apiListProjectsPublicNew, hasApi } from '../lib/api';
 
 const rotatingTexts = [
   'desenvolver o seu código',
@@ -19,8 +21,10 @@ export default function Home() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [highlightProject, setHighlightProject] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
+    setSEO({ title: 'MeuFreelas - Encontre freelancers', description: 'Conecte-se aos melhores freelancers do Brasil.', canonicalPath: '/' });
     const interval = setInterval(() => {
       setIsAnimating(true);
       setTimeout(() => {
@@ -30,6 +34,17 @@ export default function Home() {
     }, 3000);
 
     return () => clearInterval(interval);
+  }, []);
+  useEffect(() => {
+    async function loadHighlight() {
+      if (!hasApi()) return;
+      const res = await apiListProjectsPublicNew({ sort: 'recent', page: 1, per_page: 10 });
+      if (res.ok && Array.isArray(res.items)) {
+        const found = res.items.find((it: any) => String(it.titulo || it.title || '').trim() === 'Projeto Teste - Landing Page');
+        if (found) setHighlightProject({ id: String(found.id), title: String(found.titulo || found.title) });
+      }
+    }
+    loadHighlight();
   }, []);
 
   return (
@@ -314,6 +329,23 @@ export default function Home() {
 
         {/* Stats Section */}
         <Stats />
+
+        {/* Highlight Test Project */}
+        {highlightProject && (
+          <section className="bg-yellow-50 border-t border-b border-yellow-200">
+            <div className="max-w-7xl mx-auto px-4 py-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="text-yellow-800">
+                  <span className="inline-block px-2 py-1 text-xs uppercase font-bold bg-yellow-200 text-yellow-800 rounded mr-2">Projeto destaque</span>
+                  <span className="font-medium">{highlightProject.title}</span>
+                </div>
+                <Link to={`/project/${highlightProject.id}`} className="px-5 py-2 bg-99blue text-white rounded hover:bg-99blue-light transition-colors">
+                  Ver projeto de homologação
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Categories Section */}
         <Categories />
