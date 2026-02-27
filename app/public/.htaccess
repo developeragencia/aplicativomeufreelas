@@ -1,0 +1,44 @@
+# MeuFreelas - Hostinger (Apache) - SPA React
+# Garante que /freelancers, /projects, etc. sirvam index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Forçar HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Não reescrever /api/ (PHP)
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^ - [L]
+
+  # Não reescrever arquivos ou diretórios que existem
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # SPA: qualquer outra rota -> index.html (URL preservada)
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# 404: se for /api/* retorna JSON (avisa para enviar pasta api/); senão = SPA
+ErrorDocument 404 /404.php
+
+# Cache para assets estáticos (melhora performance)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+
+# Segurança básica
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
