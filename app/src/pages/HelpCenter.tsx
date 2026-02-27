@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { setSEO } from '../lib/seo';
 import { 
   Search, 
   MessageCircle, 
@@ -29,6 +30,13 @@ export default function HelpCenter() {
   const [searchTerm, setSearchTerm] = useState('');
   const [openCategory, setOpenCategory] = useState<string | null>('Geral');
   const [openFAQ, setOpenFAQ] = useState<string | null>(null);
+  useEffect(() => {
+    setSEO({
+      title: 'Central de Ajuda - MeuFreelas',
+      description: 'Perguntas frequentes e suporte do MeuFreelas.',
+      canonicalPath: '/ajuda'
+    });
+  }, []);
 
   const categories: FAQCategory[] = [
     {
