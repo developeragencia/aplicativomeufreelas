@@ -122,7 +122,13 @@ export default function Projects() {
     async function load() {
       setLoading(true);
       if (hasApi()) {
-        const res = await apiListProjectsPublicNew({ sort: 'recent', page: currentPage, per_page: pageSize });
+        const sortParam = sortBy === 'relevance' || sortBy === 'newest' ? 'recent' : 'recent';
+        const levelParam =
+          levelFilter === 'Iniciante' ? 'beginner' :
+          levelFilter === 'Intermediário' ? 'intermediate' :
+          levelFilter === 'Especialista' ? 'expert' : undefined;
+        const categoryParam = category !== 'Todas as categorias' ? category : undefined;
+        const res = await apiListProjectsPublicNew({ sort: sortParam as any, page: currentPage, per_page: pageSize, category: categoryParam, level: levelParam });
         if (!cancelled && res.ok && Array.isArray(res.items)) {
           const mapped = res.items.map((it: any) =>
             mapApiProject({
@@ -181,7 +187,7 @@ export default function Projects() {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, sortBy, levelFilter, category]);
 
   const filteredProjects = useMemo(() => {
     let list = projects.filter((p) => {

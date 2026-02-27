@@ -130,6 +130,7 @@ export default function Freelancers() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [totalServer, setTotalServer] = useState<number>(0);
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
   // Mobile
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -147,6 +148,9 @@ export default function Freelancers() {
           if (res.ok && res.items) {
             loadedFreelancers = res.items.map(mapApiFreelancer);
             setTotalServer(typeof res.total === 'number' ? res.total : loadedFreelancers.length);
+            setErrorMsg('');
+          } else if (res.error) {
+            setErrorMsg(res.error);
           }
         } 
         
