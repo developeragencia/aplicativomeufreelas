@@ -48,18 +48,19 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  </head>
-  <body>
-    <div id="root"></div>
     <script>
       (function() {
         var h = window.location.hash || '';
         if (h && h.indexOf('#/') === 0) {
           var newPath = h.substring(1) || '/';
-          window.location.replace(newPath);
+          var newUrl = location.origin + newPath;
+          location.replace(newUrl);
         }
       })();
     </script>
+  </head>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
     <!-- No JavaScript fallback -->

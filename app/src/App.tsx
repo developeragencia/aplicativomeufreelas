@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
 import Home from './pages/Home';
@@ -8,6 +8,7 @@ import Projects from './pages/Projects';
 import Freelancers from './pages/Freelancers';
 import NewProject from './pages/NewProject';
 import HowItWorks from './pages/HowItWorks';
+import ProjectDetail from './pages/ProjectDetail';
 import ErrorBoundary from './components/ErrorBoundary';
 
 let storageSanitized = false;
@@ -64,6 +65,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/projects" element={<Projects />} />
+      <Route path="/project/:id" element={<ProjectDetail />} />
       <Route path="/freelancers" element={<Freelancers />} />
       <Route path="/project/new" element={<NewProject />} />
       <Route path="/como-funciona" element={<HowItWorks />} />
@@ -79,6 +81,7 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Router>
+          <HashClean />
           <AppRoutes />
         </Router>
       </AuthProvider>
@@ -87,3 +90,19 @@ function App() {
 }
 
 export default App;
+
+function HashClean() {
+  const navigate = useNavigate();
+  if (typeof window !== 'undefined' && window.location.hash) {
+    const h = window.location.hash;
+    if (h && h.indexOf('#/') === 0) {
+      const target = h.substring(1);
+      navigate(target, { replace: true });
+    } else {
+      try {
+        window.history.replaceState(null, '', window.location.pathname);
+      } catch {}
+    }
+  }
+  return null;
+}

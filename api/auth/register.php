@@ -11,7 +11,7 @@ $input = file_get_contents('php://input');
 $data = json_decode($input, true);
 if (!is_array($data)) $data = $_POST;
 
-$role = $data['role'] ?? null;
+$role = $data['role'] ?? ($data['type'] ?? null);
 $email = $data['email'] ?? null;
 $password = $data['password'] ?? null;
 $name = $data['name'] ?? null;
