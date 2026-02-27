@@ -50,11 +50,12 @@ if ($id) {
   }
   $email = (string)$r['email'];
   $username = explode('@', $email)[0];
+  $displayName = $username;
   $item = [
     'id' => (string)$r['id'],
     'name' => $email,
     'username' => $username,
-    'avatar' => '',
+    'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($displayName) . '&background=003366&color=fff',
     'title' => (string)($r['titulo'] ?? ''),
     'bio' => (string)($r['bio'] ?? ''),
     'skills' => $skills,
@@ -113,11 +114,12 @@ foreach ($rows as $r) {
   }
   $email = (string)$r['email'];
   $username = explode('@', $email)[0];
+  $displayName = $username;
   $items[] = [
     'id' => (string)$r['id'],
     'name' => $email, // placeholder; pode ser ajustado se houver nome
     'username' => $username,
-    'avatar' => '',
+    'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($displayName) . '&background=003366&color=fff',
     'title' => (string)($r['titulo'] ?? ''),
     'bio' => (string)($r['bio'] ?? ''),
     'skills' => $skills,

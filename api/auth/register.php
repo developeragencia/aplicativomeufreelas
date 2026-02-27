@@ -3,7 +3,7 @@ require_once __DIR__ . '/../db.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method !== 'POST') {
-  json_response(['ok' => false, 'error' => 'Method not allowed'], 405);
+  json_response(['ok' => false, 'error' => 'Método não permitido'], 405);
   exit;
 }
 
@@ -17,7 +17,7 @@ $password = $data['password'] ?? null;
 $name = $data['name'] ?? null;
 
 if (!in_array($role, ['client','freelancer'], true) || !is_string($email) || !is_string($password) || !is_string($name)) {
-  json_response(['ok' => false, 'error' => 'Invalid payload'], 400);
+  json_response(['ok' => false, 'error' => 'Dados inválidos'], 400);
   exit;
 }
 
@@ -26,7 +26,7 @@ try {
   $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
   $stmt->execute([$email]);
   if ($stmt->fetch()) {
-    json_response(['ok' => false, 'error' => 'Email already registered'], 409);
+    json_response(['ok' => false, 'error' => 'Este email já está cadastrado.', 'code' => 'EMAIL_EXISTS'], 409);
     exit;
   }
 

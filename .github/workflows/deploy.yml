@@ -134,3 +134,10 @@ jobs:
           BODY=$(curl -sS "https://meufreelas.com.br/api/projects/?page=1&per_page=1")
           echo "$BODY"
           echo "$BODY" | grep -q '"ok":true'
+      - name: verify-api-freelancers
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          set -e
+          BODY=$(curl -sS "https://meufreelas.com.br/api/freelancers/?page=1&per_page=1")
+          echo "$BODY"
+          echo "$BODY" | grep -q '"ok":true'
