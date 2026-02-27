@@ -9,6 +9,7 @@ import Freelancers from './pages/Freelancers';
 import NewProject from './pages/NewProject';
 import HowItWorks from './pages/HowItWorks';
 import ProjectDetail from './pages/ProjectDetail';
+import Status from './pages/Status';
 import ErrorBoundary from './components/ErrorBoundary';
 
 let storageSanitized = false;
@@ -69,6 +70,7 @@ function AppRoutes() {
       <Route path="/freelancers" element={<Freelancers />} />
       <Route path="/project/new" element={<NewProject />} />
       <Route path="/como-funciona" element={<HowItWorks />} />
+      <Route path="/status" element={<Status />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

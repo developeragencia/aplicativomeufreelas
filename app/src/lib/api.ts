@@ -135,6 +135,26 @@ export async function apiResetPassword(token: string, password: string): Promise
   }
 }
 
+export async function apiHealth(): Promise<{ ok: boolean; database?: string; env_ok?: boolean; missing?: string[]; usersCount?: number; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const url = `${API_URL.replace(/\/$/, '')}/health.php`;
+    const res = await fetch(url, { credentials: 'omit' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    return {
+      ok: !!data.ok,
+      database: data.database as string | undefined,
+      env_ok: data.env_ok as boolean | undefined,
+      missing: (data.missing as string[] | undefined) || [],
+      usersCount: typeof data.usersCount === 'number' ? data.usersCount : undefined,
+    };
+  } catch (e) {
+    console.error('apiHealth', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export type ApiFreelancerPublic = {
   id: string;
   name: string;

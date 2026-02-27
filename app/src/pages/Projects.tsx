@@ -100,6 +100,7 @@ export default function Projects() {
   const { user, isAuthenticated } = useAuth();
   const [projects, setProjects] = useState<ProjectCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -151,6 +152,9 @@ export default function Projects() {
           );
           setProjects(mapped);
           setTotalServer(typeof res.total === 'number' ? res.total : mapped.length);
+          setErrorMsg('');
+        } else if (!cancelled && res.error) {
+          setErrorMsg(res.error);
         }
       }
       if (!hasApi()) {
@@ -425,6 +429,8 @@ export default function Projects() {
 
             {loading ? (
               <div className="border border-gray-300 p-10 text-center text-gray-500">Carregando projetos...</div>
+            ) : errorMsg ? (
+              <div className="border border-red-300 bg-red-50 p-6 text-center text-red-700">{errorMsg}</div>
             ) : paginatedProjects.length === 0 ? (
               <div className="border border-gray-300 p-10 text-center text-gray-500">Nenhum projeto encontrado.</div>
             ) : (
