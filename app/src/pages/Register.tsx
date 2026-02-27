@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
+import { setSEO } from '../lib/seo';
 
 type UserTypeOption = 'freelancer' | 'client';
 
@@ -39,7 +40,11 @@ export default function Register() {
   };
 
   useEffect(() => {
-    document.title = 'Cadastrar - MeuFreelas';
+    setSEO({
+      title: 'Cadastrar - MeuFreelas',
+      description: 'Crie sua conta para contratar ou trabalhar como freelancer.',
+      canonicalPath: '/register'
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

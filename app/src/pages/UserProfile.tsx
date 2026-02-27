@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiGetFreelancerById, hasApi } from '../lib/api';
+import { setSEO } from '../lib/seo';
 import BrandLogo from '../components/BrandLogo';
 
 export default function UserProfile() {
@@ -22,6 +23,12 @@ export default function UserProfile() {
           const res = await apiGetFreelancerById(id);
           if (res.ok && res.item) {
             setUser(res.item);
+            const nameForTitle = String(res.item.name || res.item.username || 'Freelancer');
+            setSEO({
+              title: `${nameForTitle} - Perfil | MeuFreelas`,
+              description: 'Veja habilidades, experiência e avaliações deste freelancer.',
+              canonicalPath: `/user/${id}`
+            });
           } else {
             setError(res.error || 'Perfil não encontrado');
           }

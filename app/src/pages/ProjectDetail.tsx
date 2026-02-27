@@ -4,6 +4,7 @@ import { Menu, Star, X, Clock, Heart, Flag, Send, MessageCircle, User, MapPin, S
 import { useAuth } from '../contexts/AuthContext';
 import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal } from '../lib/api';
 import BrandLogo from '../components/BrandLogo';
+import { setSEO } from '../lib/seo';
 
 type ProjectView = {
   id: string;
@@ -141,6 +142,13 @@ export default function ProjectDetail() {
       }
 
       setProject(resolvedProject);
+      if (resolvedProject) {
+        setSEO({
+          title: `${resolvedProject.title} - Projeto | MeuFreelas`,
+          description: resolvedProject.description?.slice(0, 140) || 'Detalhe do projeto no MeuFreelas.',
+          canonicalPath: `/project/${resolvedProject.id}`
+        });
+      }
 
       if (hasApi()) {
         const proposalRes = await apiListProposals({ projectId: requestedId });
@@ -240,7 +248,41 @@ export default function ProjectDetail() {
   }, [id]);
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center text-gray-500">Carregando projeto...</div>;
+    return (
+      <div className="min-h-screen bg-white">
+        <header className="bg-99dark text-white">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <BrandLogo to="/" heightClassName="h-10" darkBg />
+          </div>
+        </header>
+        <main className="max-w-6xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
+            <section className="lg:col-span-2">
+              <div className="h-8 bg-gray-200 w-3/4 mb-4" />
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 w-full" />
+                <div className="h-4 bg-gray-200 w-5/6" />
+                <div className="h-4 bg-gray-200 w-4/6" />
+              </div>
+            </section>
+            <aside className="space-y-4">
+              <div className="bg-[#efefef] border border-gray-200 p-5">
+                <div className="h-4 bg-gray-200 w-1/2 mb-3" />
+                <div className="h-10 bg-gray-200 w-full" />
+              </div>
+              <div className="bg-[#efefef] border border-gray-200 p-5">
+                <div className="h-4 bg-gray-200 w-1/3 mb-3" />
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 w-full" />
+                  <div className="h-3 bg-gray-200 w-11/12" />
+                  <div className="h-3 bg-gray-200 w-10/12" />
+                </div>
+              </div>
+            </aside>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!project) {

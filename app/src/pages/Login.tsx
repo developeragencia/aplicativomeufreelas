@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiResendActivation, hasApi } from '../lib/api';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { setSEO } from '../lib/seo';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -76,7 +77,11 @@ export default function Login() {
   };
 
   useEffect(() => {
-    document.title = 'Login - MeuFreelas';
+    setSEO({
+      title: 'Login - MeuFreelas',
+      description: 'Entre na sua conta para contratar ou trabalhar.',
+      canonicalPath: '/login'
+    });
   }, []);
 
   return (

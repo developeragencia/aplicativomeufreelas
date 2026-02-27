@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiHealth, hasApi } from '../lib/api';
+import { setSEO } from '../lib/seo';
 import BrandLogo from '../components/BrandLogo';
 import { Link } from 'react-router-dom';
 
@@ -10,6 +11,7 @@ export default function Status() {
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setSEO({ title: 'Status - MeuFreelas', description: 'Saúde da API e banco de dados.', canonicalPath: '/status' });
       if (hasApi()) {
         const res = await apiHealth();
         setData(res);
