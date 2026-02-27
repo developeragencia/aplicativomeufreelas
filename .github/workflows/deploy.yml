@@ -58,10 +58,6 @@ jobs:
           exclude: |
             **/.env
             **/.env.*
-      - name: deploy-fallback-http
-        if: ${{ secrets.DEPLOY_TOKEN != '' }}
-        run: |
-          curl -sS "https://meufreelas.com.br/api/deploy_pull.php?token=${{ secrets.DEPLOY_TOKEN }}" || true
       - name: write-deploy-token-file
         if: ${{ secrets.DEPLOY_TOKEN != '' }}
         run: |
@@ -78,3 +74,7 @@ jobs:
           port: ${{ secrets.FTP_PORT }}
           local-dir: token
           server-dir: public_html/api
+      - name: deploy-fallback-http
+        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+        run: |
+          curl -sS "https://meufreelas.com.br/api/deploy_pull.php?token=${{ secrets.DEPLOY_TOKEN }}" || true
