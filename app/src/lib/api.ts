@@ -155,6 +155,20 @@ export async function apiHealth(): Promise<{ ok: boolean; database?: string; env
   }
 }
 
+export async function apiGetFreelancerById(id: string): Promise<{ ok: boolean; item?: any; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const url = `${API_URL.replace(/\/$/, '')}/freelancers/?id=${encodeURIComponent(id)}`;
+    const res = await fetch(url, { credentials: 'omit' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    return { ok: true, item: data.item };
+  } catch (e) {
+    console.error('apiGetFreelancerById', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export type ApiFreelancerPublic = {
   id: string;
   name: string;
