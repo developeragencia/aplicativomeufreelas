@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Menu, Star, X, Clock, Heart, Flag, Send, MessageCircle, User, MapPin, Shield, ShieldCheck, FileText, ChevronDown, Calendar, DollarSign, Loader2 } from 'lucide-react';
+import { Star, Clock, Heart, Flag, Send, MessageCircle, User, MapPin, Shield, ShieldCheck, FileText, ChevronDown, Calendar, DollarSign, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal } from '../lib/api';
-import BrandLogo from '../components/BrandLogo';
+import AppShell from '../components/AppShell';
 import { setSEO } from '../lib/seo';
 
 type ProjectView = {
@@ -99,7 +99,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [proposalFilter, setProposalFilter] = useState<'Todas' | 'Pendente' | 'Aceita' | 'Recusada'>('Todas');
   const [questionLoading, setQuestionLoading] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  // header/menu handled by AppShell
   const [isSaved, setIsSaved] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Ação concluída com sucesso.');
@@ -249,13 +249,8 @@ export default function ProjectDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
-        <header className="bg-99dark text-white">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <BrandLogo to="/" heightClassName="h-10" darkBg />
-          </div>
-        </header>
-        <main className="max-w-6xl mx-auto px-4 py-6">
+      <AppShell wide>
+        <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
             <section className="lg:col-span-2">
               <div className="h-8 bg-gray-200 w-3/4 mb-4" />
@@ -280,81 +275,30 @@ export default function ProjectDetail() {
               </div>
             </aside>
           </div>
-        </main>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-700 mb-2">Projeto não encontrado.</p>
-          <Link to="/projects" className="text-sky-700 hover:underline">Voltar para projetos</Link>
+      <AppShell wide>
+        <div className="min-h-[40vh] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-700 mb-2">Projeto não encontrado.</p>
+            <Link to="/projects" className="text-sky-700 hover:underline">Voltar para projetos</Link>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <AppShell wide>
       {showSavedToast && (
         <div className="fixed top-4 right-4 bg-green-600 text-white text-sm px-4 py-2 rounded shadow z-50">
           {toastMessage}
         </div>
-      )}
-      <header className="bg-99dark text-white">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowMobileMenu(true)}
-              className="md:hidden p-2 -ml-2 rounded-lg hover:bg-white/10"
-              aria-label="Abrir menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <BrandLogo to="/" heightClassName="h-10" darkBg />
-          </div>
-          <nav className="hidden md:flex items-center gap-5 text-sm text-gray-200">
-            <Link to="/projects">Projetos</Link>
-            <Link to="/freelancers">Freelancers</Link>
-            <Link to={isAuthenticated ? (user?.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard') : '/login'}>{isAuthenticated ? 'Conta' : 'Login'}</Link>
-          </nav>
-        </div>
-        <div className="hidden md:block bg-99accent text-white text-sm">
-          <div className="max-w-6xl mx-auto px-4 h-10 flex items-center gap-5">
-            <Link to="/">Página inicial</Link>
-            <Link to="/projects">Projetos</Link>
-            <Link to="/freelancers">Freelancers</Link>
-            <Link to="/profile">Perfil</Link>
-            <Link to="/account">Conta</Link>
-            <Link to="/tools">Ferramentas</Link>
-            <Link to="/ajuda">Ajuda</Link>
-          </div>
-        </div>
-      </header>
-      {showMobileMenu && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setShowMobileMenu(false)} />
-          <aside className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl z-50 md:hidden">
-            <div className="px-4 h-14 border-b flex items-center justify-between">
-              <BrandLogo to="/" heightClassName="h-8" className="max-w-[160px]" />
-              <button type="button" onClick={() => setShowMobileMenu(false)} className="p-2 text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <nav className="p-4 space-y-2 text-gray-800">
-              <Link to="/" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Página inicial</Link>
-              <Link to="/projects" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Projetos</Link>
-              <Link to="/freelancers" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Freelancers</Link>
-              <Link to="/profile" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Perfil</Link>
-              <Link to="/account" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Conta</Link>
-              <Link to="/tools" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Ferramentas</Link>
-              <Link to="/ajuda" onClick={() => setShowMobileMenu(false)} className="block px-2 py-2 rounded hover:bg-gray-100">Ajuda</Link>
-            </nav>
-          </aside>
-        </>
       )}
 
       <main className="max-w-6xl mx-auto px-4 py-6">

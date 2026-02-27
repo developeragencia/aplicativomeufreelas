@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Star, ChevronDown, ChevronUp, Filter, CheckCircle, Shield, Menu, X, User, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, MapPin, Star, ChevronDown, ChevronUp, Filter, CheckCircle, Shield, User, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import BrandLogo from '../components/BrandLogo';
+import AppShell from '../components/AppShell';
 import { apiListFreelancersPublicNew, hasApi, type ApiFreelancerPublic } from '../lib/api';
+import { setSEO } from '../lib/seo';
 
 // --- Types ---
 
@@ -134,12 +135,12 @@ export default function Freelancers() {
 
   // Mobile
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       setError(null);
+      setSEO({ title: 'Freelancers - MeuFreelas', description: 'Encontre freelancers qualificados para o seu projeto.', canonicalPath: '/freelancers' });
       try {
         let loadedFreelancers: Freelancer[] = [];
 
@@ -256,72 +257,8 @@ export default function Freelancers() {
   const publishHref = !isAuthenticated ? '/login' : user?.type === 'client' ? '/project/new' : '/freelancer/dashboard';
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-600">
-       {/* Header */}
-      <header className="bg-gray-900 text-white sticky top-0 z-40 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setShowMobileMenu(true)}
-              className="md:hidden p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors"
-              aria-label="Abrir menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <BrandLogo to="/" heightClassName="h-8" darkBg />
-          </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-            <Link to="/projects" className="hover:text-white transition-colors">Projetos</Link>
-            <Link to="/freelancers" className="text-white border-b-2 border-white h-16 flex items-center">Freelancers</Link>
-            <Link 
-              to={isAuthenticated ? (user?.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard') : '/login'}
-              className="bg-white text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors font-semibold"
-            >
-              {isAuthenticated ? 'Minha Conta' : 'Entrar'}
-            </Link>
-          </nav>
-        </div>
-        
-        {/* Secondary Navigation - Dark Gray */}
-        <div className="hidden md:block bg-gray-800 border-t border-gray-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center gap-8 text-sm text-gray-300">
-            <Link to="/" className="hover:text-white transition-colors">Página inicial</Link>
-            <Link to="/projects" className="hover:text-white transition-colors">Projetos</Link>
-            <Link to="/freelancers" className="text-white font-medium">Freelancers</Link>
-            <Link to="/profile" className="hover:text-white transition-colors">Perfil</Link>
-            <Link to="/account" className="hover:text-white transition-colors">Conta</Link>
-            <Link to="/tools" className="hover:text-white transition-colors">Ferramentas</Link>
-            <Link to="/ajuda" className="hover:text-white transition-colors">Ajuda</Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu */}
-      {showMobileMenu && (
-        <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={() => setShowMobileMenu(false)} />
-          <aside className="fixed left-0 top-0 h-full w-72 bg-white shadow-2xl z-50 md:hidden flex flex-col">
-            <div className="px-6 h-16 border-b flex items-center justify-between bg-gray-50">
-              <BrandLogo to="/" heightClassName="h-8" className="max-w-[140px]" />
-              <button type="button" onClick={() => setShowMobileMenu(false)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              <Link to="/" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">Página inicial</Link>
-              <Link to="/projects" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">Projetos</Link>
-              <Link to="/freelancers" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-medium">Freelancers</Link>
-              <div className="border-t border-gray-100 my-2 pt-2">
-                <Link to="/profile" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">Perfil</Link>
-                <Link to="/account" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">Conta</Link>
-              </div>
-            </nav>
-          </aside>
-        </>
-      )}
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AppShell wide>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-gray-600">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
            <div>
              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Encontre Freelancers</h1>
@@ -410,9 +347,22 @@ export default function Freelancers() {
 
             <div className="space-y-4">
               {loading ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-gray-500">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
-                  <p>Carregando freelancers...</p>
+                <div className="space-y-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
+                      <div className="flex gap-4">
+                        <div className="w-24 h-24 rounded-full bg-gray-200" />
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 w-1/3 mb-2" />
+                          <div className="h-3 bg-gray-200 w-1/2 mb-2" />
+                          <div className="flex gap-2">
+                            <span className="h-6 w-16 bg-gray-200 rounded" />
+                            <span className="h-6 w-20 bg-gray-200 rounded" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : error ? (
                 <div className="bg-red-50 rounded-xl border border-red-100 p-8 text-center text-red-600">
@@ -553,17 +503,7 @@ export default function Freelancers() {
              )}
           </div>
         </div>
-      </main>
-
-      <footer className="bg-gray-900 text-white py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <BrandLogo to="/" heightClassName="h-8" className="mx-auto mb-6" darkBg />
-          <p className="text-gray-400 text-sm mb-6">Conectando profissionais talentosos a grandes oportunidades.</p>
-          <div className="text-sm text-gray-500">
-            © 2026 MeuFreelas. Todos os direitos reservados.
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </AppShell>
   );
 }
