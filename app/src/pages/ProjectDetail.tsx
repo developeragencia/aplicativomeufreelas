@@ -446,6 +446,6 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }
