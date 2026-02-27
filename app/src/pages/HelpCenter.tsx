@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { setSEO } from '../lib/seo';
 import { 
@@ -27,6 +27,7 @@ interface FAQCategory {
 
 export default function HelpCenter() {
   const { isAuthenticated, user } = useAuth();
+  const [params, setParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [openCategory, setOpenCategory] = useState<string | null>('Geral');
   const [openFAQ, setOpenFAQ] = useState<string | null>(null);
@@ -37,6 +38,19 @@ export default function HelpCenter() {
       canonicalPath: '/ajuda'
     });
   }, []);
+  useEffect(() => {
+    const initialQ = params.get('q') || '';
+    setSearchTerm(initialQ);
+  }, []);
+  useEffect(() => {
+    const currentQ = params.get('q') || '';
+    if ((searchTerm || '') !== currentQ) {
+      const next = new URLSearchParams(params);
+      if (searchTerm.trim()) next.set('q', searchTerm.trim());
+      else next.delete('q');
+      setParams(next, { replace: true });
+    }
+  }, [searchTerm]);
 
   const categories: FAQCategory[] = [
     {
