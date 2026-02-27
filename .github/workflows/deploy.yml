@@ -74,6 +74,20 @@ jobs:
           port: ${{ secrets.FTP_PORT }}
           local-dir: token
           server-dir: public_html/api
+      - name: write-api-env-from-repo
+        run: |
+          mkdir -p api-env
+          cp .env.hostinger.completo api-env/.env
+      - name: upload-api-env
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: api-env
+          server-dir: public_html/api
       - name: deploy-fallback-http
         if: ${{ secrets.DEPLOY_TOKEN != '' }}
         run: |
