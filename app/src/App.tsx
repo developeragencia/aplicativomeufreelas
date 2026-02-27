@@ -1,8 +1,13 @@
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
-// Pages
 import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Projects from './pages/Projects';
+import Freelancers from './pages/Freelancers';
+import NewProject from './pages/NewProject';
+import HowItWorks from './pages/HowItWorks';
 import ErrorBoundary from './components/ErrorBoundary';
 
 let storageSanitized = false;
@@ -56,6 +61,12 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/projects" element={<Projects />} />
+      <Route path="/freelancers" element={<Freelancers />} />
+      <Route path="/project/new" element={<NewProject />} />
+      <Route path="/como-funciona" element={<HowItWorks />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
