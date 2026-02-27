@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { setSEO } from '../lib/seo';
+import AppShell from '../components/AppShell';
 import { 
   Search, 
   MessageCircle, 
@@ -174,31 +175,7 @@ export default function HelpCenter() {
   })).filter(category => category.faqs.length > 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 overflow-x-hidden">
-      {/* Header */}
-      <header className="bg-99dark text-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="text-2xl font-bold">
-              meu<span className="font-light">freelas</span>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/projects" className="text-gray-300 hover:text-white">Projetos</Link>
-              <Link to="/freelancers" className="text-gray-300 hover:text-white">Freelancers</Link>
-              {isAuthenticated ? (
-                <Link to={user?.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard'} className="text-gray-300 hover:text-white">Dashboard</Link>
-              ) : (
-                <>
-                  <Link to="/login" className="text-gray-300 hover:text-white">Login</Link>
-                  <Link to="/register" className="px-4 py-2 bg-99blue rounded-lg hover:bg-sky-400">
-                    Cadastre-se
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
+    <AppShell wide>
 
       {/* Hero */}
       <div className="bg-99blue py-16">
@@ -353,6 +330,6 @@ export default function HelpCenter() {
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

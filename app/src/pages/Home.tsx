@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { setSEO } from '../lib/seo';
 import { ChevronDown, Search, User, LogOut, Briefcase, CheckCircle, Menu, X } from 'lucide-react';
-import BrandLogo from '../components/BrandLogo';
+import AppShell from '../components/AppShell';
 import { apiListProjectsPublicNew, hasApi } from '../lib/api';
 
 const rotatingTexts = [
@@ -48,219 +48,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50">
-        {/* Main Header */}
-        <div className="bg-99dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14">
-              {/* Logo */}
-              <div className="flex items-center">
-                <BrandLogo heightClassName="h-8" darkBg />
-              </div>
-
-              {/* Search Bar */}
-              <div className="hidden md:flex items-center flex-1 max-w-xl mx-8">
-                <div className="relative flex w-full">
-                  <div 
-                    className="relative"
-                    onMouseEnter={() => setShowDropdown(true)}
-                    onMouseLeave={() => setShowDropdown(false)}
-                  >
-                    <button className="flex items-center px-4 py-2 bg-99blue text-white text-sm font-medium rounded-l hover:bg-99blue-light transition-colors">
-                      Freelancers
-                      <ChevronDown className="ml-2 w-4 h-4" />
-                    </button>
-                    {showDropdown && (
-                      <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded shadow-lg py-2 animate-fade-in">
-                        <Link to="/freelancers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Freelancers</Link>
-                        <Link to="/projects" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Projetos</Link>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Buscar freelancers"
-                    className="flex-1 px-4 py-2 text-sm text-gray-700 bg-white border-0 focus:outline-none focus:ring-0"
-                  />
-                  <button className="px-4 py-2 bg-white border-l border-gray-200 rounded-r hover:bg-gray-50 transition-colors">
-                    <Search className="w-4 h-4 text-gray-500" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Navigation - Desktop Only */}
-              <div className="hidden md:flex items-center space-x-4">
-                {isAuthenticated ? (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 text-white"
-                    >
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                      ) : (
-                        <div className="w-8 h-8 bg-99blue rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5" />
-                        </div>
-                      )}
-                      <span className="hidden md:block text-sm">{user?.name.split(' ')[0]}</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                    {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 animate-fade-in">
-                        <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Dashboard
-                        </Link>
-                        {user?.type === 'client' && (
-                          <Link to="/project/new" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            Publicar Projeto
-                          </Link>
-                        )}
-                        <button
-                          onClick={logout}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Sair
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <Link to="/login" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                      Login
-                    </Link>
-                    <Link to="/register" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                      Cadastre-se
-                    </Link>
-                    <Link
-                      to="/project/new"
-                      className="px-5 py-2 bg-99blue text-white text-sm font-semibold rounded hover:bg-99blue-light transition-colors"
-                    >
-                      Publicar projeto
-                    </Link>
-                  </>
-                )}
-              </div>
-              
-              {/* Mobile Menu Button */}
-              <div className="flex md:hidden items-center">
-                <button 
-                  className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  onClick={() => setMobileMenuOpen(true)}
-                >
-                  <Menu className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        {mobileMenuOpen && (
-          <>
-            <div 
-              className="fixed inset-0 bg-black/50 z-40 md:hidden"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <div className="fixed left-0 top-0 w-72 h-full bg-white shadow-xl z-50 md:hidden overflow-y-auto">
-              <div className="p-4 border-b flex items-center justify-between bg-99dark">
-                <span className="text-xl font-bold text-white">Menu</span>
-                <button 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <nav className="p-4">
-                <Link 
-                  to="/como-funciona" 
-                  className="flex items-center px-4 py-3 rounded-lg mb-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Como Funciona
-                </Link>
-                <Link 
-                  to="/freelancers" 
-                  className="flex items-center px-4 py-3 rounded-lg mb-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Encontrar Freelancers
-                </Link>
-                <Link 
-                  to="/projects" 
-                  className="flex items-center px-4 py-3 rounded-lg mb-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Encontrar Trabalho
-                </Link>
-                <div className="border-t border-gray-200 my-4"></div>
-                {isAuthenticated ? (
-                  <>
-                    <Link 
-                      to="/dashboard" 
-                      className="flex items-center px-4 py-3 rounded-lg mb-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut className="w-5 h-5 mr-3" />
-                      Sair
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link 
-                      to="/login" 
-                      className="flex items-center px-4 py-3 rounded-lg mb-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link 
-                      to="/register" 
-                      className="flex items-center px-4 py-3 rounded-lg mb-2 bg-99blue text-white hover:bg-99blue-light transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Cadastre-se
-                    </Link>
-                  </>
-                )}
-              </nav>
-            </div>
-          </>
-        )}
-
-        {/* Sub Header - Desktop Only */}
-        <div className="hidden md:block bg-99dark/95 border-t border-gray-600/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav className="flex items-center justify-end space-x-8 h-10">
-              <Link to="/como-funciona" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                Como Funciona
-              </Link>
-              <Link to="/freelancers" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                Encontrar Freelancers
-              </Link>
-              <Link to="/projects" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                Encontrar Trabalho
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <main className="pt-24">
+    <AppShell wide>
+      <div className="pt-8">
         {/* Hero Section */}
         <section className="relative min-h-[500px] flex items-center justify-center">
           {/* Background Image with Overlay */}
@@ -361,11 +150,10 @@ export default function Home() {
 
         {/* Freelancer CTA */}
         <FreelancerCTA />
-      </main>
+      </div>
 
-      <Footer />
       <CookieBanner />
-    </div>
+    </AppShell>
   );
 }
 
