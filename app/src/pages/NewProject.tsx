@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, Briefcase, Check, ChevronDown, Globe, Lock, Paperclip, X } from 'lucide-react';
 import { getSortedSkills } from '../constants/skills';
+import { setSEO } from '../lib/seo';
 import { apiCreateProject, hasApi } from '../lib/api';
 
 const categories = [
@@ -75,6 +76,13 @@ export default function NewProject() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  useEffect(() => {
+    setSEO({
+      title: 'Publicar Projeto - MeuFreelas',
+      description: 'Crie um novo projeto e receba propostas de freelancers.',
+      canonicalPath: '/project/new'
+    });
   }, []);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;

@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - '**'
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -26,6 +29,7 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
       - name: deploy-frontend
+        if: ${{ github.event_name == 'push' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -39,6 +43,7 @@ jobs:
             **/.env
             **/.env.*
       - name: deploy-public
+        if: ${{ github.event_name == 'push' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -52,6 +57,7 @@ jobs:
             **/.env
             **/.env.*
       - name: deploy-api
+        if: ${{ github.event_name == 'push' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -70,7 +76,7 @@ jobs:
           mkdir -p token
           echo "${{ secrets.DEPLOY_TOKEN }}" > token/.deploy_token
       - name: upload-deploy-token-file
-        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+        if: ${{ secrets.DEPLOY_TOKEN != '' && github.event_name == 'push' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -81,10 +87,12 @@ jobs:
           local-dir: token
           server-dir: public_html/api
       - name: write-api-env-from-repo
+        if: ${{ github.event_name == 'push' }}
         run: |
           mkdir -p api-env
           cp .env.hostinger.completo api-env/.env
       - name: upload-api-env
+        if: ${{ github.event_name == 'push' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -95,6 +103,7 @@ jobs:
           local-dir: api-env
           server-dir: public_html/api
       - name: upload-root-env-hostinger
+        if: ${{ github.event_name == 'push' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -108,6 +117,6 @@ jobs:
             **
             !.env.hostinger.completo
       - name: deploy-fallback-http
-        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+        if: ${{ secrets.DEPLOY_TOKEN != '' && github.event_name == 'push' }}
         run: |
           curl -sS "https://meufreelas.com.br/api/deploy_pull.php?token=${{ secrets.DEPLOY_TOKEN }}" || true

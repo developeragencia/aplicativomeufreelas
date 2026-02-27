@@ -1,9 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from 'react';
+import { setSEO } from '../lib/seo';
 import { FilePlus, Users, ShieldCheck, Search, MessageSquare, CreditCard, CheckCircle } from 'lucide-react';
 
 export default function HowItWorks() {
   const { isAuthenticated, user } = useAuth();
+  useEffect(() => {
+    setSEO({
+      title: 'Como Funciona - MeuFreelas',
+      description: 'Entenda como contratar e trabalhar com segurança no MeuFreelas.',
+      canonicalPath: '/como-funciona'
+    });
+  }, []);
   const freelancerSteps = [
     {
       icon: Search,
