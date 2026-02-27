@@ -8,7 +8,7 @@ $offset = ($page - 1) * $per;
 $keyword = trim((string)($_GET['q'] ?? ''));
 $ratingMin = isset($_GET['rating_min']) ? floatval($_GET['rating_min']) : null;
 
-$where = ["u.role = 'freelancer'", "u.status = 'active'"];
+$where = ["u.role = 'freelancer'"];
 $params = [];
 if ($keyword !== '') {
   $where[] = "(pf.titulo LIKE ? OR pf.bio LIKE ? OR u.email LIKE ?)";
@@ -77,7 +77,7 @@ if ($id) {
   exit;
 }
 
-$stmt = $pdo->prepare("
+$primaryQuery = "
   SELECT
     u.id,
     u.email,
@@ -92,17 +92,38 @@ $stmt = $pdo->prepare("
   $sqlWhere
   ORDER BY pf.avaliacoes_avg DESC, u.id DESC
   LIMIT ? OFFSET ?
-");
-$stmt->execute(array_merge($params, [$per, $offset]));
+";
+$fallbackQuery = "
+  SELECT
+    u.id,
+    u.email
+  FROM users u
+  $sqlWhere
+  ORDER BY u.id DESC
+  LIMIT ? OFFSET ?
+";
+try {
+  $stmt = $pdo->prepare($primaryQuery);
+  $stmt->execute(array_merge($params, [$per, $offset]));
+} catch (Throwable $e) {
+  $stmt = $pdo->prepare($fallbackQuery);
+  $stmt->execute(array_merge($params, [$per, $offset]));
+}
 $rows = $stmt->fetchAll();
 
-$countStmt = $pdo->prepare("
+$countSql = "
   SELECT COUNT(*) AS c
   FROM users u
   LEFT JOIN profiles_freelancer pf ON pf.user_id = u.id
   $sqlWhere
-");
-$countStmt->execute($params);
+";
+try {
+  $countStmt = $pdo->prepare($countSql);
+  $countStmt->execute($params);
+} catch (Throwable $e) {
+  $countStmt = $pdo->prepare("SELECT COUNT(*) AS c FROM users u $sqlWhere");
+  $countStmt->execute($params);
+}
 $total = intval($countStmt->fetch()['c'] ?? 0);
 
 $items = [];

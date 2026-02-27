@@ -13,7 +13,7 @@ if ($id) {
     $stmt->execute([$id]);
     $row = $stmt->fetch();
   } catch (Throwable $e) {
-    $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
     $stmt->execute([$id]);
     $row = $stmt->fetch();
   }
@@ -68,7 +68,7 @@ $queryWithJoin = "
   LIMIT ? OFFSET ?
 ";
 $querySimple = "
-  SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, client_id, client_name, descricao, budget
+  SELECT id, titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget
   FROM projects
   $sqlWhere
   $order
