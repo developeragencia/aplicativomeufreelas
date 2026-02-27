@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 export default function Status() {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<{ ok: boolean; database?: string; env_ok?: boolean; missing?: string[]; usersCount?: number; error?: string }>({ ok: false });
+  const [data, setData] = useState<{ ok: boolean; database?: string; env_ok?: boolean; missing?: string[]; usersCount?: number; error?: string; statusCode?: number; responseMs?: number }>({ ok: false });
 
   useEffect(() => {
     async function load() {
@@ -45,6 +45,8 @@ export default function Status() {
               <div className="text-sm text-gray-600">API</div>
               <div className={`text-lg font-semibold ${data.ok ? 'text-green-600' : 'text-red-600'}`}>{data.ok ? 'OK' : 'Falha'}</div>
               {data.error && <div className="text-sm text-red-600 mt-2">{data.error}</div>}
+              <div className="text-sm text-gray-600 mt-2">HTTP: {typeof data.statusCode === 'number' ? data.statusCode : '-'}</div>
+              <div className="text-sm text-gray-600">Resposta: {typeof data.responseMs === 'number' ? `${data.responseMs} ms` : '-'}</div>
             </div>
             <div className="border border-gray-300 p-4">
               <div className="text-sm text-gray-600">Banco de dados</div>

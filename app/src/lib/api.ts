@@ -135,19 +135,24 @@ export async function apiResetPassword(token: string, password: string): Promise
   }
 }
 
-export async function apiHealth(): Promise<{ ok: boolean; database?: string; env_ok?: boolean; missing?: string[]; usersCount?: number; error?: string }> {
+export async function apiHealth(): Promise<{ ok: boolean; database?: string; env_ok?: boolean; missing?: string[]; usersCount?: number; error?: string; statusCode?: number; responseMs?: number }> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
   try {
     const url = `${API_URL.replace(/\/$/, '')}/health.php`;
+    const start = performance.now ? performance.now() : Date.now();
     const res = await fetch(url, { credentials: 'omit' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    const end = performance.now ? performance.now() : Date.now();
+    const responseMs = Math.max(0, Math.round((end - start) as number));
+    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}`, statusCode: res.status, responseMs };
     return {
       ok: !!data.ok,
       database: data.database as string | undefined,
       env_ok: data.env_ok as boolean | undefined,
       missing: (data.missing as string[] | undefined) || [],
       usersCount: typeof data.usersCount === 'number' ? data.usersCount : undefined,
+      statusCode: res.status,
+      responseMs,
     };
   } catch (e) {
     console.error('apiHealth', e);
