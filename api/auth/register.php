@@ -1,0 +1,48 @@
+<?php
+require_once __DIR__ . '/../db.php';
+
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($method !== 'POST') {
+  json_response(['ok' => false, 'error' => 'Method not allowed'], 405);
+  exit;
+}
+
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
+if (!is_array($data)) $data = $_POST;
+
+$role = $data['role'] ?? null;
+$email = $data['email'] ?? null;
+$password = $data['password'] ?? null;
+$name = $data['name'] ?? null;
+
+if (!in_array($role, ['client','freelancer'], true) || !is_string($email) || !is_string($password) || !is_string($name)) {
+  json_response(['ok' => false, 'error' => 'Invalid payload'], 400);
+  exit;
+}
+
+try {
+  $pdo = db_get_pdo();
+  $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+  $stmt->execute([$email]);
+  if ($stmt->fetch()) {
+    json_response(['ok' => false, 'error' => 'Email already registered'], 409);
+    exit;
+  }
+
+  $hash = password_hash($password, PASSWORD_DEFAULT);
+  $pdo->prepare('INSERT INTO users (role, email, password_hash) VALUES (?, ?, ?)')->execute([$role, $email, $hash]);
+  $userId = (int)$pdo->lastInsertId();
+
+  if ($role === 'client') {
+    $pdo->prepare('INSERT INTO profiles_cliente (user_id, nome) VALUES (?, ?)')->execute([$userId, $name]);
+  } else {
+    $pdo->prepare('INSERT INTO profiles_freelancer (user_id, titulo, bio) VALUES (?, ?, ?)')->execute([$userId, $name, '']);
+    $pdo->prepare('INSERT INTO connections_wallet (freelancer_id, saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel) VALUES (?, 0, 0, 0)')->execute([$userId]);
+    $pdo->prepare('INSERT INTO plans (freelancer_id, tipo_plano, modalidade, inicio, status) VALUES (?, ?, ?, ?, ?)')->execute([$userId, 'basic', 'compra', date('Y-m-d'), 'active']);
+  }
+
+  json_response(['ok' => true, 'user' => ['id' => $userId, 'email' => $email, 'name' => $name, 'type' => $role]]);
+} catch (Throwable $e) {
+  json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+}

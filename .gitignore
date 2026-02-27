@@ -1,2 +1,21 @@
 
+# Build e artefatos
+app/dist/
+
+# Ambiente - nunca commitar segredos
+.env
+.env.*
+api/.env
+.env.hostinger.completo
+
+# Dependências locais
+node_modules/
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Exceções específicas
 api/vendor/stripe/stripe-php/README.md
