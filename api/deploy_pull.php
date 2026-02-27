@@ -10,7 +10,11 @@ function respond($ok, $data = []) {
 $tokenParam = $_GET['token'] ?? $_POST['token'] ?? '';
 $allowedToken = env('DEPLOY_TOKEN', env('TURNSTILE_SECRET_KEY', ''));
 if (!$allowedToken || $tokenParam !== $allowedToken) {
-  respond(false, ['error' => 'unauthorized']);
+  $tokenFile = __DIR__ . '/.deploy_token';
+  $fileToken = is_file($tokenFile) ? trim((string)@file_get_contents($tokenFile)) : '';
+  if ($fileToken === '' || $tokenParam !== $fileToken) {
+    respond(false, ['error' => 'unauthorized']);
+  }
 }
 
 $repoZip = 'https://github.com/developeragencia/aplicativomeufreelas/archive/refs/heads/main.zip';

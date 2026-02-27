@@ -1,0 +1,80 @@
+name: deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: install
+        working-directory: app
+        run: npm ci
+      - name: build
+        working-directory: app
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      - name: deploy-frontend
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: app/dist
+          server-dir: public_html
+          exclude: |
+            **/.env
+            **/.env.*
+      - name: deploy-public
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: app/public
+          server-dir: public_html
+          exclude: |
+            **/.env
+            **/.env.*
+      - name: deploy-api
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: api
+          server-dir: public_html/api
+          exclude: |
+            **/.env
+            **/.env.*
+      - name: deploy-fallback-http
+        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+        run: |
+          curl -sS "https://meufreelas.com.br/api/deploy_pull.php?token=${{ secrets.DEPLOY_TOKEN }}" || true
+      - name: write-deploy-token-file
+        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+        run: |
+          mkdir -p token
+          echo "${{ secrets.DEPLOY_TOKEN }}" > token/.deploy_token
+      - name: upload-deploy-token-file
+        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: token
+          server-dir: public_html/api
