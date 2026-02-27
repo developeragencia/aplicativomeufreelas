@@ -1,6 +1,18 @@
 <?php
 require_once __DIR__ . '/../db.php';
 $pdo = db_get_pdo();
+$id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
+if ($id) {
+  $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
+  $stmt->execute([$id]);
+  $row = $stmt->fetch();
+  if (!$row) {
+    json_response(['ok' => false, 'error' => 'Not found'], 404);
+    exit;
+  }
+  json_response(['ok' => true, 'item' => $row]);
+  exit;
+}
 $page = max(1, intval($_GET['page'] ?? 1));
 $per = max(1, min(50, intval($_GET['per_page'] ?? 12)));
 $offset = ($page - 1) * $per;

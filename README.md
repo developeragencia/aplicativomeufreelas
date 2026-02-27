@@ -1,5 +1,7 @@
 # MeuFreelas
 
+Status do deploy: ![deploy](https://github.com/developeragencia/aplicativomeufreelas/actions/workflows/deploy.yml/badge.svg)
+
 Plataforma para conectar clientes e freelancers no Brasil.
 
 - **Frontend:** pasta `app/` (React + Vite + TypeScript)

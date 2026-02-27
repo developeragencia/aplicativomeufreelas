@@ -19,7 +19,13 @@ export async function apiAuth(
 ): Promise<ApiAuthResponse> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
   try {
-    const url = `${API_URL.replace(/\/$/, '')}/auth.php`;
+    const base = API_URL.replace(/\/$/, '');
+    const url =
+      action === 'login'
+        ? `${base}/auth/login.php`
+        : action === 'register'
+        ? `${base}/auth/register.php`
+        : `${base}/auth.php`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -161,18 +167,40 @@ export type ApiFreelancerPublic = {
 export async function apiListFreelancersPublic(): Promise<{ ok: boolean; freelancers?: ApiFreelancerPublic[]; total?: number; error?: string }> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
   try {
-    const url = `${API_URL.replace(/\/$/, '')}/freelancers.php?action=list`;
+    const url = `${API_URL.replace(/\/$/, '')}/freelancers/`;
     const res = await fetch(url, { credentials: 'omit' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    const items = (data.items as any[]) || [];
     return {
-      ok: !!data.ok,
-      freelancers: (data.freelancers as ApiFreelancerPublic[] | undefined) || [],
-      total: typeof data.total === 'number' ? data.total : undefined,
+      ok: true,
+      freelancers: items as ApiFreelancerPublic[],
+      total: typeof data.total === 'number' ? data.total : items.length,
       error: data.error as string | undefined,
     };
   } catch (e) {
     console.error('apiListFreelancersPublic', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiListProjectsPublicNew(params?: { page?: number; per_page?: number; category?: string; level?: string; sort?: 'recent' | 'relevance' }): Promise<{ ok: boolean; items?: any[]; total?: number; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const usp = new URLSearchParams();
+    if (params?.page) usp.set('page', String(params.page));
+    if (params?.per_page) usp.set('per_page', String(params.per_page));
+    if (params?.category) usp.set('category', params.category);
+    if (params?.level) usp.set('level', params.level);
+    if (params?.sort) usp.set('sort', params.sort);
+    const url = `${base}/projects/${usp.toString() ? `?${usp.toString()}` : ''}`;
+    const res = await fetch(url, { credentials: 'omit' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    return { ok: true, items: (data.items as any[]) || [], total: typeof data.total === 'number' ? data.total : undefined };
+  } catch (e) {
+    console.error('apiListProjectsPublicNew', e);
     return { ok: false, error: 'Falha de conexão' };
   }
 }
@@ -401,12 +429,30 @@ export async function apiDeleteProject(projectId: string, userId: string): Promi
 
 export async function apiGetProject(projectId: string): Promise<{ ok: boolean; project?: ApiProject; error?: string }> {
   try {
-    const data = await callProjectsApi({ action: 'get_project', projectId });
-    return {
-      ok: !!data.ok,
-      project: data.project as ApiProject | undefined,
-      error: data.error as string | undefined,
+    if (!API_URL) return { ok: false, error: 'API não configurada' };
+    const base = API_URL.replace(/\/$/, '');
+    const res = await fetch(`${base}/projects/?id=${encodeURIComponent(projectId)}`, { credentials: 'omit' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    const it = data.item as any;
+    const project: ApiProject = {
+      id: String(it.id),
+      clientId: String(it.client_id || ''),
+      clientName: String(it.client_name || ''),
+      title: String(it.titulo || it.title || ''),
+      description: String(it.descricao || it.description || ''),
+      budget: String(it.budget || 'Aberto'),
+      category: String(it.categoria || it.category || ''),
+      skills: Array.isArray(it.skills) ? it.skills : [],
+      experienceLevel: String(it.nivel || 'intermediate'),
+      proposalDays: '',
+      visibility: 'public',
+      status: 'Aberto',
+      proposals: Number(it.proposals || 0),
+      createdAt: String(it.created_at || new Date().toISOString()),
+      updatedAt: String(it.updated_at || it.created_at || new Date().toISOString()),
     };
+    return { ok: true, project };
   } catch (e) {
     console.error('apiGetProject', e);
     return { ok: false, error: 'Falha de conexão' };

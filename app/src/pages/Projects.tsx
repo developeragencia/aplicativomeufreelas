@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Briefcase, ChevronDown, ChevronUp, Menu, Search, X } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
-import { apiListProjects, hasApi, type ApiProject } from '../lib/api';
+import { apiListProjectsPublicNew, hasApi, type ApiProject } from '../lib/api';
 
 type ProjectCard = {
   id: string;
@@ -122,9 +122,28 @@ export default function Projects() {
     async function load() {
       setLoading(true);
       if (hasApi()) {
-        const res = await apiListProjects({ status: 'Aberto', sortBy: 'recent' });
-        if (!cancelled && res.ok && res.projects) {
-          setProjects(res.projects.map(mapApiProject));
+        const res = await apiListProjectsPublicNew({ sort: 'recent' });
+        if (!cancelled && res.ok && Array.isArray(res.items)) {
+          const mapped = res.items.map((it: any) =>
+            mapApiProject({
+              id: String(it.id),
+              clientId: String(it.client_id || ''),
+              clientName: String(it.clientName || ''),
+              title: String(it.titulo || it.title || ''),
+              description: String(it.descricao || it.description || ''),
+              budget: String(it.budget || 'Aberto'),
+              category: String(it.categoria || it.category || ''),
+              skills: Array.isArray(it.skills) ? it.skills : [],
+              experienceLevel: String(it.nivel || it.experienceLevel || 'intermediate'),
+              proposalDays: String(it.proposalDays || ''),
+              visibility: 'public',
+              status: 'Aberto',
+              proposals: Number(it.proposals || 0),
+              createdAt: String(it.created_at || it.createdAt || new Date().toISOString()),
+              updatedAt: String(it.updated_at || it.created_at || new Date().toISOString()),
+            } as ApiProject)
+          );
+          setProjects(mapped);
         }
       }
       if (!hasApi()) {
