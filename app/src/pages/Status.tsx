@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiHealth, hasApi } from '../lib/api';
 import { setSEO } from '../lib/seo';
-import BrandLogo from '../components/BrandLogo';
+import AppShell from '../components/AppShell';
 import { Link } from 'react-router-dom';
 
 export default function Status() {
@@ -24,18 +24,8 @@ export default function Status() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="bg-99dark text-white">
-        <div className="max-w-7xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
-          <BrandLogo to="/" heightClassName="h-10" darkBg />
-          <nav className="hidden md:flex items-center gap-5 text-sm">
-            <Link to="/">Home</Link>
-            <Link to="/projects">Projetos</Link>
-            <Link to="/freelancers">Freelancers</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="max-w-3xl mx-auto px-4 py-10">
+    <AppShell>
+      <div className="max-w-3xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-semibold mb-4">Status do Sistema</h1>
         {loading ? (
           <div className="border border-gray-300 p-8 text-center text-gray-500">Carregando status...</div>
@@ -65,7 +55,7 @@ export default function Status() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
