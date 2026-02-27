@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiResendActivation, hasApi } from '../lib/api';
@@ -74,6 +74,10 @@ export default function Login() {
   const handleSocialLogin = () => {
     setError('Login social em breve.');
   };
+
+  useEffect(() => {
+    document.title = 'Login - MeuFreelas';
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">

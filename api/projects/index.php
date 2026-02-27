@@ -26,7 +26,26 @@ if ($level) { $where[] = 'nivel = ?'; $params[] = $level; }
 if ($status) { $where[] = 'status = ?'; $params[] = $status; }
 $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 $sort = $_GET['sort'] ?? 'recent';
-$order = $sort === 'relevance' ? 'ORDER BY approved_at DESC, created_at DESC' : 'ORDER BY created_at DESC';
+switch ($sort) {
+  case 'relevance':
+    $order = 'ORDER BY approved_at DESC, created_at DESC';
+    break;
+  case 'newest':
+  case 'recent':
+    $order = 'ORDER BY created_at DESC';
+    break;
+  case 'oldest':
+    $order = 'ORDER BY created_at ASC';
+    break;
+  case 'alpha_asc':
+    $order = 'ORDER BY titulo ASC';
+    break;
+  case 'alpha_desc':
+    $order = 'ORDER BY titulo DESC';
+    break;
+  default:
+    $order = 'ORDER BY created_at DESC';
+}
 $stmt = $pdo->prepare("
   SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at
   FROM projects
