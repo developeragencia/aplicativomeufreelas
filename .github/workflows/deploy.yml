@@ -141,3 +141,7 @@ jobs:
           BODY=$(curl -sS "https://meufreelas.com.br/api/freelancers/?page=1&per_page=1")
           echo "$BODY"
           echo "$BODY" | grep -q '"ok":true'
+      - name: seed-test-data
+        if: ${{ github.event_name == 'push' && secrets.DEPLOY_TOKEN != '' }}
+        run: |
+          curl -sS "https://meufreelas.com.br/api/seed_test.php?token=${{ secrets.DEPLOY_TOKEN }}"
