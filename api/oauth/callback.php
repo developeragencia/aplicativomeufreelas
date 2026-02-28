@@ -98,7 +98,7 @@ try {
   } else {
     $id = (int)$u['id'];
   }
-  header('Location: ' . $redirectBase . '/auth?oauth_email=' . urlencode($email) . '&provider=' . urlencode($provider));
+  header('Location: ' . $redirectBase . '/login?oauth_email=' . urlencode($email) . '&provider=' . urlencode($provider));
   exit;
 } catch (Throwable $e) {
   header('Location: ' . $redirectBase . '/auth?oauth_error=server');

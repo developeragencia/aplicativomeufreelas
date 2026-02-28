@@ -62,10 +62,10 @@ export default function Header() {
             <div className="hidden md:flex items-center space-x-3">
               {!isAuthenticated && (
                 <>
-                  <a href="/auth" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                  <a href="/login" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                     Entrar
                   </a>
-                  <a href="/auth" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                  <a href="/register" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                     Cadastrar
                   </a>
                 </>

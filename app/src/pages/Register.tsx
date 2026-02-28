@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight, Chrome, Github } from 'lucide-react';
 import { setSEO } from '../lib/seo';
 import { TurnstileWidget, hasTurnstile } from '@/components/TurnstileWidget';
+import { apiOAuthStart } from '@/lib/api';
 
 type UserTypeOption = 'freelancer' | 'client';
 
@@ -244,6 +245,28 @@ export default function Register() {
 
               {!successMessage && (
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => apiOAuthStart('google').then(r=>r.ok&&r.url?window.location.href=r.url:setError(r.error||'Falha ao iniciar login social.'))}
+                    className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Chrome className="w-5 h-5 mr-3 text-rose-500" />
+                    Cadastrar com Google
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => apiOAuthStart('github').then(r=>r.ok&&r.url?window.location.href=r.url:setError(r.error||'Falha ao iniciar login social.'))}
+                    className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Github className="w-5 h-5 mr-3" />
+                    Cadastrar com GitHub
+                  </button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div>
+                    <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">ou</span></div>
+                  </div>
+                </div>
                 {hasTurnstile() && (
                   <div>
                     <TurnstileWidget
