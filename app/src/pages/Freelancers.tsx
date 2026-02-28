@@ -162,6 +162,27 @@ export default function Freelancers() {
            if (fls.length > 0) {
              loadedFreelancers = fls.map((u: any) => mapApiFreelancer({ ...u, id: String(u.id) }));
            }
+           if (loadedFreelancers.length === 0) {
+             const testItem = mapApiFreelancer({
+               id: 'fl_teste',
+               name: 'Freelancer Teste',
+               username: 'freelancer.teste',
+               avatar: '',
+               title: 'Desenvolvedor Frontend',
+               bio: 'Perfil de homologação.',
+               skills: ['React', 'TypeScript', 'Tailwind'],
+               rating: 5,
+               totalReviews: 0,
+               completedProjects: 0,
+               recommendations: 0,
+               memberSince: new Date().toISOString(),
+               isPremium: false,
+               isPro: false,
+               isVerified: false
+             } as any);
+             loadedFreelancers = [testItem];
+             setTotalServer(1);
+           }
         }
 
         // Se o usuário estiver logado, atualiza seus dados na lista com os dados locais mais recentes

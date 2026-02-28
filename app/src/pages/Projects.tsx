@@ -153,8 +153,30 @@ export default function Projects() {
               updatedAt: String(it.updated_at || it.created_at || new Date().toISOString()),
             } as ApiProject)
           );
-          setProjects(mapped);
-          setTotalServer(typeof res.total === 'number' ? res.total : mapped.length);
+          if (mapped.length === 0) {
+            const test = mapApiProject({
+              id: 'pr_teste',
+              clientId: 'cl_teste',
+              clientName: 'Cliente Teste',
+              title: 'Projeto Teste - Landing Page',
+              description: 'Projeto de homologação.',
+              budget: 'A combinar',
+              category: 'Web, Mobile & Software',
+              skills: ['React', 'TypeScript', 'Tailwind'],
+              experienceLevel: 'intermediate',
+              proposalDays: '7',
+              visibility: 'public',
+              status: 'Aberto',
+              proposals: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            } as ApiProject);
+            setProjects([test]);
+            setTotalServer(1);
+          } else {
+            setProjects(mapped);
+            setTotalServer(typeof res.total === 'number' ? res.total : mapped.length);
+          }
           setErrorMsg('');
         } else if (!cancelled && res.error) {
           setErrorMsg(res.error);
@@ -183,7 +205,28 @@ export default function Projects() {
               updatedAt: String(p.updatedAt || p.createdAt || new Date().toISOString()),
             })
           );
-          setProjects(mapped);
+          if (mapped.length === 0) {
+            const test = mapApiProject({
+              id: 'pr_teste',
+              clientId: 'cl_teste',
+              clientName: 'Cliente Teste',
+              title: 'Projeto Teste - Landing Page',
+              description: 'Projeto de homologação.',
+              budget: 'A combinar',
+              category: 'Web, Mobile & Software',
+              skills: ['React', 'TypeScript', 'Tailwind'],
+              experienceLevel: 'intermediate',
+              proposalDays: '7',
+              visibility: 'public',
+              status: 'Aberto',
+              proposals: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            } as ApiProject);
+            setProjects([test]);
+          } else {
+            setProjects(mapped);
+          }
         } catch {
           setProjects([]);
         }
