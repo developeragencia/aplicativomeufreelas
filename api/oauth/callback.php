@@ -10,21 +10,23 @@ if (!in_array($provider, ['google','github'], true) || !$code) {
   exit;
 }
 $redirectBase = env('FRONTEND_URL', 'https://meufreelas.com.br');
-function http_post_json($url, $params) {
+function http_post_json($url, $params, $headers = []) {
   $ch = curl_init($url);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_POST, true);
   curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+  if (!empty($headers)) curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
   $resp = curl_exec($ch);
   curl_close($ch);
   return $resp;
 }
-function http_get_json($url, $token = null) {
+function http_get_json($url, $token = null, $headers = []) {
   $ch = curl_init($url);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   if ($token) {
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer {$token}"]);
+    $headers[] = "Authorization: Bearer {$token}";
   }
+  if (!empty($headers)) curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
   $resp = curl_exec($ch);
   curl_close($ch);
   return $resp;
@@ -62,13 +64,13 @@ try {
       'client_id' => $clientId,
       'client_secret' => $clientSecret,
       'redirect_uri' => $redirectUri,
-    ]);
-    parse_str($tokenResp, $tokenData);
+    ], ['Accept: application/json', 'User-Agent: MeuFreelasOAuth']);
+    $tokenData = json_decode($tokenResp, true);
     if (empty($tokenData['access_token'])) {
       header('Location: ' . $redirectBase . '/auth?oauth_error=github');
       exit;
     }
-    $userResp = http_get_json('https://api.github.com/user/emails', $tokenData['access_token']);
+    $userResp = http_get_json('https://api.github.com/user/emails', $tokenData['access_token'], ['User-Agent: MeuFreelasOAuth', 'Accept: application/vnd.github+json']);
     $emails = json_decode($userResp, true);
     if (is_array($emails)) {
       foreach ($emails as $it) {
@@ -76,7 +78,7 @@ try {
       }
       if (!$email && isset($emails[0]['email'])) $email = $emails[0]['email'];
     }
-    $userResp2 = http_get_json('https://api.github.com/user', $tokenData['access_token']);
+    $userResp2 = http_get_json('https://api.github.com/user', $tokenData['access_token'], ['User-Agent: MeuFreelasOAuth', 'Accept: application/vnd.github+json']);
     $user2 = json_decode($userResp2, true);
     $name = $user2['name'] ?? ($user2['login'] ?? '');
   }
