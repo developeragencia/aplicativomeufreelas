@@ -8,13 +8,35 @@ if (!empty($_SERVER['HTTP_AUTHORIZATION']) && stripos($_SERVER['HTTP_AUTHORIZATI
   $tokenHeader = trim(substr($_SERVER['HTTP_AUTHORIZATION'], 7));
 }
 $token = $_POST['token'] ?? ($_GET['token'] ?? $tokenHeader);
+$action = $_POST['action'] ?? ($_GET['action'] ?? 'migrate');
 $allow = env('MIGRATION_ALLOW_DROP', '0') === '1';
+if ($action === 'status') {
+  json_response([
+    'ok' => true,
+    'allow_drop' => $allow,
+    'requires_token' => true,
+    'db_name' => env('DB_NAME', ''),
+    'env_ok' => !!env('DB_HOST', '') && !!env('DB_USER', '')
+  ]);
+  exit;
+}
 if (!$allow || !is_string($token) || $token !== env('MIGRATION_TOKEN', '')) {
-  json_response(['ok' => false, 'error' => 'Não autorizado'], 401);
+  json_response(['ok' => false, 'error' => 'Não autorizado', 'code' => 'UNAUTHORIZED'], 401);
   exit;
 }
 try {
   $pdo = db_get_pdo();
+  if ($action === 'dry_run') {
+    // Testa permissões de CREATE/DROP sem afetar tabelas reais
+    try {
+      $pdo->exec('CREATE TABLE IF NOT EXISTS __mf_tmp (id INT PRIMARY KEY AUTO_INCREMENT)');
+      $pdo->exec('DROP TABLE __mf_tmp');
+      json_response(['ok' => true, 'message' => 'Dry run OK: CREATE/DROP permitido']);
+    } catch (Throwable $e) {
+      json_response(['ok' => false, 'error' => 'Dry run falhou: ' . $e->getMessage()], 500);
+    }
+    exit;
+  }
   $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
   // Drop dependentes primeiro
   $pdo->exec('DROP TABLE IF EXISTS user_accounts');
