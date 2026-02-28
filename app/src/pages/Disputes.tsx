@@ -7,6 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, CheckCircle, Clock, Gavel, MessageSquare, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Dispute {
   id: string;
@@ -22,6 +26,11 @@ interface Dispute {
 export default function Disputes() {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [project, setProject] = useState('');
+  const [reason, setReason] = useState('');
+  const [amount, setAmount] = useState('');
 
   useEffect(() => {
     async function fetchDisputes() {
@@ -39,6 +48,29 @@ export default function Disputes() {
     fetchDisputes();
   }, []);
 
+  async function handleCreate() {
+    if (!project.trim() || !reason.trim() || !amount.trim()) {
+      toast.error('Preencha projeto, motivo e valor');
+      return;
+    }
+    setCreating(true);
+    try {
+      await api.post('/disputes', { project: project.trim(), reason: reason.trim(), amount: amount.trim() });
+      toast.success('Disputa aberta com sucesso');
+      setOpenCreate(false);
+      setProject('');
+      setReason('');
+      setAmount('');
+      const res = await api.get('/disputes');
+      setDisputes(res.data.data || []);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || 'Erro ao abrir disputa');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="container mx-auto py-8 space-y-8">
@@ -52,10 +84,40 @@ export default function Disputes() {
               Gerencie conflitos e solicitações de reembolso.
             </p>
           </div>
-          <Button variant="destructive">
-            <AlertTriangle className="mr-2 h-4 w-4" />
-            Abrir Nova Disputa
-          </Button>
+          <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+            <DialogTrigger asChild>
+              <Button variant="destructive">
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Abrir Nova Disputa
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Abrir nova disputa</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="project">Projeto</Label>
+                  <Input id="project" value={project} onChange={(e) => setProject(e.target.value)} placeholder="Ex.: Projeto XYZ" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="amount">Valor em disputa</Label>
+                  <Input id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Ex.: R$ 500,00" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="reason">Motivo</Label>
+                  <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Descreva o motivo da disputa" />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
+                  <Button onClick={handleCreate} disabled={creating}>
+                    {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Abrir
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {loading ? (

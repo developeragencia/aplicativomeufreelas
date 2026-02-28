@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Briefcase, Plus, CheckCircle2, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface SquadMember {
   name: string;
@@ -26,6 +29,10 @@ interface Squad {
 export default function MultiContracts() {
   const [teams, setTeams] = useState<Squad[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newProjectName, setNewProjectName] = useState('');
 
   useEffect(() => {
     async function fetchSquads() {
@@ -43,6 +50,28 @@ export default function MultiContracts() {
     fetchSquads();
   }, []);
 
+  async function handleCreate() {
+    if (!newName.trim() || !newProjectName.trim()) {
+      toast.error('Preencha nome da equipe e nome do projeto');
+      return;
+    }
+    setCreating(true);
+    try {
+      await api.post('/squads', { name: newName.trim(), project_name: newProjectName.trim() });
+      toast.success('Equipe criada com sucesso');
+      setOpenCreate(false);
+      setNewName('');
+      setNewProjectName('');
+      const res = await api.get('/squads');
+      setTeams(res.data.data || []);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || 'Erro ao criar equipe');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="container mx-auto py-8 space-y-8">
@@ -53,10 +82,36 @@ export default function MultiContracts() {
               Gerencie múltiplos freelancers trabalhando no mesmo projeto simultaneamente.
             </p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Criar Nova Equipe
-          </Button>
+          <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Criar Nova Equipe
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar nova equipe</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="team-name">Nome da equipe</Label>
+                  <Input id="team-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex.: Squad Frontend" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="project-name">Nome do projeto</Label>
+                  <Input id="project-name" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} placeholder="Ex.: Plataforma X" />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
+                  <Button onClick={handleCreate} disabled={creating}>
+                    {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {loading ? (
