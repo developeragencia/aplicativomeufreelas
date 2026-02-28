@@ -2,8 +2,12 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/_env.php';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-if ($method !== 'POST') { json_response(['ok' => false, 'error' => 'Método não permitido'], 405); exit; }
-$token = $_POST['token'] ?? ($_GET['token'] ?? null);
+$tokenHeader = null;
+if (!empty($_SERVER['HTTP_X_MIGRATION_TOKEN'])) $tokenHeader = $_SERVER['HTTP_X_MIGRATION_TOKEN'];
+if (!empty($_SERVER['HTTP_AUTHORIZATION']) && stripos($_SERVER['HTTP_AUTHORIZATION'], 'Bearer ') === 0) {
+  $tokenHeader = trim(substr($_SERVER['HTTP_AUTHORIZATION'], 7));
+}
+$token = $_POST['token'] ?? ($_GET['token'] ?? $tokenHeader);
 $allow = env('MIGRATION_ALLOW_DROP', '0') === '1';
 if (!$allow || !is_string($token) || $token !== env('MIGRATION_TOKEN', '')) {
   json_response(['ok' => false, 'error' => 'Não autorizado'], 401);
@@ -48,7 +52,7 @@ try {
       cpf_cnpj VARCHAR(32) NULL,
       telefone VARCHAR(32) NULL,
       localizacao VARCHAR(255) NULL,
-      preferencias JSON NULL,
+      preferencias TEXT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
     "CREATE TABLE IF NOT EXISTS profiles_freelancer (
