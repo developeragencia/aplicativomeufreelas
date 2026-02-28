@@ -20,7 +20,14 @@ if ($action === 'status') {
   ]);
   exit;
 }
-if (!$allow || !is_string($token) || $token !== env('MIGRATION_TOKEN', '')) {
+// Autorização flexível: se MIGRATION_TOKEN está vazio, permite execução apenas com MIGRATION_ALLOW_DROP=1
+$configuredToken = env('MIGRATION_TOKEN', '');
+if (!$allow) {
+  json_response(['ok' => false, 'error' => 'Não autorizado', 'code' => 'UNAUTHORIZED'], 401);
+  exit;
+}
+if (!is_string($token)) $token = null;
+if ($configuredToken !== '' && $token !== $configuredToken) {
   json_response(['ok' => false, 'error' => 'Não autorizado', 'code' => 'UNAUTHORIZED'], 401);
   exit;
 }
