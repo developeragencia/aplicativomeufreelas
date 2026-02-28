@@ -8,7 +8,7 @@ if (!empty($_SERVER['HTTP_AUTHORIZATION']) && stripos($_SERVER['HTTP_AUTHORIZATI
   $tokenHeader = trim(substr($_SERVER['HTTP_AUTHORIZATION'], 7));
 }
 $token = $_POST['token'] ?? ($_GET['token'] ?? $tokenHeader);
-$action = $_POST['action'] ?? ($_GET['action'] ?? 'migrate');
+$action = $_POST['action'] ?? ($_GET['action'] ?? (($token === null || $token === '') ? 'status' : 'migrate'));
 $allow = env('MIGRATION_ALLOW_DROP', '0') === '1';
 if ($action === 'status') {
   json_response([
