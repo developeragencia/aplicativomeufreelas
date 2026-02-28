@@ -166,7 +166,7 @@ export default function NewProject() {
 
     setSuccessMessage('Projeto publicado com sucesso!');
     setIsSubmitting(false);
-    setTimeout(() => navigate('/my-projects'), 1000);
+    setTimeout(() => navigate('/my-projects'), 2500);
   };
 
   return (
@@ -204,18 +204,26 @@ export default function NewProject() {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Publique um projeto</h1>
 
         {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
-            <Check className="w-5 h-5 mr-2" />
-            {successMessage}
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg" role="status" aria-live="polite">
+            <div className="flex items-center mb-2">
+              <Check className="w-5 h-5 mr-2" />
+              {successMessage}
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <Link to="/my-projects" className="text-green-700 underline">Meus Projetos</Link>
+              <span className="text-green-700/60">•</span>
+              <Link to="/my-proposals" className="text-green-700 underline">Minhas Propostas</Link>
+            </div>
           </div>
         )}
-        {errorMessage && <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{errorMessage}</div>}
+        {errorMessage && <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert" aria-live="assertive">{errorMessage}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <label className="block text-lg font-medium text-gray-900 mb-3">Escolha uma categoria</label>
+            <label htmlFor="project-category" className="block text-lg font-medium text-gray-900 mb-3">Escolha uma categoria</label>
             <div className="relative">
               <select
+                id="project-category"
                 value={formData.category}
                 onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent appearance-none bg-white"
@@ -232,8 +240,9 @@ export default function NewProject() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <label className="block text-lg font-medium text-gray-900 mb-3">Dê um nome para o trabalho</label>
+            <label htmlFor="project-title" className="block text-lg font-medium text-gray-900 mb-3">Dê um nome para o trabalho</label>
             <input
+              id="project-title"
               type="text"
               value={formData.title}
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
@@ -245,8 +254,9 @@ export default function NewProject() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <label className="block text-lg font-medium text-gray-900 mb-3">Descreva o trabalho a ser feito</label>
+            <label htmlFor="project-description" className="block text-lg font-medium text-gray-900 mb-3">Descreva o trabalho a ser feito</label>
             <textarea
+              id="project-description"
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Descreva detalhadamente o que você precisa..."
@@ -258,7 +268,7 @@ export default function NewProject() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <label className="block text-lg font-medium text-gray-900 mb-3">
+            <label htmlFor="project-files" className="block text-lg font-medium text-gray-900 mb-3">
               Anexe um arquivo <span className="text-gray-500 font-normal">(Opcional)</span>
             </label>
             <div
@@ -269,7 +279,7 @@ export default function NewProject() {
                 <span className="px-4 py-2 bg-green-500 text-white rounded-lg font-medium mr-3">Adicionar arquivos</span>
                 <span className="text-gray-500">Ou se preferir arraste seus arquivos aqui.</span>
               </div>
-              <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" />
+              <input id="project-files" ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" />
             </div>
             <p className="text-xs text-gray-500 mt-2">Máximo de 5 arquivos por projeto.</p>
             {files.length > 0 && (
@@ -291,11 +301,12 @@ export default function NewProject() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6" ref={skillsDropdownRef}>
-            <label className="block text-lg font-medium text-gray-900 mb-3">
+            <label htmlFor="skills-search" className="block text-lg font-medium text-gray-900 mb-3">
               Quais habilidades são desejadas? <span className="text-gray-500 font-normal">(Opcional)</span>
             </label>
             <div className="relative">
               <input
+                id="skills-search"
                 type="text"
                 value={skillSearch}
                 onChange={(e) => {
@@ -355,9 +366,10 @@ export default function NewProject() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <label className="block text-lg font-medium text-gray-900 mb-3">Durante quantos dias você quer receber propostas?</label>
+            <label htmlFor="proposal-days" className="block text-lg font-medium text-gray-900 mb-3">Durante quantos dias você quer receber propostas?</label>
             <div className="relative w-full sm:w-48">
               <select
+                id="proposal-days"
                 value={formData.proposalDays}
                 onChange={(e) => setFormData((prev) => ({ ...prev, proposalDays: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent appearance-none bg-white"

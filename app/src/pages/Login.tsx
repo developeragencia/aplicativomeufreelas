@@ -132,7 +132,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6" role="alert">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6" role="alert" aria-live="assertive">
               {error}
               {notVerifiedEmail && hasApi() && (
                 <div className="mt-3">
@@ -149,7 +149,7 @@ export default function Login() {
             </div>
           )}
           {successMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6" role="status">
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6" role="status" aria-live="polite">
               {successMessage}
             </div>
           )}
@@ -204,10 +204,10 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 text-99blue border-gray-300 rounded" />
-                <span className="ml-2 text-sm text-gray-600">Lembrar-me</span>
-              </label>
+              <div className="flex items-center cursor-pointer">
+                <input id="remember-me" type="checkbox" className="w-4 h-4 text-99blue border-gray-300 rounded" />
+                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">Lembrar-me</label>
+              </div>
               <Link to="/forgot-password" className="text-sm text-99blue hover:underline">
                 Esqueceu a senha?
               </Link>

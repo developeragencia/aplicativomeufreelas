@@ -19,3 +19,5 @@ Thumbs.db
 
 # Exceções específicas
 api/vendor/stripe/stripe-php/README.md
+ENVIAR-PARA-HOSTINGER.api.env
+ENVIAR-PARA-HOSTINGER.app.env

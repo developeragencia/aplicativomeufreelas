@@ -4,6 +4,7 @@ import { Star, Clock, Heart, Flag, Send, MessageCircle, User, MapPin, Shield, Sh
 import { useAuth } from '../contexts/AuthContext';
 import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal } from '../lib/api';
 import AppShell from '../components/AppShell';
+import Toast from '../components/Toast';
 import { setSEO } from '../lib/seo';
 
 type ProjectView = {
@@ -90,6 +91,12 @@ function proposalStatusLabel(status: ApiProposal['status'] | 'Todas') {
   return 'Todas';
 }
 
+function proposalStatusClass(s: ApiProposal['status']) {
+  if (s === 'Aceita') return 'bg-green-100 text-green-700';
+  if (s === 'Recusada') return 'bg-red-100 text-red-700';
+  return 'bg-gray-100 text-gray-700';
+}
+
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -105,6 +112,8 @@ export default function ProjectDetail() {
   const [toastMessage, setToastMessage] = useState('Ação concluída com sucesso.');
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [proposalsPage, setProposalsPage] = useState(1);
+  const proposalsPerPage = 5;
 
   useEffect(() => {
     async function load() {
@@ -170,6 +179,14 @@ export default function ProjectDetail() {
     if (!project) return 0;
     return visibleProposals.length;
   }, [project, visibleProposals.length]);
+  const totalProposalPages = useMemo(() => Math.max(1, Math.ceil(visibleProposals.length / proposalsPerPage)), [visibleProposals.length]);
+  const paginatedProposals = useMemo(() => {
+    const start = (proposalsPage - 1) * proposalsPerPage;
+    return visibleProposals.slice(start, start + proposalsPerPage);
+  }, [visibleProposals, proposalsPage]);
+  useEffect(() => {
+    setProposalsPage(1);
+  }, [proposalFilter, proposals.length]);
 
   const openQuestion = async () => {
     if (!isAuthenticated) {
@@ -295,11 +312,7 @@ export default function ProjectDetail() {
 
   return (
     <AppShell wide>
-      {showSavedToast && (
-        <div className="fixed top-4 right-4 bg-green-600 text-white text-sm px-4 py-2 rounded shadow z-50">
-          {toastMessage}
-        </div>
-      )}
+      <Toast open={showSavedToast} message={toastMessage} variant="success" />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <div className="bg-white border border-gray-200 p-4 text-sm mb-4">
@@ -391,7 +404,7 @@ export default function ProjectDetail() {
             {visibleProposals.length === 0 ? (
               <p className="p-6 text-sm text-gray-500">Nenhuma proposta foi encontrada.</p>
             ) : (
-              visibleProposals.map((p) => (
+              paginatedProposals.map((p) => (
                 <div key={p.id} className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Foto</div>
@@ -403,7 +416,8 @@ export default function ProjectDetail() {
                          (Sem avaliações)
                       </div>
                       <p className="text-sm text-gray-600">
-                        Submetido: {relativePublishedAt(p.createdAt)} | Oferta: <strong>{user?.type === 'client' || user?.id === p.freelancerId ? p.value : 'Privado'}</strong> | Duração estimada: <strong>{user?.type === 'client' || user?.id === p.freelancerId ? p.deliveryDays : 'Privado'}</strong> | {proposalStatusLabel(p.status)}
+                        Submetido: {relativePublishedAt(p.createdAt)} | Oferta: <strong>{user?.type === 'client' || user?.id === p.freelancerId ? p.value : 'Privado'}</strong> | Duração estimada: <strong>{user?.type === 'client' || user?.id === p.freelancerId ? p.deliveryDays : 'Privado'}</strong> |
+                        <span className={`inline-block ml-2 px-2 py-0.5 text-xs rounded ${proposalStatusClass(p.status)}`}>{proposalStatusLabel(p.status)}</span>
                       </p>
                     </div>
                   </div>
@@ -411,6 +425,41 @@ export default function ProjectDetail() {
               ))
             )}
           </div>
+          {visibleProposals.length > proposalsPerPage && (
+            <div className="px-4 py-3 bg-white border-t border-gray-200 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                aria-label="Propostas anteriores"
+                disabled={proposalsPage === 1}
+                onClick={() => setProposalsPage((v) => Math.max(1, v - 1))}
+                className="border border-gray-300 px-3 py-2 text-sm disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              {Array.from({ length: totalProposalPages }, (_, i) => i + 1)
+                .slice(Math.max(0, proposalsPage - 3), Math.min(totalProposalPages, proposalsPage + 2))
+                .map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    aria-label={`Página ${page} de propostas`}
+                    onClick={() => setProposalsPage(page)}
+                    className={`border px-3 py-2 text-sm ${page === proposalsPage ? 'bg-99blue text-white border-99blue' : 'border-gray-300'}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              <button
+                type="button"
+                aria-label="Próximas propostas"
+                disabled={proposalsPage === totalProposalPages}
+                onClick={() => setProposalsPage((v) => Math.min(totalProposalPages, v + 1))}
+                className="border border-gray-300 px-3 py-2 text-sm disabled:opacity-40"
+              >
+                Próxima
+              </button>
+            </div>
+          )}
         </section>
       </main>
 

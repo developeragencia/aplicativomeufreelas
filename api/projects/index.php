@@ -2,25 +2,44 @@
 require_once __DIR__ . '/../db.php';
 $pdo = db_get_pdo();
 $id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
-if (isset($_GET['demo']) && $_GET['demo'] === '1') {
-  $item = [
-    'id' => 'pr_teste',
-    'titulo' => 'Projeto Teste - Landing Page',
-    'categoria' => 'Web, Mobile & Software',
-    'nivel' => 'intermediate',
-    'status' => 'Aberto',
-    'created_at' => date('Y-m-d H:i:s'),
-    'client_id' => '0',
-    'client_name' => 'Cliente Teste',
-    'descricao' => 'Projeto de homologação.',
-    'budget' => 'A combinar'
-  ];
-  if ($id) {
-    json_response(['ok' => true, 'item' => $item]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $raw = file_get_contents('php://input');
+  $data = json_decode($raw ?: '{}', true);
+  $userId = isset($data['userId']) ? (string)$data['userId'] : '';
+  $title = isset($data['title']) ? trim((string)$data['title']) : '';
+  $description = isset($data['description']) ? trim((string)$data['description']) : '';
+  $category = isset($data['category']) ? trim((string)$data['category']) : '';
+  $skills = isset($data['skills']) && is_array($data['skills']) ? json_encode(array_values($data['skills'])) : json_encode([]);
+  $experience = isset($data['experienceLevel']) ? (string)$data['experienceLevel'] : 'intermediate';
+  $proposalDays = isset($data['proposalDays']) ? (string)$data['proposalDays'] : '30';
+  $visibility = isset($data['visibility']) ? (string)$data['visibility'] : 'public';
+  if ($title === '' || strlen($title) < 3 || $description === '' || $category === '') {
+    json_response(['ok' => false, 'error' => 'Dados inválidos'], 400);
     exit;
   }
-  json_response(['ok' => true, 'items' => [$item], 'page' => 1, 'per_page' => 1, 'total' => 1]);
-  exit;
+  try {
+    $stmt = $pdo->prepare("INSERT INTO projects (titulo, descricao, categoria, nivel, status, created_at, client_id, client_name, budget, skills, proposalDays, visibility) VALUES (?, ?, ?, ?, 'Aberto', NOW(), ?, ?, 'Aberto', ?, ?, ?)");
+    $clientName = 'Cliente';
+    $stmt->execute([$title, $description, $category, $experience, $userId, $clientName, $skills, $proposalDays, $visibility]);
+    $newId = $pdo->lastInsertId();
+    $created = [
+      'id' => $newId,
+      'titulo' => $title,
+      'descricao' => $description,
+      'categoria' => $category,
+      'nivel' => $experience,
+      'status' => 'Aberto',
+      'created_at' => date('Y-m-d H:i:s'),
+      'client_id' => $userId,
+      'client_name' => $clientName,
+      'budget' => 'Aberto',
+    ];
+    json_response(['ok' => true, 'item' => $created]);
+    exit;
+  } catch (Throwable $e) {
+    json_response(['ok' => false, 'error' => 'Falha ao criar projeto'], 500);
+    exit;
+  }
 }
 if ($id) {
   try {
@@ -117,36 +136,6 @@ try {
     $total = intval($countStmt->fetch()['c'] ?? 0);
   } catch (Throwable $e) {
     $total = count($items);
-  }
-  if ($total === 0) {
-    try {
-      $test = $pdo->prepare("SELECT id, titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget FROM projects WHERE titulo = ? LIMIT 1");
-      $test->execute(['Projeto Teste - Landing Page']);
-      $row = $test->fetch();
-      if ($row) {
-        $items = [$row];
-        $total = 1;
-      }
-      if (!$row) {
-        $pdo->prepare("INSERT INTO projects (titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)")
-            ->execute([
-              'Projeto Teste - Landing Page',
-              'Web, Mobile & Software',
-              'intermediate',
-              'Aberto',
-              0,
-              'Cliente Teste',
-              'Projeto de homologação.',
-              'A combinar'
-            ]);
-        $test->execute(['Projeto Teste - Landing Page']);
-        $row = $test->fetch();
-        if ($row) {
-          $items = [$row];
-          $total = 1;
-        }
-      }
-    } catch (Throwable $e) {}
   }
   json_response(['ok' => true, 'items' => $items, 'page' => $page, 'per_page' => $per, 'total' => $total]);
 } catch (Throwable $fatal) {

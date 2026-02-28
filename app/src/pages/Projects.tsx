@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Briefcase, ChevronDown, ChevronUp, Menu, Search, X } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import AppShell from '../components/AppShell';
+import Pagination from '../components/Pagination';
+import EmptyState from '../components/EmptyState';
 import { useAuth } from '../contexts/AuthContext';
 import { apiListProjectsPublicNew, hasApi, type ApiProject } from '../lib/api';
 import { setSEO } from '../lib/seo';
@@ -153,52 +155,13 @@ export default function Projects() {
               updatedAt: String(it.updated_at || it.created_at || new Date().toISOString()),
             } as ApiProject)
           );
-          if (mapped.length === 0) {
-            const test = mapApiProject({
-              id: 'pr_teste',
-              clientId: 'cl_teste',
-              clientName: 'Cliente Teste',
-              title: 'Projeto Teste - Landing Page',
-              description: 'Projeto de homologação.',
-              budget: 'A combinar',
-              category: 'Web, Mobile & Software',
-              skills: ['React', 'TypeScript', 'Tailwind'],
-              experienceLevel: 'intermediate',
-              proposalDays: '7',
-              visibility: 'public',
-              status: 'Aberto',
-              proposals: 0,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            } as ApiProject);
-            setProjects([test]);
-            setTotalServer(1);
-          } else {
-            setProjects(mapped);
-            setTotalServer(typeof res.total === 'number' ? res.total : mapped.length);
-          }
+          setProjects(mapped);
+          setTotalServer(typeof res.total === 'number' ? res.total : mapped.length);
           setErrorMsg('');
         } else if (!cancelled && res.error) {
-          const test = mapApiProject({
-            id: 'pr_teste',
-            clientId: 'cl_teste',
-            clientName: 'Cliente Teste',
-            title: 'Projeto Teste - Landing Page',
-            description: 'Projeto de homologação.',
-            budget: 'A combinar',
-            category: 'Web, Mobile & Software',
-            skills: ['React', 'TypeScript', 'Tailwind'],
-            experienceLevel: 'intermediate',
-            proposalDays: '7',
-            visibility: 'public',
-            status: 'Aberto',
-            proposals: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          } as ApiProject);
-          setProjects([test]);
-          setTotalServer(1);
-          setErrorMsg('');
+          setProjects([]);
+          setTotalServer(0);
+          setErrorMsg(res.error);
         }
       }
       if (!hasApi()) {
@@ -224,28 +187,7 @@ export default function Projects() {
               updatedAt: String(p.updatedAt || p.createdAt || new Date().toISOString()),
             })
           );
-          if (mapped.length === 0) {
-            const test = mapApiProject({
-              id: 'pr_teste',
-              clientId: 'cl_teste',
-              clientName: 'Cliente Teste',
-              title: 'Projeto Teste - Landing Page',
-              description: 'Projeto de homologação.',
-              budget: 'A combinar',
-              category: 'Web, Mobile & Software',
-              skills: ['React', 'TypeScript', 'Tailwind'],
-              experienceLevel: 'intermediate',
-              proposalDays: '7',
-              visibility: 'public',
-              status: 'Aberto',
-              proposals: 0,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            } as ApiProject);
-            setProjects([test]);
-          } else {
-            setProjects(mapped);
-          }
+          setProjects(mapped);
         } catch {
           setProjects([]);
         }
@@ -499,12 +441,9 @@ export default function Projects() {
                 <p className="text-sm">{errorMsg}</p>
               </div>
             ) : paginatedProjects.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                <p className="text-gray-900 font-medium mb-1">Nenhum projeto encontrado</p>
-                <p className="text-gray-500 text-sm">Tente ajustar seus filtros de busca.</p>
-              </div>
+              <EmptyState title="Nenhum projeto encontrado" description="Tente ajustar seus filtros de busca." />
             ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
                 {paginatedProjects.map((p) => {
                   const isExpanded = expanded.includes(p.id);
                   const desc = isExpanded ? p.description : p.description.slice(0, 150) + (p.description.length > 150 ? '...' : '');
@@ -555,23 +494,12 @@ export default function Projects() {
                 })}
               </div>
             )}
+            {projects.length === 0 && !errorMsg && (
+              <EmptyState title="Nenhum projeto disponível" description="Publique seu primeiro projeto e receba propostas." ctaHref="/project/new" ctaLabel="Publicar projeto" />
+            )}
 
             {filteredProjects.length > 0 && (
-              <div className="mt-6 flex items-center justify-center gap-2">
-                <button type="button" disabled={currentPage === 1} onClick={() => setCurrentPage((v) => Math.max(1, v - 1))} className="border border-gray-300 px-3 py-2 text-sm disabled:opacity-40">
-                  Anterior
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))
-                  .map((page) => (
-                    <button key={page} type="button" onClick={() => setCurrentPage(page)} className={`border px-3 py-2 text-sm ${page === currentPage ? 'bg-99blue text-white border-99blue' : 'border-gray-300'}`}>
-                      {page}
-                    </button>
-                  ))}
-                <button type="button" disabled={currentPage === totalPages} onClick={() => setCurrentPage((v) => Math.min(totalPages, v + 1))} className="border border-gray-300 px-3 py-2 text-sm disabled:opacity-40">
-                  Próxima
-                </button>
-              </div>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage} className="mt-6 flex items-center justify-center gap-2" ariaLabel="Paginação de Projetos" />
             )}
             {filteredProjects.length === 0 && projects.length > 0 && (
               <div className="mt-4 text-center text-sm text-gray-500">Nenhum projeto corresponde aos filtros selecionados.</div>

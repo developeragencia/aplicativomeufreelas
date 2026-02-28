@@ -225,7 +225,7 @@ export default function Register() {
               </p>
 
               {successMessage && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6" role="alert">
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6" role="status" aria-live="polite">
                   <p className="font-medium">Conta criada!</p>
                   <p className="mt-1 text-sm">{successMessage}</p>
                   <Link to="/login" className="inline-block mt-3 text-99blue font-medium hover:underline">
@@ -235,7 +235,7 @@ export default function Register() {
               )}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6" role="alert">
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6" role="alert" aria-live="assertive">
                   {error}
                 </div>
               )}

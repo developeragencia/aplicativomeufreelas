@@ -12,6 +12,8 @@ import ProjectDetail from './pages/ProjectDetail';
 import Status from './pages/Status';
 import UserProfile from './pages/UserProfile';
 import HelpCenter from './pages/HelpCenter';
+import MyProjects from './pages/MyProjects';
+import MyProposals from './pages/MyProposals';
 import ErrorBoundary from './components/ErrorBoundary';
 
 let storageSanitized = false;
@@ -73,6 +75,8 @@ function AppRoutes() {
       <Route path="/user/:id" element={<UserProfile />} />
       <Route path="/ajuda" element={<HelpCenter />} />
       <Route path="/project/new" element={<NewProject />} />
+      <Route path="/my-projects" element={<MyProjects />} />
+      <Route path="/my-proposals" element={<MyProposals />} />
       <Route path="/como-funciona" element={<HowItWorks />} />
       <Route path="/status" element={<Status />} />
       <Route path="*" element={<Navigate to="/" />} />

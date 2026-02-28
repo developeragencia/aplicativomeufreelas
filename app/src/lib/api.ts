@@ -253,7 +253,6 @@ export async function apiListProjectsPublicNew(params?: { page?: number; per_pag
   try {
     const base = API_URL.replace(/\/$/, '');
     const usp = new URLSearchParams();
-    usp.set('demo', '1');
     if (params?.page) usp.set('page', String(params.page));
     if (params?.per_page) usp.set('per_page', String(params.per_page));
     if (params?.category) usp.set('category', params.category);
@@ -411,17 +410,17 @@ export async function apiCreateProject(
 ): Promise<{ ok: boolean; project?: Record<string, unknown>; error?: string }> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
   try {
-    const url = `${API_URL.replace(/\/$/, '')}/projects.php`;
+    const url = `${API_URL.replace(/\/$/, '')}/projects/`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'create_project', ...payload }),
+      body: JSON.stringify(payload),
       credentials: 'omit',
     });
     const data = await res.json().catch(() => ({}));
     return {
       ok: !!data.ok,
-      project: data.project as Record<string, unknown> | undefined,
+      project: (data.item as Record<string, unknown> | undefined) || (data.project as Record<string, unknown> | undefined),
       error: data.error as string | undefined,
     };
   } catch (e) {

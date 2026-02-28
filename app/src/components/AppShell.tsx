@@ -20,6 +20,8 @@ export default function AppShell({ children, wide = false, noMainPadding = false
             <Link to="/projects" className={`${pathname.startsWith('/projects') ? 'text-white' : 'text-white/80'} hover:text-white`}>Projetos</Link>
             <Link to="/freelancers" className={`${pathname.startsWith('/freelancers') ? 'text-white' : 'text-white/80'} hover:text-white`}>Freelancers</Link>
             <Link to="/ajuda" className={`${pathname.startsWith('/ajuda') ? 'text-white' : 'text-white/80'} hover:text-white`}>Ajuda</Link>
+            <Link to="/my-projects" className={`${pathname.startsWith('/my-projects') ? 'text-white' : 'text-white/80'} hover:text-white`}>Meus Projetos</Link>
+            <Link to="/my-proposals" className={`${pathname.startsWith('/my-proposals') ? 'text-white' : 'text-white/80'} hover:text-white`}>Minhas Propostas</Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link to="/project/new" className="hidden sm:inline-flex px-4 py-2 bg-99blue rounded-lg hover:bg-sky-400">Publicar Projeto</Link>

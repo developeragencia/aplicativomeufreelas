@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Star, ChevronDown, ChevronUp, Filter, CheckCircle, Shield, User, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AppShell from '../components/AppShell';
+import Pagination from '../components/Pagination';
 import { apiListFreelancersPublicNew, hasApi, type ApiFreelancerPublic } from '../lib/api';
 import { setSEO } from '../lib/seo';
+import EmptyState from '../components/EmptyState';
 
 // --- Types ---
 
@@ -161,27 +163,6 @@ export default function Freelancers() {
            const fls = localUsers.filter((u: any) => u.type === 'freelancer' || u.hasFreelancerAccount);
            if (fls.length > 0) {
              loadedFreelancers = fls.map((u: any) => mapApiFreelancer({ ...u, id: String(u.id) }));
-           }
-           if (loadedFreelancers.length === 0) {
-             const testItem = mapApiFreelancer({
-               id: 'fl_teste',
-               name: 'Freelancer Teste',
-               username: 'freelancer.teste',
-               avatar: '',
-               title: 'Desenvolvedor Frontend',
-               bio: 'Perfil de homologação.',
-               skills: ['React', 'TypeScript', 'Tailwind'],
-               rating: 5,
-               totalReviews: 0,
-               completedProjects: 0,
-               recommendations: 0,
-               memberSince: new Date().toISOString(),
-               isPremium: false,
-               isPro: false,
-               isVerified: false
-             } as any);
-             loadedFreelancers = [testItem];
-             setTotalServer(1);
            }
         }
 
@@ -392,13 +373,7 @@ export default function Freelancers() {
                   <button onClick={() => window.location.reload()} className="text-sm underline hover:text-red-800">Tentar novamente</button>
                 </div>
               ) : paginatedFreelancers.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="w-8 h-8 text-gray-300" />
-                  </div>
-                  <h3 className="text-gray-900 font-medium mb-1">Nenhum freelancer encontrado</h3>
-                  <p className="text-gray-500 text-sm">Tente ajustar seus filtros de busca.</p>
-                </div>
+                <EmptyState title="Nenhum freelancer encontrado" description="Tente ajustar seus filtros de busca." ctaHref="/projects" ctaLabel="Publicar projeto" />
               ) : (
                 paginatedFreelancers.map((f) => (
                   <article key={f.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow relative overflow-hidden">
@@ -492,35 +467,7 @@ export default function Freelancers() {
             </div>
             
              {totalPages > 1 && (
-                <div className="flex justify-center mt-10 gap-2">
-                  <button 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className="w-10 h-10 flex items-center justify-center border border-gray-200 bg-white rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4 text-gray-600" />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-10 h-10 flex items-center justify-center border rounded-lg text-sm font-bold transition-colors ${
-                        currentPage === i + 1 
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
-                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                  <button 
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className="w-10 h-10 flex items-center justify-center border border-gray-200 bg-white rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ArrowRight className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
+               <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage} className="flex justify-center mt-10 gap-2" ariaLabel="Paginação de Freelancers" />
              )}
           </div>
         </div>
