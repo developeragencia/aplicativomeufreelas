@@ -76,6 +76,24 @@ export async function apiOAuthStart(provider: 'google' | 'github'): Promise<{ ok
   }
 }
 
+export async function apiOAuthComplete(email: string): Promise<{ ok: boolean; user?: Record<string, unknown>; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const url = `${base}/oauth/complete.php`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+    return { ok: !!data.ok, user: data.user as Record<string, unknown> | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 // Generic API helper
 async function request(method: string, endpoint: string, body?: any) {
   if (!API_URL) throw new Error('API_URL not configured');

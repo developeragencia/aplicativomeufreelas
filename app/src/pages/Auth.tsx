@@ -29,6 +29,25 @@ export default function Auth() {
       canonicalPath: '/auth'
     });
   }, []);
+  useEffect(() => {
+    const usp = new URLSearchParams(window.location.search);
+    const oauthEmail = usp.get('oauth_email');
+    if (oauthEmail) {
+      import('@/lib/api').then(m => m.apiOAuthComplete(oauthEmail))
+        .then((res) => {
+          if (res.ok && res.user) {
+            const ok = useAuth().setAuthenticated(res.user);
+            if (ok) {
+              const stored = localStorage.getItem('meufreelas_user');
+              const u = stored ? (JSON.parse(stored) as { type?: string }) : null;
+              const dest = u?.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard';
+              navigate(dest, { replace: true });
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

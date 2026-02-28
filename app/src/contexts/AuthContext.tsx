@@ -43,6 +43,7 @@ interface AuthContextType {
   updateUser: (data: Partial<User>) => void;
   switchAccountType: () => Promise<boolean>;
   createSecondaryAccount: (type: 'freelancer' | 'client') => Promise<boolean>;
+  setAuthenticated: (payload: Record<string, unknown>) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -200,20 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (msg.includes('turnstile') || msg.includes('captcha') || code.includes('turnstile')) {
         return { success: false, message: 'Verificação de segurança falhou. Atualize a página e tente novamente.' };
       }
-      // Se e-mail já existir com outro tipo, cria conta secundária automaticamente
-      if (msg.includes('cadastrado') || msg.includes('exists')) {
-        try {
-          const created = await apiCreateSecondaryAccount({ userId: email, accountType: type });
-          if (created.ok && created.user) {
-            const normalizedUser = normalizeUser(created.user);
-            if (normalizedUser) {
-              setUser(normalizedUser);
-              upsertStoredUser(normalizedUser);
-              localStorage.setItem('meufreelas_user', JSON.stringify(normalizedUser));
-              return { success: true };
-            }
-          }
-        } catch {}
+      if (msg.includes('cadastrado') || msg.includes('exists') || code === 'email_exists') {
         return { success: false, message: 'Este e-mail já possui conta ativa. Faça login.' };
       }
       return { success: false, message: res.error };
@@ -354,6 +342,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  const setAuthenticated = (payload: Record<string, unknown>): boolean => {
+    const normalizedUser = normalizeUser(payload);
+    if (!normalizedUser) return false;
+    setUser(normalizedUser);
+    upsertStoredUser(normalizedUser);
+    localStorage.setItem('meufreelas_user', JSON.stringify(normalizedUser));
+    return true;
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -363,7 +360,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       updateUser,
       switchAccountType,
-      createSecondaryAccount
+      createSecondaryAccount,
+      setAuthenticated
     }}>
       {children}
     </AuthContext.Provider>
