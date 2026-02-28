@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { apiListFreelancersPublicNew, apiListProjectsPublicNew } from '@/lib/api';
 import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
+import { maskCurrencyBRLInput } from '@/lib/format';
 
 interface SquadMember {
   name: string;
@@ -30,7 +31,7 @@ interface Squad {
 }
 
 export default function MultiContracts() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [teams, setTeams] = useState<Squad[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -46,6 +47,7 @@ export default function MultiContracts() {
     name: z.string().min(2, { message: 'Informe o nome da equipe' }),
     project_name: z.string().min(2, { message: 'Informe o projeto' }),
   });
+  let projectSearchDebounce: number | undefined;
 
   useEffect(() => {
     async function fetchSquads() {
@@ -99,14 +101,22 @@ export default function MultiContracts() {
   async function fetchSuggestions() {
     try {
       const [projects, freelancers] = await Promise.all([
-        apiListProjectsPublicNew({ page: 1, per_page: 10 }),
-        apiListFreelancersPublicNew({ page: 1, per_page: 10 }),
+        apiListProjectsPublicNew({ page: 1, per_page: 10, q: newProjectName || undefined }),
+        apiListFreelancersPublicNew({ page: 1, per_page: 10, q: membersDraft[membersDraft.length - 1]?.name || undefined }),
       ]);
       setProjectOptions((projects.items || []).map((p: any) => ({ id: String(p.id || p.projectId || ''), title: String(p.title || p.name || '') })));
       setFreelancerOptions((freelancers.items || []).map((f: any) => ({ name: f.name, title: f.title })));
     } catch {
       // silently ignore
     }
+  }
+
+  function handleProjectNameChange(v: string) {
+    setNewProjectName(v);
+    if (projectSearchDebounce) window.clearTimeout(projectSearchDebounce);
+    projectSearchDebounce = window.setTimeout(() => {
+      fetchSuggestions();
+    }, 250);
   }
 
   return (
@@ -121,7 +131,7 @@ export default function MultiContracts() {
           </div>
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
-              <Button disabled={!isAuthenticated}>
+              <Button disabled={!isAuthenticated || user?.type !== 'client'}>
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Nova Equipe
               </Button>
@@ -140,7 +150,7 @@ export default function MultiContracts() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="project-name">Nome do projeto</Label>
-                  <Input id="project-name" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} placeholder="Ex.: Plataforma X" />
+                  <Input id="project-name" value={newProjectName} onChange={(e) => handleProjectNameChange(e.target.value)} placeholder="Ex.: Plataforma X" />
                   {projectOptions.length > 0 && (
                     <div className="text-xs text-muted-foreground">
                       Sugestões: {projectOptions.slice(0, 5).map((p, idx) => (
@@ -165,14 +175,7 @@ export default function MultiContracts() {
                     <Input
                       id="budget"
                       value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
-                      onBlur={() => {
-                        const v = budget.replace(/[^\d]/g, '');
-                        if (v) {
-                          const formatted = (Number(v) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                          setBudget(formatted);
-                        }
-                      }}
+                      onChange={(e) => setBudget(maskCurrencyBRLInput(e.target.value))}
                       placeholder="Ex.: R$ 5.000,00"
                     />
                   </div>

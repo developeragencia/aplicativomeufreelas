@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
+import { maskCurrencyBRLInput } from '@/lib/format';
 
 interface Dispute {
   id: string;
@@ -156,7 +157,12 @@ export default function Disputes() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="amount">Valor em disputa</Label>
-                  <Input id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Ex.: R$ 500,00" />
+                  <Input
+                    id="amount"
+                    value={amount}
+                    onChange={(e) => setAmount(maskCurrencyBRLInput(e.target.value))}
+                    placeholder="Ex.: R$ 500,00"
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="reason">Motivo</Label>
@@ -170,6 +176,22 @@ export default function Disputes() {
                     multiple
                     onChange={(e) => setAttachments(Array.from(e.target.files || []))}
                   />
+                  {attachments.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {attachments.map((f, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          <span className="truncate max-w-[60%]">{f.name}</span>
+                          <button
+                            type="button"
+                            className="text-99blue hover:underline"
+                            onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
