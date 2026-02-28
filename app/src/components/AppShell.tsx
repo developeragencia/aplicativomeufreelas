@@ -5,9 +5,10 @@ import BrandLogo from './BrandLogo';
 type AppShellProps = {
   children: ReactNode;
   wide?: boolean;
+  noMainPadding?: boolean;
 };
 
-export default function AppShell({ children, wide = false }: AppShellProps) {
+export default function AppShell({ children, wide = false, noMainPadding = false }: AppShellProps) {
   const { pathname } = useLocation();
   return (
     <div className="min-h-screen bg-white">
@@ -26,7 +27,7 @@ export default function AppShell({ children, wide = false }: AppShellProps) {
           </div>
         </div>
       </header>
-      <main className={`${wide ? 'max-w-7xl' : 'max-w-6xl'} mx-auto px-4 py-8`}>
+      <main className={`${wide ? 'max-w-7xl' : 'max-w-6xl'} mx-auto px-4 ${noMainPadding ? 'py-0' : 'py-8'}`}>
         {children}
       </main>
       <footer className="mt-8 border-t">

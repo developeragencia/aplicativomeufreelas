@@ -48,8 +48,8 @@ export default function Home() {
   }, []);
 
   return (
-    <AppShell wide>
-      <div className="pt-24">
+    <AppShell wide noMainPadding>
+      <div className="pt-0">
         {/* Hero Section */}
         <section
           className="relative min-h-[500px] flex items-center justify-center"
