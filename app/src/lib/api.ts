@@ -30,7 +30,7 @@ export async function apiAuth(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...body }),
-      credentials: 'omit',
+      credentials: 'omit', // JWT should be handled via headers if needed, or if cookie-based, include
     });
     const text = await res.text();
     let data: Record<string, unknown> = {};
@@ -48,11 +48,54 @@ export async function apiAuth(
       requiresActivation: data.requiresActivation as boolean | undefined,
       message: data.message as string | undefined,
     };
-  } catch (e) {
-    console.error('apiAuth', e);
-    return { ok: false, error: 'Falha de conexão com o servidor' };
+  } catch (err: any) {
+    return { ok: false, error: err.message || 'Erro de conexão' };
   }
 }
+
+// Generic API helper
+async function request(method: string, endpoint: string, body?: any) {
+  if (!API_URL) throw new Error('API_URL not configured');
+  const base = API_URL.replace(/\/$/, '');
+  const url = `${base}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  
+  // Get token from storage if using JWT, or rely on cookies
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(res.ok ? 'Invalid JSON response' : `Request failed with status ${res.status}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(data.error || `Request failed with status ${res.status}`);
+  }
+
+  return { data, status: res.status };
+}
+
+export const api = {
+  get: (endpoint: string) => request('GET', endpoint),
+  post: (endpoint: string, body: any) => request('POST', endpoint, body),
+  put: (endpoint: string, body: any) => request('PUT', endpoint, body),
+  delete: (endpoint: string) => request('DELETE', endpoint),
+};
 
 export async function apiSwitchAccountType(payload: {
   userId: string;

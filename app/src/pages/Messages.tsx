@@ -8,9 +8,8 @@ import {
   Briefcase,
   Check,
   CheckCheck,
-  EllipsisVertical,
-  MessageSquare,
   MoreVertical,
+  MessageSquare,
   Paperclip,
   Phone,
   Search,
@@ -54,6 +53,7 @@ function formatMessageTime(value?: string | null): string {
 
 export default function Messages() {
   const { user } = useAuth();
+  const [activeChat, setActiveChat] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -361,7 +361,7 @@ export default function Messages() {
               onClick={() => setShowChatMenu(!showChatMenu)}
               className="p-2"
             >
-              <EllipsisVertical className="w-6 h-6" />
+              <MoreVertical className="w-6 h-6" />
             </button>
             
             {showChatMenu && (
