@@ -14,6 +14,14 @@ import UserProfile from './pages/UserProfile';
 import HelpCenter from './pages/HelpCenter';
 import MyProjects from './pages/MyProjects';
 import MyProposals from './pages/MyProposals';
+import ClientDashboard from './pages/ClientDashboard';
+import FreelancerDashboard from './pages/FreelancerDashboard';
+import Plans from './pages/Plans';
+import VerifiedIdentity from './pages/VerifiedIdentity';
+import Disputes from './pages/Disputes';
+import AdminModeration from './pages/AdminModeration';
+import Invitations from './pages/Invitations';
+import Notifications from './pages/Notifications';
 import ErrorBoundary from './components/ErrorBoundary';
 
 let storageSanitized = false;
@@ -79,6 +87,14 @@ function AppRoutes() {
       <Route path="/my-proposals" element={<MyProposals />} />
       <Route path="/como-funciona" element={<HowItWorks />} />
       <Route path="/status" element={<Status />} />
+      <Route path="/dashboard" element={<ClientDashboard />} />
+      <Route path="/freelancer/dashboard" element={<FreelancerDashboard />} />
+      <Route path="/plans" element={<Plans />} />
+      <Route path="/verified" element={<VerifiedIdentity />} />
+      <Route path="/disputes" element={<Disputes />} />
+      <Route path="/admin/moderation" element={<AdminModeration />} />
+      <Route path="/invitations" element={<Invitations />} />
+      <Route path="/notifications" element={<Notifications />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

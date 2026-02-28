@@ -298,8 +298,10 @@ export default function Register() {
                       placeholder="Mínimo 6 caracteres"
                       required
                       minLength={6}
+                      aria-describedby="register-password-desc"
                       disabled={isLoading}
                     />
+                    <p id="register-password-desc" className="mt-1 text-xs text-gray-500">Mínimo 6 caracteres</p>
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
@@ -326,8 +328,10 @@ export default function Register() {
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent outline-none"
                       placeholder="Confirme sua senha"
                       required
+                      aria-describedby="register-confirm-desc"
                       disabled={isLoading}
                     />
+                    <p id="register-confirm-desc" className="mt-1 text-xs text-gray-500">Deve coincidir com a senha</p>
                   </div>
                 </div>
 

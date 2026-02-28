@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { setSEO } from '../lib/seo';
 import AppShell from '../components/AppShell';
+import EmptyState from '../components/EmptyState';
 import { 
   Search, 
   MessageCircle, 
@@ -219,6 +220,7 @@ export default function HelpCenter() {
                         <button
                           onClick={() => setOpenFAQ(openFAQ === faq.question ? null : faq.question)}
                           className="w-full flex items-center justify-between p-4 text-left"
+                          aria-expanded={openFAQ === faq.question}
                         >
                           <span className="font-medium text-gray-800">{faq.question}</span>
                           {openFAQ === faq.question ? (
@@ -238,10 +240,12 @@ export default function HelpCenter() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Nenhum resultado encontrado para "{searchTerm}"</p>
-                <p className="text-gray-400 mt-2">Tente buscar com outros termos</p>
-              </div>
+              <EmptyState
+                title={`Nenhum resultado para "${searchTerm}"`}
+                description="Tente buscar com outros termos ou limpe sua busca."
+                ctaHref="/ajuda"
+                ctaLabel="Limpar busca"
+              />
             )}
           </div>
         ) : (
@@ -255,6 +259,7 @@ export default function HelpCenter() {
                   key={category.title}
                   onClick={() => setOpenCategory(openCategory === category.title ? null : category.title)}
                   className="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow"
+                  aria-expanded={openCategory === category.title}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -283,6 +288,7 @@ export default function HelpCenter() {
                               setOpenFAQ(openFAQ === faq.question ? null : faq.question);
                             }}
                             className="w-full flex items-center justify-between py-2 text-left"
+                            aria-expanded={openFAQ === faq.question}
                           >
                             <span className="text-sm text-gray-700">{faq.question}</span>
                             {openFAQ === faq.question ? (

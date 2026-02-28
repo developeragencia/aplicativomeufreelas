@@ -170,8 +170,10 @@ export default function Login() {
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent outline-none"
                   placeholder="seu@email.com"
                   required
+                  aria-describedby="login-email-desc"
                   disabled={isLoading}
                 />
+                <p id="login-email-desc" className="mt-1 text-xs text-gray-500">Campo obrigatório</p>
               </div>
             </div>
 
@@ -190,8 +192,10 @@ export default function Login() {
                   className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent outline-none"
                   placeholder="Sua senha"
                   required
+                  aria-describedby="login-password-desc"
                   disabled={isLoading}
                 />
+                <p id="login-password-desc" className="mt-1 text-xs text-gray-500">Campo obrigatório</p>
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
