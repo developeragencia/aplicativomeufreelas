@@ -186,6 +186,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('meufreelas_user', JSON.stringify(normalizedUser));
           return { success: true };
         }
+        const msg = (res.error || '').toLowerCase();
+        const code = (res.code || '').toLowerCase();
+        if (code.includes('email') || msg.includes('email') || msg.includes('cadastrado') || msg.includes('exists')) {
+          const created = await apiCreateSecondaryAccount({ userId: email, accountType: type });
+          if (created.ok && created.user) {
+            const normalizedUser = normalizeUser(created.user);
+            if (normalizedUser) {
+              setUser(normalizedUser);
+              upsertStoredUser(normalizedUser);
+              localStorage.setItem('meufreelas_user', JSON.stringify(normalizedUser));
+              return { success: true };
+            }
+          }
+        }
         return { success: false, message: res.error };
       }
       const users = JSON.parse(localStorage.getItem('meufreelas_users') || '[]');

@@ -33,6 +33,9 @@ export default function MultiContracts() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newProjectName, setNewProjectName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [budget, setBudget] = useState('');
+  const [membersDraft, setMembersDraft] = useState<Array<{ name: string; role: string }>>([]);
 
   useEffect(() => {
     async function fetchSquads() {
@@ -57,11 +60,21 @@ export default function MultiContracts() {
     }
     setCreating(true);
     try {
-      await api.post('/squads', { name: newName.trim(), project_name: newProjectName.trim() });
+      const payload = {
+        name: newName.trim(),
+        project_name: newProjectName.trim(),
+        start_date: startDate || undefined,
+        budget: budget || undefined,
+        members: membersDraft.filter(m => m.name.trim() && m.role.trim()),
+      };
+      await api.post('/squads', payload);
       toast.success('Equipe criada com sucesso');
       setOpenCreate(false);
       setNewName('');
       setNewProjectName('');
+      setStartDate('');
+      setBudget('');
+      setMembersDraft([]);
       const res = await api.get('/squads');
       setTeams(res.data.data || []);
     } catch (error: any) {
@@ -101,6 +114,73 @@ export default function MultiContracts() {
                 <div className="grid gap-2">
                   <Label htmlFor="project-name">Nome do projeto</Label>
                   <Input id="project-name" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} placeholder="Ex.: Plataforma X" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="start-date">Data de início</Label>
+                    <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="budget">Orçamento</Label>
+                    <Input
+                      id="budget"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                      onBlur={() => {
+                        const v = budget.replace(/[^\d]/g, '');
+                        if (v) {
+                          const formatted = (Number(v) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                          setBudget(formatted);
+                        }
+                      }}
+                      placeholder="Ex.: R$ 5.000,00"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Membros</Label>
+                  <div className="space-y-2">
+                    {membersDraft.map((m, idx) => (
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <Input
+                          value={m.name}
+                          onChange={(e) => {
+                            const next = [...membersDraft];
+                            next[idx] = { ...next[idx], name: e.target.value };
+                            setMembersDraft(next);
+                          }}
+                          placeholder="Nome"
+                        />
+                        <Input
+                          value={m.role}
+                          onChange={(e) => {
+                            const next = [...membersDraft];
+                            next[idx] = { ...next[idx], role: e.target.value };
+                            setMembersDraft(next);
+                          }}
+                          placeholder="Função (ex.: Frontend)"
+                        />
+                      </div>
+                    ))}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setMembersDraft([...membersDraft, { name: '', role: '' }])}
+                      >
+                        Adicionar membro
+                      </Button>
+                      {membersDraft.length > 0 && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => setMembersDraft(membersDraft.filter((_, i) => i !== membersDraft.length - 1))}
+                        >
+                          Remover último
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>

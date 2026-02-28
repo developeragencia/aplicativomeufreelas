@@ -31,6 +31,9 @@ export default function Disputes() {
   const [project, setProject] = useState('');
   const [reason, setReason] = useState('');
   const [amount, setAmount] = useState('');
+  const [contractId, setContractId] = useState('');
+  const [category, setCategory] = useState<'prazo' | 'qualidade' | 'escopo' | 'pagamento' | ''>('');
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   useEffect(() => {
     async function fetchDisputes() {
@@ -55,12 +58,23 @@ export default function Disputes() {
     }
     setCreating(true);
     try {
-      await api.post('/disputes', { project: project.trim(), reason: reason.trim(), amount: amount.trim() });
+      const payload = {
+        project: project.trim(),
+        reason: reason.trim(),
+        amount: amount.trim(),
+        contract_id: contractId.trim() || undefined,
+        category: category || undefined,
+        attachments: attachments.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      };
+      await api.post('/disputes', payload);
       toast.success('Disputa aberta com sucesso');
       setOpenCreate(false);
       setProject('');
       setReason('');
       setAmount('');
+      setContractId('');
+      setCategory('');
+      setAttachments([]);
       const res = await api.get('/disputes');
       setDisputes(res.data.data || []);
     } catch (error: any) {
@@ -100,6 +114,27 @@ export default function Disputes() {
                   <Label htmlFor="project">Projeto</Label>
                   <Input id="project" value={project} onChange={(e) => setProject(e.target.value)} placeholder="Ex.: Projeto XYZ" />
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="contract">ID do contrato/proposta</Label>
+                    <Input id="contract" value={contractId} onChange={(e) => setContractId(e.target.value)} placeholder="Ex.: 12345" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="category">Categoria</Label>
+                    <select
+                      id="category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as any)}
+                      className="border border-input rounded-md h-9 px-3 text-sm bg-background"
+                    >
+                      <option value="">Selecione</option>
+                      <option value="pagamento">Pagamento</option>
+                      <option value="prazo">Prazo</option>
+                      <option value="qualidade">Qualidade</option>
+                      <option value="escopo">Escopo</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="amount">Valor em disputa</Label>
                   <Input id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Ex.: R$ 500,00" />
@@ -107,6 +142,15 @@ export default function Disputes() {
                 <div className="grid gap-2">
                   <Label htmlFor="reason">Motivo</Label>
                   <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Descreva o motivo da disputa" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="attachments">Evidências (opcional)</Label>
+                  <Input
+                    id="attachments"
+                    type="file"
+                    multiple
+                    onChange={(e) => setAttachments(Array.from(e.target.files || []))}
+                  />
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
