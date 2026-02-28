@@ -52,6 +52,7 @@ try {
       role ENUM('client','freelancer','admin') NOT NULL,
       email VARCHAR(255) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
+      active_role ENUM('client','freelancer') NULL,
       status ENUM('active','blocked') DEFAULT 'active',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       last_login_at TIMESTAMP NULL
@@ -81,6 +82,16 @@ try {
       recomendacao_pct INT DEFAULT 0,
       avaliacoes_avg DECIMAL(3,2) DEFAULT 0,
       projetos_concluidos INT DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // user_accounts (multi perfis por usuário)
+    "CREATE TABLE IF NOT EXISTS user_accounts (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT UNSIGNED NOT NULL,
+      role ENUM('client','freelancer') NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uniq_user_role (user_id, role),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 
