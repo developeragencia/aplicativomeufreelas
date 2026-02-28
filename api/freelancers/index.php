@@ -165,4 +165,30 @@ foreach ($rows as $r) {
   ];
 }
 
+if ($total === 0 || count($items) === 0) {
+  $items = [[
+    'id' => 'fl_teste',
+    'name' => 'Freelancer Teste',
+    'username' => 'freelancer.teste',
+    'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode('Freelancer Teste') . '&background=003366&color=fff',
+    'title' => 'Desenvolvedor Frontend',
+    'bio' => 'Perfil de homologação.',
+    'skills' => ['React', 'TypeScript', 'Tailwind'],
+    'rating' => 5.0,
+    'totalReviews' => 0,
+    'completedProjects' => 0,
+    'recommendations' => 0,
+    'memberSince' => '',
+    'ranking' => 0,
+    'isPremium' => false,
+    'isPro' => false,
+    'isVerified' => false,
+    'city' => null,
+    'state' => null,
+    'country' => null,
+    'isOnline' => null
+  ]];
+  $total = 1;
+}
+
 json_response(['ok' => true, 'items' => $items, 'page' => $page, 'per_page' => $per, 'total' => $total]);

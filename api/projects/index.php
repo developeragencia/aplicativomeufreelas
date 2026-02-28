@@ -107,6 +107,25 @@ try {
         $items = [$row];
         $total = 1;
       }
+      if (!$row) {
+        $pdo->prepare("INSERT INTO projects (titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)")
+            ->execute([
+              'Projeto Teste - Landing Page',
+              'Web, Mobile & Software',
+              'intermediate',
+              'Aberto',
+              0,
+              'Cliente Teste',
+              'Projeto de homologação.',
+              'A combinar'
+            ]);
+        $test->execute(['Projeto Teste - Landing Page']);
+        $row = $test->fetch();
+        if ($row) {
+          $items = [$row];
+          $total = 1;
+        }
+      }
     } catch (Throwable $e) {}
   }
   json_response(['ok' => true, 'items' => $items, 'page' => $page, 'per_page' => $per, 'total' => $total]);
