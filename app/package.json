@@ -41,9 +41,9 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
-    "@types/node": "^24.10.1",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
+    "@types/node": "^20.11.24",
+    "@types/react": "18.2.66",
+    "@types/react-dom": "18.2.22",
     "@vitejs/plugin-react": "^4.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -51,25 +51,29 @@
     "date-fns": "^3.3.1",
     "embla-carousel-react": "^8.0.0",
     "input-otp": "^1.0.0",
-    "lucide-react": "^0.562.0",
+    "lucide-react": "^0.344.0",
     "next-themes": "^0.2.1",
-    "postcss": "^8.5.6",
-    "react": "^18.2.0",
+    "postcss": "^8.4.35",
+    "react": "18.2.0",
     "react-day-picker": "^8.10.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "18.2.0",
     "react-hook-form": "^7.51.0",
     "react-resizable-panels": "^2.0.0",
-    "react-router-dom": "^6.23.1",
+    "react-router-dom": "^6.22.3",
     "recharts": "^2.12.0",
     "sonner": "^1.4.0",
     "tailwind-merge": "^2.2.0",
-    "tailwindcss": "^3.4.19",
-    "typescript": "^5.4.5",
-    "vite": "^5.4.9",
-    "zod": "^4.3.5"
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "eslint": "^9.39.1",
-    "typescript-eslint": "^8.46.4"
+    "eslint": "^8.57.0",
+    "typescript-eslint": "^7.1.0"
+  },
+  "overrides": {
+    "@types/react": "18.2.66",
+    "@types/react-dom": "18.2.22"
   }
 }
