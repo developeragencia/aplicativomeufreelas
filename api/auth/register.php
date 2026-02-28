@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../_env.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+use App\Mailer;
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method !== 'POST') {
@@ -41,6 +44,10 @@ try {
     $pdo->prepare('INSERT INTO connections_wallet (freelancer_id, saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel) VALUES (?, 0, 0, 0)')->execute([$userId]);
     $pdo->prepare('INSERT INTO plans (freelancer_id, tipo_plano, modalidade, inicio, status) VALUES (?, ?, ?, ?, ?)')->execute([$userId, 'basic', 'compra', date('Y-m-d'), 'active']);
   }
+
+  $subject = 'Bem-vindo ao MeuFreelas';
+  $html = '<p>Olá, ' . htmlspecialchars($name) . '!</p><p>Conta criada com sucesso como ' . htmlspecialchars($role) . '.</p><p>Acesse: <a href="' . (env('FRONTEND_URL', 'https://meufreelas.com.br')) . '/login">Login</a></p>';
+  Mailer::send($email, $name, $subject, $html);
 
   json_response(['ok' => true, 'user' => ['id' => $userId, 'email' => $email, 'name' => $name, 'type' => $role]]);
 } catch (Throwable $e) {
