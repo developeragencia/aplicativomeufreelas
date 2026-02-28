@@ -29,7 +29,7 @@ export default function AppShell({ children, wide = false, noMainPadding = false
           </div>
         </div>
       </header>
-      <main className={`${wide ? 'max-w-7xl' : 'max-w-6xl'} mx-auto px-4 ${noMainPadding ? 'py-0' : 'py-8'}`}>
+      <main className={`${wide ? 'max-w-7xl' : 'max-w-6xl'} mx-auto ${noMainPadding ? 'p-0' : 'px-4 py-8'}`}>
         {children}
       </main>
       <footer className="mt-8 border-t">

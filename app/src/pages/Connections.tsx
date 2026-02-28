@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AppShell } from '@/components/AppShell';
+import AppShell from '@/components/AppShell';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AppShell } from '@/components/AppShell';
+import AppShell from '@/components/AppShell';
 import {
   Table,
   TableBody,
