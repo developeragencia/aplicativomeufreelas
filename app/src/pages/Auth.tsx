@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { TurnstileWidget, hasTurnstile } from '@/components/TurnstileWidget';
-import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight, Github, Chrome } from 'lucide-react';
 import { setSEO } from '@/lib/seo';
 
 type UserTypeOption = 'freelancer' | 'client';
@@ -57,6 +57,21 @@ export default function Auth() {
     }
   };
 
+  const handleOAuth = async (provider: 'google' | 'github') => {
+    setError('');
+    setSuccessMessage('');
+    try {
+      const res = await import('@/lib/api').then(m => m.apiOAuthStart(provider));
+      if (res.ok && res.url) {
+        window.location.href = res.url;
+      } else {
+        setError(res.error || 'Login social não configurado.');
+      }
+    } catch {
+      setError('Falha ao iniciar login social.');
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -93,20 +108,21 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <header className="bg-99dark py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <Link to="/" className="text-white text-2xl font-bold">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white flex flex-col">
+      <header className="py-4 border-b bg-white/80 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+          <Link to="/" className="text-2xl font-bold tracking-tight text-99dark">
             meu<span className="font-light">freelas</span>
           </Link>
+          <Link to="/como-funciona" className="text-sm text-99blue hover:underline">Como funciona</Link>
         </div>
       </header>
 
-      <div className="flex-1 flex items-center justify-center py-12 px-4">
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-8">
+      <div className="flex-1 flex items-center justify-center py-16 px-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl p-8 border border-gray-100">
           <div className="flex mb-6 border-b">
-            <button className={`flex-1 py-2 ${tab==='login' ? 'border-b-2 border-99blue font-semibold' : ''}`} onClick={() => setTab('login')}>Entrar</button>
-            <button className={`flex-1 py-2 ${tab==='register' ? 'border-b-2 border-99blue font-semibold' : ''}`} onClick={() => setTab('register')}>Cadastrar</button>
+            <button className={`flex-1 py-3 ${tab==='login' ? 'border-b-2 border-99blue font-semibold' : 'text-gray-500'}`} onClick={() => setTab('login')}>Entrar</button>
+            <button className={`flex-1 py-3 ${tab==='register' ? 'border-b-2 border-99blue font-semibold' : 'text-gray-500'}`} onClick={() => setTab('register')}>Cadastrar</button>
           </div>
 
           {error && (
@@ -120,13 +136,27 @@ export default function Auth() {
             </div>
           )}
 
+          {tab === 'login' && (
+            <div className="grid gap-3 mb-6">
+              <button type="button" onClick={()=>handleOAuth('google')} className="w-full py-3 border rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+                <Chrome className="w-5 h-5 text-rose-500" />
+                <span className="font-medium">Continuar com Google</span>
+              </button>
+              <button type="button" onClick={()=>handleOAuth('github')} className="w-full py-3 border rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+                <Github className="w-5 h-5" />
+                <span className="font-medium">Continuar com GitHub</span>
+              </button>
+              <div className="flex items-center gap-3 my-2">
+                <div className="h-px bg-gray-200 flex-1" />
+                <span className="text-xs text-gray-500">ou</span>
+                <div className="h-px bg-gray-200 flex-1" />
+              </div>
+            </div>
+          )}
+
           {hasTurnstile() && (
             <div className="mb-4">
-              <TurnstileWidget
-                onVerify={(token) => setTurnstileToken(token)}
-                onExpire={() => setTurnstileToken('')}
-                theme="light"
-              />
+              <TurnstileWidget onVerify={(t)=>setTurnstileToken(t)} onExpire={()=>setTurnstileToken('')} theme="light" />
             </div>
           )}
 

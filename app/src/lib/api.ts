@@ -59,6 +59,23 @@ export async function apiAuth(
   }
 }
 
+export async function apiOAuthStart(provider: 'google' | 'github'): Promise<{ ok: boolean; url?: string; error?: string; code?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const url = `${base}/oauth/start.php`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, url: data.url as string | undefined, error: data.error as string | undefined, code: data.code as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 // Generic API helper
 async function request(method: string, endpoint: string, body?: any) {
   if (!API_URL) throw new Error('API_URL not configured');
