@@ -150,6 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (msg.includes('turnstile') || msg.includes('captcha') || code.includes('turnstile')) {
           return { success: false, error: 'Verificação de segurança falhou. Atualize a página e tente novamente.', code: 'TURNSTILE' };
         }
+        // Alguns backends retornam "email já cadastrado" erroneamente no login
+        if (msg.includes('cadastrado') || msg.includes('exists')) {
+          return { success: false, error: 'E-mail ou senha incorretos.', code: 'BAD_CREDENTIALS' };
+        }
         return { success: false, error: res.error || 'E-mail ou senha incorretos.', code: res.code };
       }
       const users = JSON.parse(localStorage.getItem('meufreelas_users') || '[]');
@@ -196,7 +200,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (msg.includes('turnstile') || msg.includes('captcha') || code.includes('turnstile')) {
         return { success: false, message: 'Verificação de segurança falhou. Atualize a página e tente novamente.' };
       }
-        return { success: false, message: res.error };
+      // Se e-mail já existir com outro tipo, cria conta secundária automaticamente
+      if (msg.includes('cadastrado') || msg.includes('exists')) {
+        try {
+          const created = await apiCreateSecondaryAccount({ userId: email, accountType: type });
+          if (created.ok && created.user) {
+            const normalizedUser = normalizeUser(created.user);
+            if (normalizedUser) {
+              setUser(normalizedUser);
+              upsertStoredUser(normalizedUser);
+              localStorage.setItem('meufreelas_user', JSON.stringify(normalizedUser));
+              return { success: true };
+            }
+          }
+        } catch {}
+        return { success: false, message: 'Este e-mail já possui conta ativa. Faça login.' };
+      }
+      return { success: false, message: res.error };
       }
       const users = JSON.parse(localStorage.getItem('meufreelas_users') || '[]');
       const existingUser = users.find((u: any) => u.email === email);
