@@ -2,8 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { AuthProvider } from './contexts/AuthContext';
 
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Auth from './pages/Auth';
 import Projects from './pages/Projects';
 import Freelancers from './pages/Freelancers';
 import NewProject from './pages/NewProject';
@@ -80,8 +79,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/login" element={<Navigate to="/auth" />} />
+      <Route path="/register" element={<Navigate to="/auth" />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/project/:id" element={<ProjectDetail />} />
       <Route path="/freelancers" element={<Freelancers />} />

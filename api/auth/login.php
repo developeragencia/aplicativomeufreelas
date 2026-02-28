@@ -32,7 +32,19 @@ try {
     exit;
   }
   $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([$row['id']]);
-  json_response(['ok' => true, 'user' => ['id' => (int)$row['id'], 'email' => $row['email'], 'name' => $row['email'], 'type' => $row['role']]]);
+  $name = $row['email'];
+  if ($row['role'] === 'client') {
+    $stmt2 = $pdo->prepare('SELECT nome FROM profiles_cliente WHERE user_id = ? LIMIT 1');
+    $stmt2->execute([$row['id']]);
+    $p = $stmt2->fetch();
+    if ($p && !empty($p['nome'])) $name = $p['nome'];
+  } else {
+    $stmt2 = $pdo->prepare('SELECT titulo FROM profiles_freelancer WHERE user_id = ? LIMIT 1');
+    $stmt2->execute([$row['id']]);
+    $p = $stmt2->fetch();
+    if ($p && !empty($p['titulo'])) $name = $p['titulo'];
+  }
+  json_response(['ok' => true, 'user' => ['id' => (int)$row['id'], 'email' => $row['email'], 'name' => $name, 'type' => $row['role']]]);
 } catch (Throwable $e) {
   json_response(['ok' => false, 'error' => 'Falha de conexão com o servidor'], 500);
 }
