@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight } from 'lucide-react';
 import { setSEO } from '../lib/seo';
+import { TurnstileWidget, hasTurnstile } from '@/components/TurnstileWidget';
 
 type UserTypeOption = 'freelancer' | 'client';
 
@@ -19,6 +20,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleTypeSelection = (type: UserTypeOption) => {
     setUserType(type);
@@ -82,7 +84,7 @@ export default function Register() {
 
     try {
       setSuccessMessage('');
-      const result = await register(trimmedName, trimmedEmail, password, userType);
+      const result = await register(trimmedName, trimmedEmail, password, userType, turnstileToken || undefined);
       if (result.success && result.requiresActivation) {
         setSuccessMessage(result.message || 'Enviamos um e-mail de ativação. Clique no link para ativar sua conta e depois faça login.');
         return;
@@ -242,6 +244,15 @@ export default function Register() {
 
               {!successMessage && (
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                {hasTurnstile() && (
+                  <div>
+                    <TurnstileWidget
+                      onVerify={(token) => setTurnstileToken(token)}
+                      onExpire={() => setTurnstileToken('')}
+                      theme="light"
+                    />
+                  </div>
+                )}
                 <div>
                   <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 mb-2">
                     Nome completo

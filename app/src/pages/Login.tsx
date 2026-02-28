@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiResendActivation, hasApi } from '../lib/api';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { setSEO } from '../lib/seo';
+import { TurnstileWidget, hasTurnstile } from '@/components/TurnstileWidget';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [isResendLoading, setIsResendLoading] = useState(false);
   const [notVerifiedEmail, setNotVerifiedEmail] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const result = await login(trimmedEmail, password);
+      const result = await login(trimmedEmail, password, turnstileToken || undefined);
       if (result.success) {
         const stored = localStorage.getItem('meufreelas_user');
         const u = stored ? (JSON.parse(stored) as { type?: string }) : null;
@@ -155,6 +157,15 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            {hasTurnstile() && (
+              <div className="mb-2">
+                <TurnstileWidget
+                  onVerify={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken('')}
+                  theme="light"
+                />
+              </div>
+            )}
             <div>
               <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email

@@ -26,11 +26,17 @@ export async function apiAuth(
         : action === 'register'
         ? `${base}/auth/register.php`
         : `${base}/auth.php`;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const turnstileToken = (body.turnstileToken || '').trim();
+    if (turnstileToken) {
+      headers['cf-turnstile-response'] = turnstileToken;
+      headers['x-turnstile-token'] = turnstileToken;
+    }
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ action, ...body }),
-      credentials: 'omit', // JWT should be handled via headers if needed, or if cookie-based, include
+      credentials: 'include',
     });
     const text = await res.text();
     let data: Record<string, unknown> = {};
