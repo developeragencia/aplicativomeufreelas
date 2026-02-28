@@ -16,6 +16,7 @@ import MyProjects from './pages/MyProjects';
 import MyProposals from './pages/MyProposals';
 import ClientDashboard from './pages/ClientDashboard';
 import FreelancerDashboard from './pages/FreelancerDashboard';
+import AdminRoute from './components/AdminRoute';
 import Plans from './pages/Plans';
 import VerifiedIdentity from './pages/VerifiedIdentity';
 import Disputes from './pages/Disputes';
@@ -92,7 +93,7 @@ function AppRoutes() {
       <Route path="/plans" element={<Plans />} />
       <Route path="/verified" element={<VerifiedIdentity />} />
       <Route path="/disputes" element={<Disputes />} />
-      <Route path="/admin/moderation" element={<AdminModeration />} />
+      <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="*" element={<Navigate to="/" />} />
