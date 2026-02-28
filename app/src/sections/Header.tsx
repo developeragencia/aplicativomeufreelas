@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const { user, isAuthenticated, createSecondaryAccount, switchAccountType } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,13 +59,59 @@ export default function Header() {
             </div>
 
             {/* Right Navigation - Desktop Only */}
-            <div className="hidden md:flex items-center space-x-4">
-              <a href="/login" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                Login
-              </a>
-              <a href="/register" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
-                Cadastre-se
-              </a>
+            <div className="hidden md:flex items-center space-x-3">
+              {!isAuthenticated && (
+                <>
+                  <a href="/auth" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                    Entrar
+                  </a>
+                  <a href="/auth" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                    Cadastrar
+                  </a>
+                </>
+              )}
+              {isAuthenticated && (
+                <>
+                  {user?.type === 'client' && (
+                    <>
+                      {!user?.hasFreelancerAccount ? (
+                        <button
+                          onClick={() => createSecondaryAccount('freelancer')}
+                          className="px-4 py-2 border border-sky-500 text-sky-400 rounded hover:bg-sky-600 hover:text-white transition"
+                        >
+                          Criar conta freelancer
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => switchAccountType()}
+                          className="px-4 py-2 border border-sky-500 text-sky-400 rounded hover:bg-sky-600 hover:text-white transition"
+                        >
+                          Alternar para freelancer
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {user?.type === 'freelancer' && (
+                    <>
+                      {!user?.hasClientAccount ? (
+                        <button
+                          onClick={() => createSecondaryAccount('client')}
+                          className="px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-600 hover:text-white transition"
+                        >
+                          Criar conta cliente
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => switchAccountType()}
+                          className="px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-600 hover:text-white transition"
+                        >
+                          Alternar para cliente
+                        </button>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
               <a
                 href="/project/new"
                 className="px-5 py-2 bg-99blue text-white text-sm font-semibold rounded hover:bg-sky-400 transition-colors"
