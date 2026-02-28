@@ -73,6 +73,8 @@ export function TurnstileWidget({ onVerify, onExpire, theme = 'light', className
       .then(() => {
         if (cancelled || !containerRef.current || !window.turnstile) return;
         try {
+          // Fallback markup for auto-render
+          containerRef.current.innerHTML = `<div class="cf-turnstile" data-sitekey="${SITE_KEY}" data-theme="${theme}"></div>`;
           widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: SITE_KEY,
             theme,
