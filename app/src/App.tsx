@@ -23,6 +23,10 @@ import Disputes from './pages/Disputes';
 import AdminModeration from './pages/AdminModeration';
 import Invitations from './pages/Invitations';
 import Notifications from './pages/Notifications';
+import Ranking from './pages/Ranking';
+import Medals from './pages/Medals';
+import Connections from './pages/Connections';
+import MultiContracts from './pages/MultiContracts';
 import ErrorBoundary from './components/ErrorBoundary';
 
 let storageSanitized = false;
@@ -96,6 +100,10 @@ function AppRoutes() {
       <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="/ranking" element={<Ranking />} />
+      <Route path="/medals" element={<Medals />} />
+      <Route path="/connections" element={<Connections />} />
+      <Route path="/multi-contracts" element={<MultiContracts />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
