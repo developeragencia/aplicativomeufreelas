@@ -2,6 +2,26 @@
 require_once __DIR__ . '/../db.php';
 $pdo = db_get_pdo();
 $id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
+if (isset($_GET['demo']) && $_GET['demo'] === '1') {
+  $item = [
+    'id' => 'pr_teste',
+    'titulo' => 'Projeto Teste - Landing Page',
+    'categoria' => 'Web, Mobile & Software',
+    'nivel' => 'intermediate',
+    'status' => 'Aberto',
+    'created_at' => date('Y-m-d H:i:s'),
+    'client_id' => '0',
+    'client_name' => 'Cliente Teste',
+    'descricao' => 'Projeto de homologação.',
+    'budget' => 'A combinar'
+  ];
+  if ($id) {
+    json_response(['ok' => true, 'item' => $item]);
+    exit;
+  }
+  json_response(['ok' => true, 'items' => [$item], 'page' => 1, 'per_page' => 1, 'total' => 1]);
+  exit;
+}
 if ($id) {
   try {
     $stmt = $pdo->prepare("SELECT 

@@ -493,7 +493,7 @@ export default function Projects() {
                   </div>
                 ))}
               </div>
-            ) : errorMsg ? (
+            ) : errorMsg && projects.length === 0 ? (
               <div className="bg-red-50 rounded-xl border border-red-100 p-8 text-center text-red-600">
                 <p className="font-medium mb-2">Ops! Ocorreu um erro.</p>
                 <p className="text-sm">{errorMsg}</p>
@@ -504,7 +504,7 @@ export default function Projects() {
                 <p className="text-gray-500 text-sm">Tente ajustar seus filtros de busca.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {paginatedProjects.map((p) => {
                   const isExpanded = expanded.includes(p.id);
                   const desc = isExpanded ? p.description : p.description.slice(0, 150) + (p.description.length > 150 ? '...' : '');
@@ -572,6 +572,9 @@ export default function Projects() {
                   Próxima
                 </button>
               </div>
+            )}
+            {filteredProjects.length === 0 && projects.length > 0 && (
+              <div className="mt-4 text-center text-sm text-gray-500">Nenhum projeto corresponde aos filtros selecionados.</div>
             )}
           </section>
         </div>

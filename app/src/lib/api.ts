@@ -253,6 +253,7 @@ export async function apiListProjectsPublicNew(params?: { page?: number; per_pag
   try {
     const base = API_URL.replace(/\/$/, '');
     const usp = new URLSearchParams();
+    usp.set('demo', '1');
     if (params?.page) usp.set('page', String(params.page));
     if (params?.per_page) usp.set('per_page', String(params.per_page));
     if (params?.category) usp.set('category', params.category);
