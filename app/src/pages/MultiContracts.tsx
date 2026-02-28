@@ -101,7 +101,7 @@ export default function MultiContracts() {
   async function fetchSuggestions() {
     try {
       const [projects, freelancers] = await Promise.all([
-        apiListProjectsPublicNew({ page: 1, per_page: 10, q: newProjectName || undefined }),
+        apiListProjectsPublicNew({ page: 1, per_page: 10 }),
         apiListFreelancersPublicNew({ page: 1, per_page: 10, q: membersDraft[membersDraft.length - 1]?.name || undefined }),
       ]);
       setProjectOptions((projects.items || []).map((p: any) => ({ id: String(p.id || p.projectId || ''), title: String(p.title || p.name || '') })));
