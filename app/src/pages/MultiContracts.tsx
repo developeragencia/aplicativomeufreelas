@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiListFreelancersPublicNew, apiListProjectsPublicNew } from '@/lib/api';
 import { z } from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SquadMember {
   name: string;
@@ -29,6 +30,7 @@ interface Squad {
 }
 
 export default function MultiContracts() {
+  const { isAuthenticated } = useAuth();
   const [teams, setTeams] = useState<Squad[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -119,7 +121,7 @@ export default function MultiContracts() {
           </div>
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!isAuthenticated}>
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Nova Equipe
               </Button>

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Dispute {
   id: string;
@@ -25,6 +26,7 @@ interface Dispute {
 }
 
 export default function Disputes() {
+  const { isAuthenticated } = useAuth();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -117,7 +119,7 @@ export default function Disputes() {
           </div>
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
-              <Button variant="destructive">
+              <Button variant="destructive" disabled={!isAuthenticated}>
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Abrir Nova Disputa
               </Button>
