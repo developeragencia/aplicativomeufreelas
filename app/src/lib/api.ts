@@ -97,6 +97,31 @@ export const api = {
   delete: (endpoint: string) => request('DELETE', endpoint),
 };
 
+export async function apiPostForm(endpoint: string, form: FormData) {
+  if (!API_URL) throw new Error('API_URL not configured');
+  const base = API_URL.replace(/\/$/, '');
+  const url = `${base}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: form,
+  });
+  const text = await res.text();
+  let data: any;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(res.ok ? 'Invalid JSON response' : `Request failed with status ${res.status}`);
+  }
+  if (!res.ok) {
+    throw new Error(data.error || `Request failed with status ${res.status}`);
+  }
+  return { data, status: res.status };
+}
+
 export async function apiSwitchAccountType(payload: {
   userId: string;
   targetType: 'freelancer' | 'client';

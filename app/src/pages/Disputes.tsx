@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, CheckCircle, Clock, Gavel, MessageSquare, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api, apiPostForm } from '@/lib/api';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { z } from 'zod';
 
 interface Dispute {
   id: string;
@@ -34,6 +35,11 @@ export default function Disputes() {
   const [contractId, setContractId] = useState('');
   const [category, setCategory] = useState<'prazo' | 'qualidade' | 'escopo' | 'pagamento' | ''>('');
   const [attachments, setAttachments] = useState<File[]>([]);
+  const schema = z.object({
+    project: z.string().min(2, { message: 'Informe o projeto' }),
+    amount: z.string().min(2, { message: 'Informe o valor' }),
+    reason: z.string().min(5, { message: 'Descreva o motivo' }),
+  });
 
   useEffect(() => {
     async function fetchDisputes() {
@@ -52,21 +58,32 @@ export default function Disputes() {
   }, []);
 
   async function handleCreate() {
-    if (!project.trim() || !reason.trim() || !amount.trim()) {
-      toast.error('Preencha projeto, motivo e valor');
+    const parsed = schema.safeParse({ project, amount, reason });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message || 'Dados inválidos');
       return;
     }
     setCreating(true);
     try {
-      const payload = {
-        project: project.trim(),
-        reason: reason.trim(),
-        amount: amount.trim(),
-        contract_id: contractId.trim() || undefined,
-        category: category || undefined,
-        attachments: attachments.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-      };
-      await api.post('/disputes', payload);
+      if (attachments.length > 0) {
+        const form = new FormData();
+        form.set('project', project.trim());
+        form.set('reason', reason.trim());
+        form.set('amount', amount.trim());
+        if (contractId.trim()) form.set('contract_id', contractId.trim());
+        if (category) form.set('category', category);
+        attachments.forEach((f, i) => form.append('attachments[]', f, f.name));
+        await apiPostForm('/disputes', form);
+      } else {
+        const payload = {
+          project: project.trim(),
+          reason: reason.trim(),
+          amount: amount.trim(),
+          contract_id: contractId.trim() || undefined,
+          category: category || undefined,
+        };
+        await api.post('/disputes', payload);
+      }
       toast.success('Disputa aberta com sucesso');
       setOpenCreate(false);
       setProject('');

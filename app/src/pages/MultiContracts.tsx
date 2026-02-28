@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { apiListFreelancersPublicNew, apiListProjectsPublicNew } from '@/lib/api';
+import { z } from 'zod';
 
 interface SquadMember {
   name: string;
@@ -36,6 +38,12 @@ export default function MultiContracts() {
   const [startDate, setStartDate] = useState('');
   const [budget, setBudget] = useState('');
   const [membersDraft, setMembersDraft] = useState<Array<{ name: string; role: string }>>([]);
+  const [projectOptions, setProjectOptions] = useState<Array<{ id: string; title: string }>>([]);
+  const [freelancerOptions, setFreelancerOptions] = useState<Array<{ name: string; title?: string }>>([]);
+  const schema = z.object({
+    name: z.string().min(2, { message: 'Informe o nome da equipe' }),
+    project_name: z.string().min(2, { message: 'Informe o projeto' }),
+  });
 
   useEffect(() => {
     async function fetchSquads() {
@@ -54,8 +62,9 @@ export default function MultiContracts() {
   }, []);
 
   async function handleCreate() {
-    if (!newName.trim() || !newProjectName.trim()) {
-      toast.error('Preencha nome da equipe e nome do projeto');
+    const parsed = schema.safeParse({ name: newName, project_name: newProjectName });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message || 'Dados inválidos');
       return;
     }
     setCreating(true);
@@ -85,6 +94,19 @@ export default function MultiContracts() {
     }
   }
 
+  async function fetchSuggestions() {
+    try {
+      const [projects, freelancers] = await Promise.all([
+        apiListProjectsPublicNew({ page: 1, per_page: 10 }),
+        apiListFreelancersPublicNew({ page: 1, per_page: 10 }),
+      ]);
+      setProjectOptions((projects.items || []).map((p: any) => ({ id: String(p.id || p.projectId || ''), title: String(p.title || p.name || '') })));
+      setFreelancerOptions((freelancers.items || []).map((f: any) => ({ name: f.name, title: f.title })));
+    } catch {
+      // silently ignore
+    }
+  }
+
   return (
     <AppShell>
       <div className="container mx-auto py-8 space-y-8">
@@ -107,6 +129,9 @@ export default function MultiContracts() {
                 <DialogTitle>Criar nova equipe</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-2">
+                <div className="flex justify-end">
+                  <Button type="button" variant="secondary" onClick={fetchSuggestions}>Buscar sugestões</Button>
+                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="team-name">Nome da equipe</Label>
                   <Input id="team-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex.: Squad Frontend" />
@@ -114,6 +139,19 @@ export default function MultiContracts() {
                 <div className="grid gap-2">
                   <Label htmlFor="project-name">Nome do projeto</Label>
                   <Input id="project-name" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} placeholder="Ex.: Plataforma X" />
+                  {projectOptions.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      Sugestões: {projectOptions.slice(0, 5).map((p, idx) => (
+                        <button
+                          key={idx}
+                          className="underline mr-2"
+                          onClick={(e) => { e.preventDefault(); setNewProjectName(p.title); }}
+                        >
+                          {p.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="grid gap-2">
@@ -170,6 +208,22 @@ export default function MultiContracts() {
                       >
                         Adicionar membro
                       </Button>
+                      {freelancerOptions.length > 0 && (
+                        <div className="text-xs text-muted-foreground flex-1">
+                          Sugestões: {freelancerOptions.slice(0, 5).map((f, idx) => (
+                            <button
+                              key={idx}
+                              className="underline mr-2"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setMembersDraft([...membersDraft, { name: f.name, role: f.title || '' }]);
+                              }}
+                            >
+                              {f.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       {membersDraft.length > 0 && (
                         <Button
                           type="button"
