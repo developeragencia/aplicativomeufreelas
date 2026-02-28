@@ -1,18 +1,70 @@
+import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Zap, CreditCard, Calendar, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Zap, CreditCard, Calendar, ArrowUpRight, ArrowDownLeft, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+interface Transaction {
+  id: number;
+  amount: number;
+  description: string;
+  type: 'usage' | 'refill' | 'bonus';
+  date: string;
+}
 
 export default function Connections() {
-  const transactions = [
-    { id: 1, type: 'usage', description: 'Proposta para "E-commerce React"', amount: -2, date: '28/02/2026' },
-    { id: 2, type: 'usage', description: 'Proposta para "Landing Page"', amount: -2, date: '27/02/2026' },
-    { id: 3, type: 'refill', description: 'Renovação Mensal (Plano Pro)', amount: +40, date: '01/02/2026' },
-    { id: 4, type: 'usage', description: 'Proposta para "App Mobile"', amount: -4, date: '15/01/2026' },
-  ];
+  const [balance, setBalance] = useState(0);
+  const [maxMonthly, setMaxMonthly] = useState(40);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/connections');
+      setBalance(res.data.balance || 0);
+      setMaxMonthly(res.data.max_monthly || 40);
+      setTransactions(res.data.transactions || []);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao carregar conexões');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleBuy = async (pack: 'basic' | 'pro') => {
+    try {
+      await api.post('/connections', { action: 'buy', pack });
+      toast.success('Pacote comprado com sucesso! (Simulado)');
+      fetchData(); // Refresh balance
+    } catch (error) {
+      toast.error('Erro na compra');
+    }
+  };
+
+  const usagePercent = Math.min((balance / maxMonthly) * 100, 100);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex justify-center items-center h-screen">
+          <Loader2 className="animate-spin h-8 w-8" />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -32,9 +84,9 @@ export default function Connections() {
               <Zap className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">32</div>
-              <p className="text-xs text-muted-foreground">de 40 mensais</p>
-              <Progress value={80} className="mt-2 h-1" />
+              <div className="text-2xl font-bold">{balance}</div>
+              <p className="text-xs text-muted-foreground">de {maxMonthly} mensais (estimado)</p>
+              <Progress value={usagePercent} className="mt-2 h-1" />
             </CardContent>
           </Card>
           <Card>
@@ -43,8 +95,10 @@ export default function Connections() {
               <ArrowUpRight className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
-              <p className="text-xs text-muted-foreground">4 propostas enviadas</p>
+              <div className="text-2xl font-bold">
+                {transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">propostas enviadas</p>
             </CardContent>
           </Card>
           <Card>
@@ -54,7 +108,7 @@ export default function Connections() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">01/03</div>
-              <p className="text-xs text-muted-foreground">Em 1 dia</p>
+              <p className="text-xs text-muted-foreground">Em breve</p>
             </CardContent>
           </Card>
         </div>
@@ -73,18 +127,26 @@ export default function Connections() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell className="text-muted-foreground">{t.date}</TableCell>
-                      <TableCell>{t.description}</TableCell>
-                      <TableCell className="text-right">
-                        <Badge variant={t.type === 'refill' ? 'default' : 'secondary'} 
-                               className={t.type === 'refill' ? 'bg-green-600 hover:bg-green-700' : ''}>
-                          {t.amount > 0 ? `+${t.amount}` : t.amount}
-                        </Badge>
+                  {transactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                        Nenhuma transação encontrada.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    transactions.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="text-muted-foreground">{t.date}</TableCell>
+                        <TableCell>{t.description}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={t.type === 'refill' ? 'default' : 'secondary'} 
+                                 className={t.type === 'refill' ? 'bg-green-600 hover:bg-green-700' : ''}>
+                            {t.amount > 0 ? `+${t.amount}` : t.amount}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -106,7 +168,7 @@ export default function Connections() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full">Comprar Agora</Button>
+                <Button className="w-full" onClick={() => handleBuy('basic')}>Comprar Agora</Button>
               </CardFooter>
             </Card>
             
@@ -123,7 +185,7 @@ export default function Connections() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">Comprar Agora</Button>
+                <Button variant="outline" className="w-full" onClick={() => handleBuy('pro')}>Comprar Agora</Button>
               </CardFooter>
             </Card>
           </div>

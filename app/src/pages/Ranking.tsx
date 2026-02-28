@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import {
   Table,
@@ -11,64 +11,41 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Medal, Star } from 'lucide-react';
+import { Trophy, Medal, Star, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/lib/api';
 
-// Mock Data
-const MOCK_RANKING = [
-  {
-    id: '1',
-    rank: 1,
-    name: 'Ana Silva',
-    role: 'Desenvolvedora Full Stack',
-    score: 9850,
-    projects: 42,
-    avatar: 'https://github.com/shadcn.png',
-    badges: ['top-rated', 'fast-delivery'],
-  },
-  {
-    id: '2',
-    rank: 2,
-    name: 'Carlos Oliveira',
-    role: 'Designer UI/UX',
-    score: 9200,
-    projects: 38,
-    avatar: '',
-    badges: ['creative'],
-  },
-  {
-    id: '3',
-    rank: 3,
-    name: 'Mariana Costa',
-    role: 'Redatora SEO',
-    score: 8950,
-    projects: 55,
-    avatar: '',
-    badges: ['reliable'],
-  },
-  {
-    id: '4',
-    rank: 4,
-    name: 'Pedro Santos',
-    role: 'Engenheiro de Mobile',
-    score: 8500,
-    projects: 29,
-    avatar: '',
-    badges: [],
-  },
-  {
-    id: '5',
-    rank: 5,
-    name: 'Julia Lima',
-    role: 'Marketing Digital',
-    score: 8100,
-    projects: 31,
-    avatar: '',
-    badges: [],
-  },
-];
+interface RankingUser {
+  id: string;
+  rank: number;
+  name: string;
+  role: string;
+  score: number;
+  projects: number;
+  avatar: string;
+  badges: string[];
+}
 
 export default function Ranking() {
   const [period, setPeriod] = useState('weekly');
+  const [ranking, setRanking] = useState<RankingUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    async function fetchRanking() {
+      setLoading(true);
+      try {
+        const res = await api.get(`/ranking?period=${period}`);
+        setRanking(res.data.data || []);
+      } catch (error) {
+        console.error('Failed to fetch ranking', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRanking();
+  }, [period]);
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
@@ -97,53 +74,64 @@ export default function Ranking() {
           </Tabs>
         </div>
 
-        <div className="rounded-md border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px] text-center">Posição</TableHead>
-                <TableHead>Freelancer</TableHead>
-                <TableHead className="hidden md:table-cell">Especialidade</TableHead>
-                <TableHead className="text-right">Projetos</TableHead>
-                <TableHead className="text-right">Pontuação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {MOCK_RANKING.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium text-center">
-                    <div className="flex justify-center items-center">
-                      {getRankIcon(user.rank)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{user.name}</span>
-                        <div className="flex gap-1 md:hidden">
-                          <span className="text-xs text-muted-foreground">{user.role}</span>
+        <div className="rounded-md border bg-card min-h-[300px]">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : ranking.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+              <Trophy className="h-12 w-12 mb-4 opacity-20" />
+              <p>Nenhum dado de ranking para este período.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px] text-center">Posição</TableHead>
+                  <TableHead>Freelancer</TableHead>
+                  <TableHead className="hidden md:table-cell">Especialidade</TableHead>
+                  <TableHead className="text-right">Projetos</TableHead>
+                  <TableHead className="text-right">Pontuação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ranking.map((rUser) => (
+                  <TableRow key={rUser.id} className={user?.id === rUser.id ? 'bg-muted/50' : ''}>
+                    <TableCell className="font-medium text-center">
+                      <div className="flex justify-center items-center">
+                        {getRankIcon(rUser.rank)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={rUser.avatar} />
+                          <AvatarFallback>{rUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{rUser.name}</span>
+                          <div className="flex gap-1 md:hidden">
+                            <span className="text-xs text-muted-foreground">{rUser.role}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
-                    {user.role}
-                  </TableCell>
-                  <TableCell className="text-right">{user.projects}</TableCell>
-                  <TableCell className="text-right font-bold">
-                    <div className="flex items-center justify-end gap-1">
-                      <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                      {user.score.toLocaleString()}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                      {rUser.role}
+                    </TableCell>
+                    <TableCell className="text-right">{rUser.projects}</TableCell>
+                    <TableCell className="text-right font-bold">
+                      <div className="flex items-center justify-end gap-1">
+                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                        {rUser.score.toLocaleString()}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </div>
     </AppShell>

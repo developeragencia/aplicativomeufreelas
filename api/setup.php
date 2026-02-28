@@ -134,19 +134,83 @@ try {
       INDEX idx_threads_project (project_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 
-    // messages
-    "CREATE TABLE IF NOT EXISTS messages (
+    // ranking (stores historical or computed ranking data)
+    "CREATE TABLE IF NOT EXISTS ranking (
       id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-      thread_id BIGINT UNSIGNED NOT NULL,
-      sender_id BIGINT UNSIGNED NOT NULL,
-      texto MEDIUMTEXT NOT NULL,
-      anexos JSON NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      is_system TINYINT(1) DEFAULT 0,
-      FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
-      FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-      INDEX idx_messages_thread (thread_id)
+      user_id BIGINT UNSIGNED NOT NULL,
+      score DECIMAL(10,2) DEFAULT 0.00,
+      position INT UNSIGNED DEFAULT 0,
+      period ENUM('weekly','monthly','all_time') DEFAULT 'weekly',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_ranking_period_score (period, score DESC)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // user_medals (unlocks)
+    "CREATE TABLE IF NOT EXISTS user_medals (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT UNSIGNED NOT NULL,
+      medal_slug VARCHAR(50) NOT NULL,
+      unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      progress INT DEFAULT 100,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY uniq_user_medal (user_id, medal_slug)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // connections_ledger (transactions for connections)
+    "CREATE TABLE IF NOT EXISTS connections_ledger (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT UNSIGNED NOT NULL,
+      amount INT NOT NULL,
+      description VARCHAR(255) NOT NULL,
+      type ENUM('usage','refill','bonus') NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_conn_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // squads (multi-contract teams)
+    "CREATE TABLE IF NOT EXISTS squads (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      project_id BIGINT UNSIGNED NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      created_by BIGINT UNSIGNED NOT NULL,
+      status ENUM('active','completed','archived') DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // squad_members
+    "CREATE TABLE IF NOT EXISTS squad_members (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      squad_id BIGINT UNSIGNED NOT NULL,
+      user_id BIGINT UNSIGNED NOT NULL,
+      role VARCHAR(100) NULL,
+      contract_id BIGINT UNSIGNED NULL,
+      joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (squad_id) REFERENCES squads(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // disputes
+    "CREATE TABLE IF NOT EXISTS disputes (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      project_id BIGINT UNSIGNED NOT NULL,
+      opened_by BIGINT UNSIGNED NOT NULL,
+      against_id BIGINT UNSIGNED NOT NULL,
+      reason VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      amount DECIMAL(12,2) NULL,
+      status ENUM('open','under_review','resolved','closed') DEFAULT 'open',
+      outcome TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (opened_by) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (against_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
 
     // payments
     "CREATE TABLE IF NOT EXISTS payments (
