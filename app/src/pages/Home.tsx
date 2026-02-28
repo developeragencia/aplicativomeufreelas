@@ -51,7 +51,10 @@ export default function Home() {
     <AppShell wide>
       <div className="pt-24">
         {/* Hero Section */}
-        <section className="relative min-h-[500px] flex items-center justify-center">
+        <section
+          className="relative min-h-[500px] flex items-center justify-center"
+          style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)' }}
+        >
           {/* Background Image with Overlay */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -122,7 +125,7 @@ export default function Home() {
         {/* Highlight Test Project */}
         {highlightProject && (
           <section className="bg-yellow-50 border-t border-b border-yellow-200">
-            <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="max-w-7xl mx-auto px-4 py-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="text-yellow-800">
                   <span className="inline-block px-2 py-1 text-xs uppercase font-bold bg-yellow-200 text-yellow-800 rounded mr-2">Projeto destaque</span>
