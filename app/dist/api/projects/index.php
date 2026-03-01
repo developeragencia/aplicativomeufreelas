@@ -72,9 +72,20 @@ try {
   $category = $_GET['category'] ?? null;
   $level = $_GET['level'] ?? null;
   $status = $_GET['status'] ?? null;
+  $clientId = $_GET['client_id'] ?? null;
+  $freelancerId = $_GET['freelancer_id'] ?? null;
   if ($category) { $where[] = 'categoria = ?'; $params[] = $category; }
   if ($level) { $where[] = 'nivel = ?'; $params[] = $level; }
   if ($status) { $where[] = 'status = ?'; $params[] = $status; }
+  if ($clientId) { $where[] = 'client_id = ?'; $params[] = $clientId; }
+  
+  $joinProposals = '';
+  if ($freelancerId) {
+      $joinProposals = " JOIN proposals prop ON prop.project_id = p.id ";
+      $where[] = "prop.freelancer_id = ? AND prop.status = 'Accepted'";
+      $params[] = $freelancerId;
+  }
+
   $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
   $sort = $_GET['sort'] ?? 'recent';
   switch ($sort) {
@@ -101,9 +112,10 @@ try {
       p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
     FROM projects p
     LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
-    $sqlWhere
-    $order
-    LIMIT ? OFFSET ?
+    {$joinProposals}
+    {$sqlWhere}
+    {$order}
+    LIMIT {$per} OFFSET {$offset}
   ";
   $querySimple = "
     SELECT id, titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget

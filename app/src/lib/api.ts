@@ -383,7 +383,7 @@ export async function apiListFreelancersPublicNew(params?: { page?: number; per_
     return { ok: false, error: 'Falha de conexão' };
   }
 }
-export async function apiListProjectsPublicNew(params?: { page?: number; per_page?: number; category?: string; level?: string; sort?: 'recent' | 'relevance' }): Promise<{ ok: boolean; items?: any[]; total?: number; error?: string }> {
+export async function apiListProjectsPublicNew(params?: { page?: number; per_page?: number; category?: string; level?: string; sort?: 'recent' | 'relevance'; client_id?: string; freelancer_id?: string }): Promise<{ ok: boolean; items?: any[]; total?: number; error?: string }> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
   try {
     const base = API_URL.replace(/\/$/, '');
@@ -393,6 +393,8 @@ export async function apiListProjectsPublicNew(params?: { page?: number; per_pag
     if (params?.category) usp.set('category', params.category);
     if (params?.level) usp.set('level', params.level);
     if (params?.sort) usp.set('sort', params.sort);
+    if (params?.client_id) usp.set('client_id', params.client_id);
+    if (params?.freelancer_id) usp.set('freelancer_id', params.freelancer_id);
     const url = `${base}/projects/${usp.toString() ? `?${usp.toString()}` : ''}`;
     const res = await fetch(url, { credentials: 'omit' });
     const data = await res.json().catch(() => ({}));

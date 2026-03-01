@@ -76,5 +76,8 @@
   "overrides": {
     "@types/react": "18.2.66",
     "@types/react-dom": "18.2.22"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }

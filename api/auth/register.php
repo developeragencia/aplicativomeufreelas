@@ -88,6 +88,8 @@ try {
       $pdo->prepare('INSERT INTO profiles_freelancer (user_id, titulo, bio) VALUES (?, ?, ?)')->execute([$userId, $name, '']);
       $pdo->prepare('INSERT INTO connections_wallet (freelancer_id, saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel) VALUES (?, 0, 0, 0)')->execute([$userId]);
       $pdo->prepare('INSERT INTO plans (freelancer_id, tipo_plano, modalidade, inicio, status) VALUES (?, ?, ?, ?, ?)')->execute([$userId, 'basic', 'compra', date('Y-m-d'), 'active']);
+      // Bônus inicial de 10 conexões
+      $pdo->prepare("INSERT INTO connections_ledger (user_id, amount, description, type) VALUES (?, ?, ?, 'bonus')")->execute([$userId, 10, 'Bônus de Boas-vindas']);
     }
     $user = ['id' => $userId, 'email' => $email, 'name' => $name, 'type' => $role];
   }

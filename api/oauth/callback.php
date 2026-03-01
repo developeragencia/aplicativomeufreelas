@@ -96,6 +96,14 @@ try {
     $userId = (int)$pdo->lastInsertId();
     $pdo->prepare('INSERT INTO user_accounts (user_id, role) VALUES (?, ?)')->execute([$userId, $role]);
     $pdo->prepare('INSERT INTO profiles_cliente (user_id, nome) VALUES (?, ?)')->execute([$userId, $name]);
+    // Bônus inicial para todos (simplificação) ou só freelancer? O OAuth cria 'client' por padrão acima.
+    // O código acima define $role='client' fixo na linha 87: $role = 'client';
+    // Vamos dar 10 conexões para todos por enquanto, caso virem freelancer depois.
+    // Ou melhor: criar conta freelancer também? Não, o fluxo OAuth cria só client.
+    // O usuário pode mudar para freelancer depois.
+    // Se mudar para freelancer, o 'switch_account_type' deveria dar o bônus.
+    // Vamos deixar o OAuth como está (client) e ajustar o register normal.
+    // Mas se o usuário quiser ser freelancer, ele vai em "Mudar para Freelancer".
     $id = $userId;
     // Envia e-mail de boas-vindas via Mailer (fallback)
     if (file_exists(__DIR__ . '/../vendor/autoload.php')) {

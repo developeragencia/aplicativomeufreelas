@@ -37,17 +37,16 @@ export default function MultiContracts() {
   const [openCreate, setOpenCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newProjectName, setNewProjectName] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [budget, setBudget] = useState('');
   const [membersDraft, setMembersDraft] = useState<Array<{ name: string; role: string }>>([]);
-  const [projectOptions, setProjectOptions] = useState<Array<{ id: string; title: string }>>([]);
+  const [myProjects, setMyProjects] = useState<Array<{ id: string; title: string }>>([]);
   const [freelancerOptions, setFreelancerOptions] = useState<Array<{ name: string; title?: string }>>([]);
   const schema = z.object({
     name: z.string().min(2, { message: 'Informe o nome da equipe' }),
-    project_name: z.string().min(2, { message: 'Informe o projeto' }),
+    project_id: z.string().min(1, { message: 'Selecione o projeto' }),
   });
-  let projectSearchDebounce: number | undefined;
 
   useEffect(() => {
     async function fetchSquads() {
@@ -65,8 +64,18 @@ export default function MultiContracts() {
     fetchSquads();
   }, []);
 
+  useEffect(() => {
+    if (user?.type === 'client' || user?.active_role === 'client') {
+       apiListProjectsPublicNew({ client_id: user.id, per_page: 50 }).then(res => {
+         if (res.items) {
+           setMyProjects(res.items.map((p: any) => ({ id: String(p.id), title: p.title || p.titulo })));
+         }
+       }).catch(() => {});
+    }
+  }, [user]);
+
   async function handleCreate() {
-    const parsed = schema.safeParse({ name: newName, project_name: newProjectName });
+    const parsed = schema.safeParse({ name: newName, project_id: projectId });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || 'Dados inválidos');
       return;
@@ -75,7 +84,7 @@ export default function MultiContracts() {
     try {
       const payload = {
         name: newName.trim(),
-        project_name: newProjectName.trim(),
+        project_id: projectId,
         start_date: startDate || undefined,
         budget: budget || undefined,
         members: membersDraft.filter(m => m.name.trim() && m.role.trim()),
@@ -84,7 +93,7 @@ export default function MultiContracts() {
       toast.success('Equipe criada com sucesso');
       setOpenCreate(false);
       setNewName('');
-      setNewProjectName('');
+      setProjectId('');
       setStartDate('');
       setBudget('');
       setMembersDraft([]);
@@ -96,27 +105,6 @@ export default function MultiContracts() {
     } finally {
       setCreating(false);
     }
-  }
-
-  async function fetchSuggestions() {
-    try {
-      const [projects, freelancers] = await Promise.all([
-        apiListProjectsPublicNew({ page: 1, per_page: 10 }),
-        apiListFreelancersPublicNew({ page: 1, per_page: 10, q: membersDraft[membersDraft.length - 1]?.name || undefined }),
-      ]);
-      setProjectOptions((projects.items || []).map((p: any) => ({ id: String(p.id || p.projectId || ''), title: String(p.title || p.name || '') })));
-      setFreelancerOptions((freelancers.items || []).map((f: any) => ({ name: f.name, title: f.title })));
-    } catch {
-      // silently ignore
-    }
-  }
-
-  function handleProjectNameChange(v: string) {
-    setNewProjectName(v);
-    if (projectSearchDebounce) window.clearTimeout(projectSearchDebounce);
-    projectSearchDebounce = window.setTimeout(() => {
-      fetchSuggestions();
-    }, 250);
   }
 
   return (
@@ -141,29 +129,23 @@ export default function MultiContracts() {
                 <DialogTitle>Criar nova equipe</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-2">
-                <div className="flex justify-end">
-                  <Button type="button" variant="secondary" onClick={fetchSuggestions}>Buscar sugestões</Button>
-                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="team-name">Nome da equipe</Label>
                   <Input id="team-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex.: Squad Frontend" />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="project-name">Nome do projeto</Label>
-                  <Input id="project-name" value={newProjectName} onChange={(e) => handleProjectNameChange(e.target.value)} placeholder="Ex.: Plataforma X" />
-                  {projectOptions.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
-                      Sugestões: {projectOptions.slice(0, 5).map((p, idx) => (
-                        <button
-                          key={idx}
-                          className="underline mr-2"
-                          onClick={(e) => { e.preventDefault(); setNewProjectName(p.title); }}
-                        >
-                          {p.title}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <Label htmlFor="project-id">Projeto vinculado</Label>
+                  <select
+                    id="project-id"
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Selecione o projeto...</option>
+                    {myProjects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.title}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="grid gap-2">
@@ -213,22 +195,6 @@ export default function MultiContracts() {
                       >
                         Adicionar membro
                       </Button>
-                      {freelancerOptions.length > 0 && (
-                        <div className="text-xs text-muted-foreground flex-1">
-                          Sugestões: {freelancerOptions.slice(0, 5).map((f, idx) => (
-                            <button
-                              key={idx}
-                              className="underline mr-2"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setMembersDraft([...membersDraft, { name: f.name, role: f.title || '' }]);
-                              }}
-                            >
-                              {f.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                       {membersDraft.length > 0 && (
                         <Button
                           type="button"
