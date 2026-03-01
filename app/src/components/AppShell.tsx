@@ -177,7 +177,7 @@ export default function AppShell({ children, wide = false, noMainPadding = false
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to={user.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard'} className="cursor-pointer">
+                      <Link to={user.type === 'admin' ? '/admin/dashboard' : (user.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard')} className="cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span>Painel</span>
                       </Link>
@@ -219,59 +219,90 @@ export default function AppShell({ children, wide = false, noMainPadding = false
         </div>
         <div className="bg-99blue/90 border-t border-white/10">
           <div className={`mx-auto ${wide ? 'max-w-7xl' : 'max-w-6xl'} px-4 h-10 hidden md:flex items-center gap-6 text-sm`}>
-            <Link to="/" className="text-white/90 hover:text-white">Página inicial</Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1">
-                Projetos <ChevronDown className="w-3.5 h-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild><Link to="/projects">Buscar projetos</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/my-projects">Meus projetos</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/my-proposals">Minhas propostas</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/favorites">Projetos salvos</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Link to="/freelancers" className="text-white/90 hover:text-white">Freelancers</Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1">
-                Perfil <ChevronDown className="w-3.5 h-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild><Link to="/profile">Meu perfil</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/profile/edit">Editar perfil</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/verified-identity">Validação de identidade</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/medals">Medalhas</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/connections">Histórico de conexões</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1">
-                Conta <ChevronDown className="w-3.5 h-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild><Link to="/payments">Pagamentos</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/notifications">Notificações</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/settings">Configurações de acesso</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/plans">Minhas assinaturas</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1">
-                Ferramentas <ChevronDown className="w-3.5 h-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild><Link to="/tools">Calculadora & Formatador</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1">
-                Ajuda <ChevronDown className="w-3.5 h-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild><Link to="/help">Central de ajuda</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/how-it-works">Como funciona</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
+            {/* ADMIN NAVIGATION */}
+            {user?.type === 'admin' && (
+              <>
+                <Link to="/admin/dashboard" className="text-white/90 hover:text-white font-medium">Dashboard</Link>
+                <Link to="/admin/moderation" className="text-white/90 hover:text-white">Moderação</Link>
+                <Link to="/admin/users" className="text-white/90 hover:text-white">Usuários</Link>
+                <Link to="/admin/sanctions" className="text-white/90 hover:text-white">Sanções</Link>
+                <Link to="/disputes" className="text-white/90 hover:text-white">Disputas</Link>
+                <div className="h-4 w-px bg-white/20 mx-2"></div>
+                <Link to="/" className="text-white/70 hover:text-white">Ver Site</Link>
+              </>
+            )}
+
+            {/* CLIENT NAVIGATION */}
+            {user?.type === 'client' && (
+              <>
+                <Link to="/dashboard" className="text-white/90 hover:text-white font-medium">Dashboard</Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1 cursor-pointer">
+                    Projetos <ChevronDown className="w-3.5 h-3.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem asChild><Link to="/project/new">Publicar Novo</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/my-projects">Meus Projetos</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/favorites">Favoritos</Link></DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Link to="/freelancers" className="text-white/90 hover:text-white">Encontrar Freelancers</Link>
+                <Link to="/payments" className="text-white/90 hover:text-white">Financeiro</Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1 cursor-pointer">
+                    Perfil <ChevronDown className="w-3.5 h-3.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem asChild><Link to="/profile">Visualizar Perfil</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/profile/edit">Editar Perfil</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/settings">Configurações</Link></DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
+            {/* FREELANCER NAVIGATION */}
+            {user?.type === 'freelancer' && (
+              <>
+                <Link to="/freelancer/dashboard" className="text-white/90 hover:text-white font-medium">Dashboard</Link>
+                <Link to="/projects" className="text-white/90 hover:text-white">Buscar Projetos</Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1 cursor-pointer">
+                    Trabalho <ChevronDown className="w-3.5 h-3.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem asChild><Link to="/my-proposals">Minhas Propostas</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/my-projects">Projetos em Andamento</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/connections">Conexões</Link></DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Link to="/plans" className="text-white/90 hover:text-white">Planos</Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="text-white/90 hover:text-white flex items-center gap-1 cursor-pointer">
+                    Perfil <ChevronDown className="w-3.5 h-3.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem asChild><Link to="/profile">Meu Perfil</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/profile/edit">Editar Perfil</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/verified-identity">Verificação</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/medals">Medalhas</Link></DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
+            {/* PUBLIC / GUEST NAVIGATION */}
+            {(!user || !['admin', 'client', 'freelancer'].includes(user.type)) && (
+              <>
+                <Link to="/" className="text-white/90 hover:text-white">Página inicial</Link>
+                <Link to="/projects" className="text-white/90 hover:text-white">Buscar Projetos</Link>
+                <Link to="/freelancers" className="text-white/90 hover:text-white">Encontrar Freelancers</Link>
+                <Link to="/how-it-works" className="text-white/90 hover:text-white">Como Funciona</Link>
+                <Link to="/help" className="text-white/90 hover:text-white">Ajuda</Link>
+              </>
+            )}
+
           </div>
         </div>
       </header>
