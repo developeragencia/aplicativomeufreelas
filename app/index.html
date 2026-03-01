@@ -61,8 +61,59 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              foreground: 'hsl(var(--foreground))',
+              background: 'hsl(var(--background))',
+              border: 'hsl(var(--border))',
+              primary: 'hsl(var(--primary))',
+              secondary: 'hsl(var(--secondary))',
+              accent: 'hsl(var(--accent))',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 210 11% 15%;
+        --card: 0 0% 100%;
+        --card-foreground: 210 11% 15%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 210 11% 15%;
+        --primary: 219 100% 50%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 11% 96%;
+        --secondary-foreground: 210 11% 15%;
+        --muted: 210 11% 96%;
+        --muted-foreground: 210 9% 45%;
+        --accent: 29 100% 50%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 210 11% 90%;
+        --input: 210 11% 90%;
+        --ring: 29 100% 50%;
+        --radius: 0.25rem;
+        --99blue: #0058ff;
+        --99blue-light: #1a7dff;
+        --99blue-dark: #0038b8;
+        --99accent: #ff7a00;
+        --99accent-light: #ffab00;
+        --99dark: #2f2f32;
+        --99darker: #252528;
+        --99gray: #f5f5f5;
+      }
+      html, body, #root { width:100%; overflow-x:hidden; }
+      body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      * { border-color: hsl(var(--border)); }
+    </style>
+    <script type="module" src="/src/main.tsx"></script>
     
     <!-- No JavaScript fallback -->
     <noscript>
