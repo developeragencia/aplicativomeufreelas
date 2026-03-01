@@ -14,8 +14,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "lucide-react": path.resolve(__dirname, "./src/_icons_stub.ts"),
-      "react-remove-scroll": path.resolve(__dirname, "./src/_react_remove_scroll_stub.ts"),
     },
   },
   build: {

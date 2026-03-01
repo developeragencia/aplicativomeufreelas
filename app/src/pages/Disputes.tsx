@@ -27,19 +27,20 @@ interface Dispute {
 }
 
 export default function Disputes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [myProjects, setMyProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [project, setProject] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [reason, setReason] = useState('');
   const [amount, setAmount] = useState('');
   const [contractId, setContractId] = useState('');
   const [category, setCategory] = useState<'prazo' | 'qualidade' | 'escopo' | 'pagamento' | ''>('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const schema = z.object({
-    project: z.string().min(2, { message: 'Informe o projeto' }),
+    project_id: z.string().min(1, { message: 'Selecione o projeto' }),
     amount: z.string().min(2, { message: 'Informe o valor' }),
     reason: z.string().min(5, { message: 'Descreva o motivo' }),
   });
@@ -60,8 +61,25 @@ export default function Disputes() {
     fetchDisputes();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const params = new URLSearchParams();
+    if (user.type === 'client' || user.active_role === 'client') {
+       params.set('client_id', String(user.id));
+    } else {
+       params.set('freelancer_id', String(user.id));
+    }
+    api.get(`/projects?${params.toString()}`).then(res => {
+      if (res.data && Array.isArray(res.data.items)) {
+        setMyProjects(res.data.items);
+      } else if (Array.isArray(res.data)) {
+        setMyProjects(res.data);
+      }
+    }).catch(() => {});
+  }, [user]);
+
   async function handleCreate() {
-    const parsed = schema.safeParse({ project, amount, reason });
+    const parsed = schema.safeParse({ project_id: projectId, amount, reason });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || 'Dados inválidos');
       return;
@@ -70,7 +88,7 @@ export default function Disputes() {
     try {
       if (attachments.length > 0) {
         const form = new FormData();
-        form.set('project', project.trim());
+        form.set('project_id', projectId);
         form.set('reason', reason.trim());
         form.set('amount', amount.trim());
         if (contractId.trim()) form.set('contract_id', contractId.trim());
@@ -79,7 +97,7 @@ export default function Disputes() {
         await apiPostForm('/disputes', form);
       } else {
         const payload = {
-          project: project.trim(),
+          project_id: projectId,
           reason: reason.trim(),
           amount: amount.trim(),
           contract_id: contractId.trim() || undefined,
@@ -89,7 +107,7 @@ export default function Disputes() {
       }
       toast.success('Disputa aberta com sucesso');
       setOpenCreate(false);
-      setProject('');
+      setProjectId('');
       setReason('');
       setAmount('');
       setContractId('');
@@ -132,7 +150,17 @@ export default function Disputes() {
               <div className="grid gap-4 py-2">
                 <div className="grid gap-2">
                   <Label htmlFor="project">Projeto</Label>
-                  <Input id="project" value={project} onChange={(e) => setProject(e.target.value)} placeholder="Ex.: Projeto XYZ" />
+                  <select
+                    id="project"
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Selecione o projeto...</option>
+                    {myProjects.map((p: any) => (
+                      <option key={p.id} value={p.id}>{p.titulo}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="grid gap-2">

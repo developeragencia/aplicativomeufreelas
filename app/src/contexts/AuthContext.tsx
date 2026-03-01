@@ -8,6 +8,7 @@ export interface User {
   email: string;
   name: string;
   type: UserType;
+  active_role?: 'client' | 'freelancer';
   avatar?: string;
   phone?: string;
   location?: string;
