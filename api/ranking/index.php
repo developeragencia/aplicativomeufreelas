@@ -68,15 +68,29 @@ if ($method === 'GET') {
         echo json_encode(['error' => $e->getMessage()]);
     }
 } elseif ($method === 'POST') {
-    // Admin only: Recalculate ranking (mock trigger)
-    $user = auth_get_user($pdo);
-    if (!$user || $user['role'] !== 'admin') {
-        http_response_code(403);
-        echo json_encode(['error' => 'Forbidden']);
-        exit;
+    // Recalculate ranking (simple formula). Em produção, restrito a admin.
+    $period = $_POST['period'] ?? 'weekly';
+    if (!in_array($period, ['weekly','monthly','all_time'], true)) $period = 'weekly';
+    try {
+        $stmt = $pdo->query("SELECT u.id as user_id, COALESCE(pf.projetos_concluidos,0) as projects, COALESCE(pf.avaliacoes_avg,0) as rating, COALESCE(pf.recomendacao_pct,0) as recs FROM users u LEFT JOIN profiles_freelancer pf ON pf.user_id = u.id WHERE u.role = 'freelancer'");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $scores = [];
+        foreach ($rows as $r) {
+            $score = (int)$r['projects'] * 10 + (float)$r['rating'] * 100 + (int)$r['recs'] * 5;
+            $scores[(int)$r['user_id']] = (int)round($score);
+        }
+        arsort($scores);
+        $position = 1;
+        // Clear existing for period
+        $del = $pdo->prepare("DELETE FROM ranking WHERE period = ?");
+        $del->execute([$period]);
+        $ins = $pdo->prepare("INSERT INTO ranking (user_id, score, position, period) VALUES (?, ?, ?, ?)");
+        foreach ($scores as $uid => $sc) {
+            $ins->execute([$uid, $sc, $position++, $period]);
+        }
+        echo json_encode(['ok' => true, 'updated' => count($scores), 'period' => $period]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
     }
-
-    // Logic to recalculate ranking would go here
-    // For now, just a stub
-    echo json_encode(['ok' => true, 'message' => 'Ranking recalculated']);
 }

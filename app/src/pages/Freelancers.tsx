@@ -465,11 +465,23 @@ export default function Freelancers() {
                         </div>
 
                         <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
-                           <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                            <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
                              <div className="flex items-center gap-1">
                                <CheckCircle className="w-3.5 h-3.5" />
                                {f.completedProjects} projetos
                              </div>
+                              {typeof f.rankingScore === 'number' && f.rankingScore > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Star className="w-3.5 h-3.5 text-amber-500" />
+                                  score {f.rankingScore}
+                                </div>
+                              )}
+                              {f.isVerified && (
+                                <div className="flex items-center gap-1">
+                                  <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                                  verificado
+                                </div>
+                              )}
                              {f.city && (
                                <div className="flex items-center gap-1">
                                  <MapPin className="w-3.5 h-3.5" />
