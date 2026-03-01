@@ -29,6 +29,7 @@ export default function AppShell({ children, wide = false, noMainPadding = false
   const [searchType, setSearchType] = useState<'projects' | 'freelancers'>('projects');
   const [keyword, setKeyword] = useState('');
   const [notifCount, setNotifCount] = useState(0);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; description?: string; link?: string; type: string; date?: string; isRead?: boolean }>>([]);
   const [connBalance, setConnBalance] = useState<number | null>(null);
   const [msgCount] = useState(0);
 
@@ -46,7 +47,11 @@ export default function AppShell({ children, wide = false, noMainPadding = false
           // Notifications (silent failure)
           try {
             const res = await api.post('/notifications.php', { action: 'list_notifications', userId: user.id } as any);
-            if (mounted) setNotifCount(Array.isArray(res.data?.notifications) ? res.data.notifications.filter((n: any) => !n.isRead).length : 0);
+            const list = Array.isArray(res.data?.notifications) ? res.data.notifications : [];
+            if (mounted) {
+              setNotifications(list.slice(0, 6));
+              setNotifCount(list.filter((n: any) => !n.isRead).length);
+            }
           } catch {}
           // Connections balance (silent failure)
           try {
@@ -117,10 +122,39 @@ export default function AppShell({ children, wide = false, noMainPadding = false
                   <MessageSquare className="w-5 h-5" />
                   {msgCount > 0 && <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">{msgCount}</span>}
                 </Link>
-                <Link to="/notifications" title="Notificações" className="relative p-2 rounded hover:bg-white/10">
-                  <Bell className="w-5 h-5" />
-                  {notifCount > 0 && <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">{notifCount}</span>}
-                </Link>
+                <DropdownMenu onOpenChange={async (open) => {
+                  if (open && hasApi() && user) {
+                    try {
+                      await api.post('/notifications.php', { action: 'mark_all_read', userId: user.id } as any);
+                      setNotifCount(0);
+                    } catch {}
+                  }
+                }}>
+                  <DropdownMenuTrigger className="relative p-2 rounded hover:bg-white/10">
+                    <Bell className="w-5 h-5" />
+                    {notifCount > 0 && <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">{notifCount}</span>}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-80">
+                    <DropdownMenuLabel className="text-xs text-gray-500">Notificações</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notifications.length === 0 ? (
+                      <div className="px-3 py-6 text-sm text-gray-500">Nenhuma notificação recente.</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <DropdownMenuItem key={n.id} asChild>
+                          <Link to={n.link || '/notifications'} className="flex flex-col gap-0.5">
+                            <span className="text-sm text-gray-900">{n.title}</span>
+                            {n.description && <span className="text-xs text-gray-500">{n.description}</span>}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/notifications" className="text-center w-full">Ver todas</Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Link to="/connections" title="Conexões" className="relative p-2 rounded hover:bg-white/10 flex items-center gap-1">
                   <Wallet className="w-5 h-5" />
                   {typeof connBalance === 'number' && <span className="text-xs bg-emerald-600/90 rounded px-1">{connBalance}</span>}
