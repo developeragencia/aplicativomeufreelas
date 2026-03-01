@@ -1,12 +1,1 @@
 DirectoryIndex login/index.html
-
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /admin/
-  # Serve existing files normally
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-  # Fallback to admin login
-  RewriteRule ^ login/index.html [L]
-</IfModule>
