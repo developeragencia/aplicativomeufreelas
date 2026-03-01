@@ -128,6 +128,7 @@ export default function Freelancers() {
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('Todas as áreas');
   const [ratingFilter, setRatingFilter] = useState('any');
+  const [sortBy, setSortBy] = useState<'relevance' | 'rank_desc' | 'alpha_asc' | 'alpha_desc' | 'projects_desc' | 'projects_asc' | 'recs_desc' | 'recs_asc'>('relevance');
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -245,8 +246,19 @@ export default function Freelancers() {
       const matchRating = ratingFilter === 'any' || (ratingFilter === '4.5' && f.rating >= 4.5) || (ratingFilter === '4' && f.rating >= 4);
       
       return matchKeyword && matchCategory && matchRating;
+    }).sort((a, b) => {
+      switch (sortBy) {
+        case 'alpha_asc': return a.name.localeCompare(b.name);
+        case 'alpha_desc': return b.name.localeCompare(a.name);
+        case 'projects_desc': return (b.completedProjects || 0) - (a.completedProjects || 0);
+        case 'projects_asc': return (a.completedProjects || 0) - (b.completedProjects || 0);
+        case 'recs_desc': return (b.recommendations || 0) - (a.recommendations || 0);
+        case 'recs_asc': return (a.recommendations || 0) - (b.recommendations || 0);
+        case 'rank_desc': return (b.ranking || 0) - (a.ranking || 0);
+        default: return 0;
+      }
     });
-  }, [freelancers, keyword, category, ratingFilter]);
+  }, [freelancers, keyword, category, ratingFilter, sortBy]);
 
   const paginatedFreelancers = useMemo(() => {
     if (hasApi()) return filteredFreelancers; // Server-side já paginado
@@ -266,10 +278,22 @@ export default function Freelancers() {
              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Encontre Freelancers</h1>
              <p className="text-gray-500 mt-1">{filteredFreelancers.length} profissionais encontrados</p>
            </div>
-           <Link to={publishHref} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+           <div className="flex items-center gap-3">
+             <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+               <option value="relevance">Relevância</option>
+               <option value="rank_desc">Ranking (Maior)</option>
+               <option value="alpha_asc">A–Z</option>
+               <option value="alpha_desc">Z–A</option>
+               <option value="projects_desc">Projetos (Maior)</option>
+               <option value="projects_asc">Projetos (Menor)</option>
+               <option value="recs_desc">Recomendações (Maior)</option>
+               <option value="recs_asc">Recomendações (Menor)</option>
+             </select>
+             <Link to={publishHref} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
              <User className="w-4 h-4" />
              Publicar Projeto Grátis
-           </Link>
+             </Link>
+           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -454,10 +478,13 @@ export default function Freelancers() {
                              )}
                            </div>
                            
-                           <Link to={`/user/${f.id}`} className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
-                             Ver Perfil
-                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                           </Link>
+                           <div className="flex items-center gap-3">
+                             <Link to={`/user/${f.id}`} className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                               Ver Perfil
+                               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                             </Link>
+                             <Link to="/invitations" className="text-sm font-bold text-emerald-600 hover:text-emerald-700">Convidar</Link>
+                           </div>
                         </div>
                       </div>
                     </div>

@@ -4,6 +4,7 @@ import {
   Calculator, ArrowLeft, TrendingUp, Clock, DollarSign,
   Percent, Briefcase, FileText
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CalculatorResult {
   grossValue: number;
@@ -15,12 +16,14 @@ interface CalculatorResult {
 
 export default function Tools() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'calculator' | 'text'>('calculator');
   
   // Calculator state
   const [projectValue, setProjectValue] = useState('');
   const [projectHours, setProjectHours] = useState('');
   const [taxRate, setTaxRate] = useState('6');
+  const [netDesired, setNetDesired] = useState('');
   const [result, setResult] = useState<CalculatorResult | null>(null);
 
   // Text formatter state
@@ -32,9 +35,34 @@ export default function Tools() {
     const value = parseFloat(projectValue);
     const hours = parseFloat(projectHours);
     const tax = parseFloat(taxRate);
+    const desiredNet = parseFloat(netDesired);
+    const planFeeRate = (() => {
+      const tier = (user?.plan || (user?.isPremium ? 'premium' : user?.isPro ? 'pro' : 'free')) as any;
+      if (tier === 'premium') return 0.10;
+      if (tier === 'pro') return 0.15;
+      return 0.20;
+    })();
+
+    if (desiredNet && hours) {
+      const grossBeforeTax = desiredNet / (1 - planFeeRate);
+      const taxValue = grossBeforeTax * (tax / 100);
+      const grossValue = grossBeforeTax + taxValue;
+      const platformFee = grossValue * planFeeRate;
+      const netValue = grossValue - platformFee - taxValue;
+      const hourlyRate = netValue / hours;
+
+      setResult({
+        grossValue,
+        platformFee,
+        taxValue,
+        netValue,
+        hourlyRate
+      });
+      return;
+    }
 
     if (value && hours) {
-      const platformFee = value * 0.1; // 10% platform fee
+      const platformFee = value * planFeeRate;
       const taxValue = (value - platformFee) * (tax / 100);
       const netValue = value - platformFee - taxValue;
       const hourlyRate = netValue / hours;
@@ -94,6 +122,22 @@ export default function Tools() {
               type="number"
               value={projectValue}
               onChange={(e) => setProjectValue(e.target.value)}
+              placeholder="0,00"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Valor líquido desejado (R$)
+          </label>
+          <div className="relative">
+            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="number"
+              value={netDesired}
+              onChange={(e) => setNetDesired(e.target.value)}
               placeholder="0,00"
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent"
             />
