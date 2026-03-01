@@ -13,6 +13,9 @@
   RewriteCond %{REQUEST_URI} ^/api/
   RewriteRule ^ - [L]
 
+  # Atalho: /admin-login -> arquivo estatico (antes do fallback da SPA)
+  RewriteRule ^admin-login/?$ admin-login.html [L]
+
   # Não reescrever arquivos ou diretórios que existem
   RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
