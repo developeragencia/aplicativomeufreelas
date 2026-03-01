@@ -16,6 +16,7 @@ interface Project {
   clientName: string;
   category: string;
   minOffer: number;
+  approvedAt?: string;
 }
 
 export default function SendProposal() {
@@ -128,6 +129,7 @@ export default function SendProposal() {
         clientName: res.project.clientName || 'Cliente',
         category: res.project.category,
         minOffer: minimumOffer,
+        approvedAt: res.project.approvedAt,
       });
       
       // Only set default offer if NOT editing
@@ -313,6 +315,28 @@ export default function SendProposal() {
 
   const finalSuggested = project ? Math.round(project.minOffer * 1.25) : 0;
 
+  const withinExclusiveWindow = (() => {
+    if (!project?.approvedAt) return false;
+    try {
+      const approved = new Date(project.approvedAt).getTime();
+      return Date.now() - approved < 24 * 60 * 60 * 1000;
+    } catch { return false; }
+  })();
+  const isSubscriber = Boolean((user as any)?.isPro || (user as any)?.isPremium || (user as any)?.plan === 'pro' || (user as any)?.plan === 'premium');
+  const lockedByExclusivity = withinExclusiveWindow && !isSubscriber;
+
+  const handleNotifyMe = () => {
+    if (!project) return;
+    try {
+      const alerts = JSON.parse(localStorage.getItem('project_alerts') || '[]');
+      if (!alerts.includes(project.id)) alerts.push(project.id);
+      localStorage.setItem('project_alerts', JSON.stringify(alerts));
+      alert('Você será avisado quando o projeto sair da janela de exclusividade.');
+    } catch {
+      alert('Alerta registrado.');
+    }
+  };
+
   const handleAskQuestion = async () => {
     if (!project || !user?.id) return;
     if (!project.clientId) {
@@ -376,6 +400,12 @@ export default function SendProposal() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-6 border border-gray-100">
+              {lockedByExclusivity && (
+                <div className="bg-purple-50 border border-purple-200 text-purple-800 text-sm p-3 rounded mb-2">
+                  Este projeto está exclusivo para assinantes nas primeiras 24h após aprovação. 
+                  Assine um plano para enviar agora ou clique em <button type="button" onClick={handleNotifyMe} className="underline font-medium">Avise-me</button> para ser notificado quando liberar.
+                </div>
+              )}
               <div className="bg-sky-100 border border-sky-200 text-sky-900 text-sm p-3">
                 Para ver o valor médio das propostas e a duração média estimada, assine um de nossos planos.
               </div>
@@ -399,6 +429,7 @@ export default function SendProposal() {
                           onChange={(e) => handleOfferChange(e.target.value)}
                           placeholder="0,00"
                           className="w-full px-3 py-2 outline-none"
+                          disabled={lockedByExclusivity}
                         />
                       </div>
                       <p className="text-xs text-gray-600 mt-1">(Oferta mínima: R$ {project.minOffer.toFixed(2)})</p>

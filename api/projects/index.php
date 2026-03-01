@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'status' => 'Aguardando aprovação',
       'created_at' => date('Y-m-d H:i:s'),
       'client_id' => $userId,
+      'approved_at' => null,
     ];
     json_response(['ok' => true, 'item' => $created]);
     exit;
@@ -68,6 +69,7 @@ if ($id) {
       p.nivel,
       p.status,
       p.created_at,
+      p.approved_at,
       p.cliente_id AS client_id,
       pc.nome AS client_name,
       p.descricao
@@ -77,7 +79,7 @@ if ($id) {
     $stmt->execute([$id]);
     $row = $stmt->fetch();
   } catch (Throwable $e) {
-    $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, cliente_id AS client_id, NULL AS client_name, descricao FROM projects WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, approved_at, cliente_id AS client_id, NULL AS client_name, descricao FROM projects WHERE id = ?");
     $stmt->execute([$id]);
     $row = $stmt->fetch();
   }

@@ -598,6 +598,7 @@ export type ApiProject = {
   proposals: number;
   createdAt: string;
   updatedAt?: string;
+  approvedAt?: string;
 };
 
 async function callProjectsApi(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -698,6 +699,7 @@ export async function apiGetProject(projectId: string): Promise<{ ok: boolean; p
       proposals: Number(it.proposals || 0),
       createdAt: String(it.created_at || new Date().toISOString()),
       updatedAt: String(it.updated_at || it.created_at || new Date().toISOString()),
+      approvedAt: typeof it.approved_at === 'string' ? it.approved_at : undefined,
     };
     return { ok: true, project };
   } catch (e) {
