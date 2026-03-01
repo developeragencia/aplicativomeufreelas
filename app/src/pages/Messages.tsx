@@ -80,6 +80,8 @@ export default function Messages() {
   const [selectedFolder, setSelectedFolder] = useState<'inbox' | 'unread' | 'starred' | 'archived' | 'dispute'>('inbox');
   const [starredConversations, setStarredConversations] = useState<string[]>([]);
   const [archivedConversations, setArchivedConversations] = useState<string[]>([]);
+  const [paramConversationId, setParamConversationId] = useState<string | null>(null);
+  const [lastLoadedConvId, setLastLoadedConvId] = useState<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -110,14 +112,31 @@ export default function Messages() {
 
   useEffect(() => {
     const conversationId = new URLSearchParams(location.search).get('conversation');
-    if (!conversationId) return;
-    const found = conversations.find((c) => c.id === conversationId);
+    setParamConversationId(conversationId);
+    if (conversationId) setShowMobileChat(true);
+  }, [location.search, conversations]);
+
+  useEffect(() => {
+    if (paramConversationId && !selectedConversation) {
+      if (lastLoadedConvId !== paramConversationId) {
+        setLastLoadedConvId(paramConversationId);
+        loadMessages(paramConversationId);
+      }
+    }
+  }, [paramConversationId, selectedConversation]);
+
+  useEffect(() => {
+    if (!paramConversationId) return;
+    const found = conversations.find((c) => c.id === paramConversationId);
     if (!found) return;
     setSelectedConversation(found);
     setShowMobileChat(true);
     loadConversationProposal(found);
-    loadMessages(found.id);
-  }, [location.search, conversations]);
+    if (lastLoadedConvId !== found.id) {
+      setLastLoadedConvId(found.id);
+      loadMessages(found.id);
+    }
+  }, [conversations, paramConversationId]);
 
   useEffect(() => {
     let mounted = true;
