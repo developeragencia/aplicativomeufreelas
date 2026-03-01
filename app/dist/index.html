@@ -134,5 +134,42 @@
         <p>Por favor, habilite o JavaScript para usar o MeuFreelas.</p>
       </div>
     </noscript>
+    <script>
+      (function () {
+        function showDiag(msg) {
+          try {
+            var box = document.createElement('pre');
+            box.setAttribute('id', 'diag-error');
+            box.style.position = 'fixed';
+            box.style.left = '8px';
+            box.style.right = '8px';
+            box.style.bottom = '8px';
+            box.style.maxHeight = '40vh';
+            box.style.overflow = 'auto';
+            box.style.background = '#fff';
+            box.style.border = '1px solid #fca5a5';
+            box.style.color = '#b91c1c';
+            box.style.padding = '10px';
+            box.style.borderRadius = '8px';
+            box.style.boxShadow = '0 2px 12px rgba(0,0,0,0.1)';
+            box.style.fontSize = '12px';
+            box.style.zIndex = '999999';
+            box.textContent = '[Diagnóstico] ' + msg;
+            var old = document.getElementById('diag-error');
+            if (old) old.remove();
+            document.body.appendChild(box);
+          } catch (_) {}
+        }
+        window.addEventListener('error', function (e) {
+          var m = e && e.message ? e.message : 'Erro JS';
+          var s = e && e.error && e.error.stack ? '\n' + e.error.stack : '';
+          showDiag(m + s);
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          var m = (e && e.reason && (e.reason.message || e.reason)) || 'Promise rejeitada';
+          showDiag(String(m));
+        });
+      })();
+    </script>
   </body>
 </html>
