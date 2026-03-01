@@ -1,18 +1,37 @@
 import AppShell from '../components/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiListNotifications } from '@/lib/api';
 
 export default function ClientDashboard() {
   const { user, isAuthenticated, createSecondaryAccount, switchAccountType } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState<{ ok?: string; err?: string }>({});
+  const [events, setEvents] = useState<Array<{ id: string; title: string; description?: string; link?: string; date?: string }>>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    async function loadEvents() {
+      if (!user?.id) return;
+      setLoadingEvents(true);
+      const res = await apiListNotifications(String(user.id));
+      setLoadingEvents(false);
+      if (res.ok && res.notifications) {
+        const list = (res.notifications as any[]).filter((n) => n.type === 'project').slice(0, 6);
+        setEvents(list);
+      } else {
+        setEvents([]);
+      }
+    }
+    void loadEvents();
+  }, [user?.id]);
 
   if (!user) return null;
 
@@ -65,6 +84,31 @@ export default function ClientDashboard() {
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Convites</h2>
             <p className="text-sm text-gray-500">0 enviados</p>
           </div>
+        </div>
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-800">Eventos recentes do projeto</h2>
+            <Link to="/notifications" className="text-sm text-99blue hover:underline">Ver todas</Link>
+          </div>
+          {loadingEvents ? (
+            <p className="text-sm text-gray-500">Carregando…</p>
+          ) : events.length === 0 ? (
+            <p className="text-sm text-gray-500">Nenhum evento recente.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {events.map((e) => (
+                <li key={e.id} className="py-2 flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-gray-800">{e.title}</p>
+                    {e.description && <p className="text-xs text-gray-500">{e.description}</p>}
+                  </div>
+                  <div className="ml-4">
+                    {e.link && <Link to={e.link} className="text-sm text-99blue hover:underline">Abrir</Link>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </AppShell>
