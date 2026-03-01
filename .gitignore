@@ -1,6 +1,6 @@
 
-# Build e artefatos
-app/dist/
+# Build e artefatos (permitir commit do dist para deploy)
+# app/dist/
 
 # Ambiente - nunca commitar segredos
 .env
