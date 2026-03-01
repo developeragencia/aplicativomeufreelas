@@ -390,7 +390,30 @@ try {
   foreach ($results as $r) {
     $createdFlags[] = $r['ok'];
   }
-  json_response(['ok' => true, 'created' => $createdFlags, 'details' => $results]);
+
+  // Admin auto-create simples (sem token): mesmo padrão dos outros painéis
+  $adminEmail = env('ADMIN_EMAIL', 'admin@meufreelas.com.br');
+  $adminPass  = env('ADMIN_PASSWORD', 'SenhaAdmin#2026!');
+  $adminInfo = null;
+  try {
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $stmt->execute([$adminEmail]);
+    $existingId = $stmt->fetchColumn();
+    $hash = password_hash($adminPass, PASSWORD_DEFAULT);
+    if ($existingId) {
+      $pdo->prepare('UPDATE users SET role = ?, password_hash = ?, status = ? WHERE id = ?')
+          ->execute(['admin', $hash, 'active', (int)$existingId]);
+      $adminInfo = ['updated' => true, 'id' => (int)$existingId, 'email' => $adminEmail];
+    } else {
+      $pdo->prepare('INSERT INTO users (role, email, password_hash, status) VALUES (?, ?, ?, ?)')
+          ->execute(['admin', $adminEmail, $hash, 'active']);
+      $adminInfo = ['created' => true, 'id' => (int)$pdo->lastInsertId(), 'email' => $adminEmail];
+    }
+  } catch (Throwable $e) {
+    $adminInfo = ['error' => 'admin_create_failed'];
+  }
+
+  json_response(['ok' => true, 'created' => $createdFlags, 'details' => $results, 'admin' => $adminInfo]);
 } catch (Throwable $e) {
   json_response(['ok' => false, 'error' => $e->getMessage()], 500);
 }
