@@ -394,6 +394,7 @@ try {
   // Admin auto-create simples (sem token): mesmo padrão dos outros painéis
   $adminEmail = env('ADMIN_EMAIL', 'admin@meufreelas.com.br');
   $adminPass  = env('ADMIN_PASSWORD', 'SenhaAdmin#2026!');
+  $adminForce = env('ADMIN_FORCE_PASSWORD', '0') === '1';
   $adminInfo = null;
   try {
     $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
@@ -401,9 +402,15 @@ try {
     $existingId = $stmt->fetchColumn();
     $hash = password_hash($adminPass, PASSWORD_DEFAULT);
     if ($existingId) {
-      $pdo->prepare('UPDATE users SET role = ?, password_hash = ?, status = ? WHERE id = ?')
-          ->execute(['admin', $hash, 'active', (int)$existingId]);
-      $adminInfo = ['updated' => true, 'id' => (int)$existingId, 'email' => $adminEmail];
+      if ($adminForce) {
+        $pdo->prepare('UPDATE users SET role = ?, password_hash = ?, status = ? WHERE id = ?')
+            ->execute(['admin', $hash, 'active', (int)$existingId]);
+        $adminInfo = ['updated' => true, 'id' => (int)$existingId, 'email' => $adminEmail, 'forced' => true];
+      } else {
+        $pdo->prepare('UPDATE users SET role = ?, status = ? WHERE id = ?')
+            ->execute(['admin', 'active', (int)$existingId]);
+        $adminInfo = ['kept_password' => true, 'id' => (int)$existingId, 'email' => $adminEmail];
+      }
     } else {
       $pdo->prepare('INSERT INTO users (role, email, password_hash, status) VALUES (?, ?, ?, ?)')
           ->execute(['admin', $adminEmail, $hash, 'active']);
