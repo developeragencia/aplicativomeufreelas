@@ -88,8 +88,13 @@ try {
       $pdo->prepare('INSERT INTO profiles_freelancer (user_id, titulo, bio) VALUES (?, ?, ?)')->execute([$userId, $name, '']);
       $pdo->prepare('INSERT INTO connections_wallet (freelancer_id, saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel) VALUES (?, 0, 0, 0)')->execute([$userId]);
       $pdo->prepare('INSERT INTO plans (freelancer_id, tipo_plano, modalidade, inicio, status) VALUES (?, ?, ?, ?, ?)')->execute([$userId, 'basic', 'compra', date('Y-m-d'), 'active']);
-      // Bônus inicial de 10 conexões
-      $pdo->prepare("INSERT INTO connections_ledger (user_id, amount, description, type) VALUES (?, ?, ?, 'bonus')")->execute([$userId, 10, 'Bônus de Boas-vindas']);
+      // Bônus inicial de 10 conexões (saldo não expirável + ledger)
+      $pdo->prepare("UPDATE connections_wallet SET saldo_nao_expiravel = saldo_nao_expiravel + 10 WHERE freelancer_id = ?")->execute([$userId]);
+      $stmtW = $pdo->prepare("SELECT saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel FROM connections_wallet WHERE freelancer_id = ?");
+      $stmtW->execute([$userId]);
+      $w = $stmtW->fetch();
+      $saldoApos = intval($w['saldo_plano_mensal'] ?? 0) + intval($w['saldo_medalha_bonus'] ?? 0) + intval($w['saldo_nao_expiravel'] ?? 0);
+      $pdo->prepare("INSERT INTO connections_ledger (freelancer_id, project_id, tipo, delta, saldo_apos) VALUES (?, NULL, 'credit', ?, ?)")->execute([$userId, 10, $saldoApos]);
     }
     $user = ['id' => $userId, 'email' => $email, 'name' => $name, 'type' => $role];
   }

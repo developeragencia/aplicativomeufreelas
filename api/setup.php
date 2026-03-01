@@ -168,17 +168,7 @@ try {
       UNIQUE KEY uniq_user_medal (user_id, medal_slug)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 
-    // connections_ledger (transactions for connections)
-    "CREATE TABLE IF NOT EXISTS connections_ledger (
-      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-      user_id BIGINT UNSIGNED NOT NULL,
-      amount INT NOT NULL,
-      description VARCHAR(255) NOT NULL,
-      type ENUM('usage','refill','bonus') NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      INDEX idx_conn_user (user_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    
 
     // squads (multi-contract teams)
     "CREATE TABLE IF NOT EXISTS squads (
