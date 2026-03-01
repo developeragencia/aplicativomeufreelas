@@ -29,7 +29,7 @@ try {
   ];
 
   $getProject = function (PDO $pdo, $id) {
-    $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.cliente_id AS client_id, pc.nome AS client_name, p.descricao FROM projects p LEFT JOIN profiles_cliente pc ON pc.user_id = p.cliente_id WHERE p.id = ?");
     $stmt->execute([$id]);
     return $stmt->fetch();
   };
@@ -40,8 +40,8 @@ try {
     $params = [];
     $where = [];
     if ($status) { $where[] = 'status = ?'; $params[] = $status; }
-    if ($clientId) { $where[] = 'client_id = ?'; $params[] = $clientId; }
-    $sql = "SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, client_id, client_name, descricao, budget FROM projects";
+    if ($clientId) { $where[] = 'cliente_id = ?'; $params[] = $clientId; }
+    $sql = "SELECT p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.cliente_id AS client_id, pc.nome AS client_name, p.descricao FROM projects p LEFT JOIN profiles_cliente pc ON pc.user_id = p.cliente_id";
     if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
     $sql .= ' ORDER BY created_at DESC LIMIT 100';
     $stmt = $pdo->prepare($sql);
@@ -123,4 +123,3 @@ try {
 } catch (Throwable $e) {
   json_response(['ok' => false, 'error' => 'Falha de servidor'], 500);
 }
-

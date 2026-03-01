@@ -35,9 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   $description = sanitize_project_description($description);
   try {
-    $stmt = $pdo->prepare("INSERT INTO projects (titulo, descricao, categoria, subcategoria, nivel, status, created_at, client_id, client_name, budget, skills, proposalDays, visibility) VALUES (?, ?, ?, ?, ?, 'Awaiting_Approval', NOW(), ?, ?, 'Aberto', ?, ?, ?)");
-    $clientName = 'Cliente';
-    $stmt->execute([$title, $description, $category, $subcategory, $experience, $userId, $clientName, $skills, $proposalDays, $visibility]);
+    // Alinha com o schema criado em setup.php
+    // cliente_id, habilidades (JSON), privacidade
+    $stmt = $pdo->prepare("INSERT INTO projects (cliente_id, titulo, descricao, categoria, subcategoria, habilidades, nivel, privacidade, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Awaiting_Approval', NOW())");
+    $stmt->execute([(int)$userId, $title, $description, $category, $subcategory, $skills, $experience, $visibility === 'private' ? 'private' : 'public']);
     $newId = $pdo->lastInsertId();
     $created = [
       'id' => $newId,
@@ -49,8 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'status' => 'Aguardando aprovação',
       'created_at' => date('Y-m-d H:i:s'),
       'client_id' => $userId,
-      'client_name' => $clientName,
-      'budget' => 'Aberto',
     ];
     json_response(['ok' => true, 'item' => $created]);
     exit;
@@ -62,15 +61,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($id) {
   try {
     $stmt = $pdo->prepare("SELECT 
-      p.id, p.titulo, p.categoria, p.nivel, p.status, p.created_at,
-      p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
+      p.id,
+      p.titulo,
+      p.categoria,
+      p.subcategoria,
+      p.nivel,
+      p.status,
+      p.created_at,
+      p.cliente_id AS client_id,
+      pc.nome AS client_name,
+      p.descricao
       FROM projects p
-      LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
+      LEFT JOIN profiles_cliente pc ON pc.user_id = p.cliente_id
       WHERE p.id = ?");
     $stmt->execute([$id]);
     $row = $stmt->fetch();
   } catch (Throwable $e) {
-    $stmt = $pdo->prepare("SELECT id, titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget FROM projects WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, cliente_id AS client_id, NULL AS client_name, descricao FROM projects WHERE id = ?");
     $stmt->execute([$id]);
     $row = $stmt->fetch();
   }
@@ -95,7 +102,7 @@ try {
   if ($category) { $where[] = 'categoria = ?'; $params[] = $category; }
   if ($level) { $where[] = 'nivel = ?'; $params[] = $level; }
   if ($status) { $where[] = 'status = ?'; $params[] = $status; }
-  if ($clientId) { $where[] = 'client_id = ?'; $params[] = $clientId; }
+  if ($clientId) { $where[] = 'cliente_id = ?'; $params[] = $clientId; }
   
   $joinProposals = '';
   if ($freelancerId) {
@@ -126,17 +133,25 @@ try {
   }
   $queryWithJoin = "
     SELECT 
-      p.id, p.titulo, p.categoria, p.nivel, p.status, p.created_at,
-      p.client_id, COALESCE(pc.nome, p.client_name) AS client_name, p.descricao, p.budget
+      p.id,
+      p.titulo,
+      p.categoria,
+      p.subcategoria,
+      p.nivel,
+      p.status,
+      p.created_at,
+      p.cliente_id AS client_id,
+      pc.nome AS client_name,
+      p.descricao
     FROM projects p
-    LEFT JOIN profiles_cliente pc ON pc.user_id = p.client_id
+    LEFT JOIN profiles_cliente pc ON pc.user_id = p.cliente_id
     {$joinProposals}
     {$sqlWhere}
     {$order}
     LIMIT {$per} OFFSET {$offset}
   ";
   $querySimple = "
-    SELECT id, titulo, categoria, nivel, status, created_at, client_id, client_name, descricao, budget
+    SELECT id, titulo, categoria, subcategoria, nivel, status, created_at, cliente_id AS client_id, NULL AS client_name, descricao
     FROM projects
     $sqlWhere
     $order
