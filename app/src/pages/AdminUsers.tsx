@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -71,98 +72,26 @@ export default function AdminUsers() {
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [user]); // Reload when user is ready
 
   useEffect(() => {
     filterUsers();
   }, [users, searchTerm, filterType, filterStatus]);
 
-  const loadUsers = () => {
-    const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    const mockUsers: UserData[] = [
-      {
-        id: '1',
-        name: 'João Silva',
-        email: 'joao@email.com',
-        type: 'freelancer',
-        status: 'active',
-        phone: '(11) 98765-4321',
-        location: 'São Paulo, SP',
-        registeredAt: '2024-01-15T10:30:00',
-        lastLogin: '2024-02-20T14:20:00',
-        verified: true,
-        proposalsCount: 45,
-        projectsCount: 12
-      },
-      {
-        id: '2',
-        name: 'Empresa ABC Ltda',
-        email: 'contato@abc.com',
-        type: 'client',
-        status: 'active',
-        phone: '(11) 3456-7890',
-        location: 'Rio de Janeiro, RJ',
-        registeredAt: '2024-01-10T09:00:00',
-        lastLogin: '2024-02-19T16:45:00',
-        verified: true,
-        projectsCount: 8
-      },
-      {
-        id: '3',
-        name: 'Maria Santos',
-        email: 'maria@email.com',
-        type: 'freelancer',
-        status: 'pending',
-        phone: '(21) 99876-5432',
-        location: 'Belo Horizonte, MG',
-        registeredAt: '2024-02-18T11:20:00',
-        verified: false,
-        proposalsCount: 3
-      },
-      {
-        id: '4',
-        name: 'Tech Solutions',
-        email: 'tech@sol.com',
-        type: 'client',
-        status: 'active',
-        phone: '(31) 4567-8901',
-        location: 'Curitiba, PR',
-        registeredAt: '2023-12-05T14:30:00',
-        lastLogin: '2024-02-20T09:15:00',
-        verified: true,
-        projectsCount: 25
-      },
-      {
-        id: '5',
-        name: 'Pedro Costa',
-        email: 'pedro@email.com',
-        type: 'freelancer',
-        status: 'blocked',
-        phone: '(41) 98765-1234',
-        location: 'Porto Alegre, RS',
-        registeredAt: '2023-11-20T10:00:00',
-        verified: false,
-        proposalsCount: 8
-      },
-      {
-        id: '6',
-        name: 'Marketing Pro',
-        email: 'marketing@pro.com',
-        type: 'client',
-        status: 'inactive',
-        phone: '(51) 3456-7890',
-        location: 'Florianópolis, SC',
-        registeredAt: '2023-10-15T16:45:00',
-        lastLogin: '2024-01-10T11:30:00',
-        verified: true,
-        projectsCount: 5
+  const loadUsers = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await api.get(`admin/users_list.php?user_id=${user.id}`);
+      if (res.data && res.data.ok) {
+        setUsers(res.data.users);
       }
-    ];
-    const allUsers = [...mockUsers, ...storedUsers];
-    setUsers(allUsers);
+    } catch (e) {
+      console.error('Failed to load users', e);
+    }
   };
 
   const filterUsers = () => {
+    // Client-side filtering for now (since we fetch limit 100)
     let filtered = users;
 
     if (searchTerm) {

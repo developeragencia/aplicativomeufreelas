@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -18,45 +19,53 @@ import {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
     } else if (user?.type !== 'admin') {
       navigate(user?.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard');
+    } else {
+      loadStats();
     }
   }, [isAuthenticated, user, navigate]);
+
+  const loadStats = async () => {
+    try {
+      if (!user?.id) return;
+      const res = await api.get(`admin/dashboard_stats.php?user_id=${user.id}`);
+      if (res.data && res.data.ok) {
+        setData(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to load admin stats', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!user || user.type !== 'admin') return null;
 
   const stats = [
-    { label: 'Total de Usuários', value: '45.231', icon: Users, color: 'bg-blue-500', change: '+12%' },
-    { label: 'Projetos Ativos', value: '1.847', icon: Briefcase, color: 'bg-green-500', change: '+8%' },
-    { label: 'Faturamento do Mês', value: 'R$ 2.4M', icon: DollarSign, color: 'bg-purple-500', change: '+23%' },
-    { label: 'Taxa de Conversão', value: '78%', icon: TrendingUp, color: 'bg-orange-500', change: '+5%' },
+    { label: 'Total de Usuários', value: data?.stats?.total_users || '0', icon: Users, color: 'bg-blue-500', change: '' },
+    { label: 'Projetos Ativos', value: data?.stats?.active_projects || '0', icon: Briefcase, color: 'bg-green-500', change: '' },
+    { label: 'Faturamento do Mês', value: data?.stats?.monthly_revenue || 'R$ 0,00', icon: DollarSign, color: 'bg-purple-500', change: '' },
+    { label: 'Taxa de Conversão', value: data?.stats?.conversion_rate || '0%', icon: TrendingUp, color: 'bg-orange-500', change: '' },
   ];
 
-  const recentUsers = [
-    { id: 1, name: 'João Silva', email: 'joao@email.com', type: 'Freelancer', date: '2 minutos atrás', status: 'Ativo' },
-    { id: 2, name: 'Empresa ABC', email: 'contato@abc.com', type: 'Cliente', date: '15 minutos atrás', status: 'Ativo' },
-    { id: 3, name: 'Maria Santos', email: 'maria@email.com', type: 'Freelancer', date: '1 hora atrás', status: 'Pendente' },
-    { id: 4, name: 'Tech Solutions', email: 'tech@sol.com', type: 'Cliente', date: '2 horas atrás', status: 'Ativo' },
-  ];
-
-  const recentProjects = [
-    { id: 1, title: 'Desenvolvimento de E-commerce', client: 'Loja Virtual Ltda', budget: 'R$ 8.500', status: 'Em andamento' },
-    { id: 2, title: 'Design de Identidade Visual', client: 'Startup Tech', budget: 'R$ 3.200', status: 'Aberto' },
-    { id: 3, title: 'Redação de Conteúdo SEO', client: 'Marketing Pro', budget: 'R$ 1.500', status: 'Concluído' },
-  ];
+  const recentUsers = data?.recent_users || [];
+  const recentProjects = data?.recent_projects || [];
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', active: true, href: '/admin/dashboard' },
-    { icon: Users, label: 'Usuários', active: false, href: '#' },
-    { icon: Briefcase, label: 'Projetos', active: false, href: '#' },
-    { icon: DollarSign, label: 'Financeiro', active: false, href: '#' },
-    { icon: MessageSquare, label: 'Suporte', active: false, href: '#' },
-    { icon: BarChart3, label: 'Relatórios', active: false, href: '#' },
-    { icon: Shield, label: 'Segurança', active: false, href: '#' },
+    { icon: Users, label: 'Usuários', active: false, href: '/admin/users' },
+    { icon: Briefcase, label: 'Projetos', active: false, href: '/admin/moderation' }, // Projects -> Moderation link? Or create AdminProjects?
+    { icon: DollarSign, label: 'Financeiro', active: false, href: '/admin/payments' }, // Not exists yet
+    { icon: MessageSquare, label: 'Suporte', active: false, href: '/admin/support' }, // Not exists yet
+    { icon: BarChart3, label: 'Relatórios', active: false, href: '/admin/reports' }, // Not exists yet
+    { icon: Shield, label: 'Sanções', active: false, href: '/admin/sanctions' },
     { icon: Settings, label: 'Configurações', active: false, href: '/settings' },
   ];
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -20,7 +21,7 @@ import {
   X,
   Gavel
 } from 'lucide-react';
-import { type Sanction, getAllSanctions, liftSanction, processAppeal } from '../utils/sanctions';
+import { type Sanction, liftSanction, processAppeal } from '../utils/sanctions';
 import type { ViolationType } from '../utils/contentModerator';
 
 const violationLabels: Record<ViolationType, string> = {
@@ -56,55 +57,22 @@ export default function AdminSanctions() {
 
   useEffect(() => {
     loadSanctions();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     filterSanctions();
   }, [sanctions, searchTerm, filterType, filterStatus]);
 
-  const loadSanctions = () => {
-    const allSanctions = getAllSanctions();
-    // Mock data for demo
-    const mockSanctions: Sanction[] = [
-      {
-        id: 'sanction_1',
-        userId: 'user1',
-        userName: 'João Silva',
-        userType: 'freelancer',
-        type: 'violation',
-        violations: ['PHONE_NUMBER'],
-        reason: 'Violação dos Termos de Uso',
-        description: 'Compartilhamento de número de telefone',
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'active'
-      },
-      {
-        id: 'sanction_2',
-        userId: 'user2',
-        userName: 'Maria Santos',
-        userType: 'freelancer',
-        type: 'penalty',
-        violations: ['EMAIL', 'URL'],
-        reason: 'Penalização por múltiplas violações',
-        description: 'Compartilhamento de email e link externo',
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'active'
-      },
-      {
-        id: 'sanction_3',
-        userId: 'user3',
-        userName: 'Pedro Costa',
-        userType: 'client',
-        type: 'ban',
-        violations: ['PAYMENT_REQUEST', 'PHONE_NUMBER', 'EMAIL'],
-        reason: 'Banimento por violação grave ou reincidência',
-        description: 'Solicitação de pagamento externo, telefone e email',
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'active'
+  const loadSanctions = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await api.get(`admin/sanctions_list.php?user_id=${user.id}`);
+      if (res.data && res.data.ok) {
+        setSanctions(res.data.sanctions);
       }
-    ];
-    setSanctions([...mockSanctions, ...allSanctions]);
+    } catch (e) {
+      console.error('Failed to load sanctions', e);
+    }
   };
 
   const filterSanctions = () => {
