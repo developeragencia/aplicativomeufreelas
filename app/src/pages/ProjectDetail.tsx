@@ -259,6 +259,19 @@ export default function ProjectDetail() {
         ? `/project/bid/${project.id}`
         : '/plans';
 
+  const statusInfo = (raw?: string) => {
+    const r = String(raw || '').trim();
+    if (r === 'Awaiting_Approval') return { label: 'Aguardando aprovação', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' };
+    if (r === 'Open') return { label: 'Aberto', cls: 'bg-blue-50 text-blue-700 border-blue-200' };
+    if (r === 'Awaiting_Payment') return { label: 'Aguardando pagamento', cls: 'bg-amber-50 text-amber-800 border-amber-200' };
+    if (r === 'In_Progress') return { label: 'Em andamento', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    if (r === 'Awaiting_Release') return { label: 'Aguardando liberação', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    if (r === 'Closed') return { label: 'Concluído', cls: 'bg-gray-100 text-gray-700 border-gray-200' };
+    if (r === 'Rejected') return { label: 'Reprovado', cls: 'bg-red-50 text-red-700 border-red-200' };
+    if (r === 'Disputed') return { label: 'Em disputa', cls: 'bg-orange-50 text-orange-700 border-orange-200' };
+    return { label: '—', cls: 'bg-gray-50 text-gray-600 border-gray-200' };
+  };
+
   useEffect(() => {
     if (!id) return;
     const saved = JSON.parse(localStorage.getItem('meufreelas_saved_projects') || '[]');
@@ -325,11 +338,11 @@ export default function ProjectDetail() {
           <section className="lg:col-span-2">
             <h1 className="text-2xl md:text-3xl font-light text-gray-800 leading-tight">{project.title}</h1>
             <p className="text-sm text-gray-500 mt-2">{relativePublishedAt(project.createdAt)}</p>
-            {project.statusRaw && (
-              <p className="text-xs text-gray-500 mt-1">
-                Status: {project.statusRaw}
-              </p>
-            )}
+            <div className="mt-2">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded border text-xs font-semibold ${statusInfo(project.statusRaw).cls}`}>
+                {statusInfo(project.statusRaw).label}
+              </span>
+            </div>
 
             <h2 className="text-xl font-light text-gray-800 mt-6 mb-3">Descrição do Projeto:</h2>
             <p className="text-gray-700 whitespace-pre-line leading-7 text-sm md:text-base">{project.description}</p>
@@ -369,13 +382,14 @@ export default function ProjectDetail() {
                           if (!(amount > 0)) return;
                           const esc = await apiCreateEscrow(project.id, amount, 'pix');
                           if (!esc.ok || !esc.paymentId) {
-                            setToastMessage('Falha ao criar pagamento.');
+                            setToastMessage('Falha ao criar o depósito. Tente novamente.');
                             setShowSavedToast(true);
                             setTimeout(() => setShowSavedToast(false), 1800);
                             return;
                           }
                           await apiConfirmPayment(esc.paymentId);
-                          setToastMessage('Pagamento confirmado. Projeto em andamento.');
+                          setToastMessage('Depósito confirmado. O projeto foi iniciado.');
+                          setProject((p) => (p ? { ...p, statusRaw: 'In_Progress' } : p));
                           setShowSavedToast(true);
                           setTimeout(() => setShowSavedToast(false), 1800);
                         }}
@@ -389,7 +403,12 @@ export default function ProjectDetail() {
                         type="button"
                         onClick={async () => {
                           const r = await apiReleasePaymentByProject(project.id);
-                          setToastMessage(r.ok ? 'Pagamento liberado ao freelancer.' : (r.error || 'Falha ao liberar pagamento.'));
+                          if (r.ok) {
+                            setToastMessage('Pagamento liberado ao freelancer. Projeto concluído.');
+                            setProject((p) => (p ? { ...p, statusRaw: 'Closed' } : p));
+                          } else {
+                            setToastMessage(r.error || 'Falha ao liberar pagamento.');
+                          }
                           setShowSavedToast(true);
                           setTimeout(() => setShowSavedToast(false), 1800);
                         }}
@@ -405,7 +424,7 @@ export default function ProjectDetail() {
                           const ok = window.confirm('Tem certeza que deseja cancelar? Se estiver em andamento, abrirá disputa.');
                           if (!ok) return;
                           const r = await apiCancelProject(project.id);
-                          setToastMessage(r.ok ? 'Projeto cancelado.' : (r.error || 'Falha ao cancelar.'));
+                          setToastMessage(r.ok ? 'Solicitação de cancelamento registrada.' : (r.error || 'Falha ao cancelar.'));
                           setShowSavedToast(true);
                           setTimeout(() => setShowSavedToast(false), 1800);
                         }}
@@ -419,7 +438,12 @@ export default function ProjectDetail() {
                         type="button"
                         onClick={async () => {
                           const r = await apiReopenProject(project.id);
-                          setToastMessage(r.ok ? 'Projeto reaberto.' : (r.error || 'Falha ao reabrir.'));
+                          if (r.ok) {
+                            setToastMessage('Projeto reaberto e pronto para receber propostas.');
+                            setProject((p) => (p ? { ...p, statusRaw: 'Open' } : p));
+                          } else {
+                            setToastMessage(r.error || 'Falha ao reabrir.');
+                          }
                           setShowSavedToast(true);
                           setTimeout(() => setShowSavedToast(false), 1800);
                         }}
