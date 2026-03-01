@@ -68,6 +68,22 @@ $all_medals = [
     ]
 ];
 
+function get_profile_stats(PDO $pdo, int $freelancerId): array {
+    $stmt = $pdo->prepare("SELECT projetos_concluidos, avaliacoes_avg FROM profiles_freelancer WHERE user_id = ? LIMIT 1");
+    $stmt->execute([$freelancerId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $projects = (int)($row['projetos_concluidos'] ?? 0);
+    $rating = (float)($row['avaliacoes_avg'] ?? 0);
+    return ['projects' => $projects, 'rating' => $rating];
+}
+
+function tier_from_stats(int $projects, float $rating): string {
+    if ($projects >= 50 && $rating >= 4.8) return 'top_plus';
+    if ($projects >= 20 && $rating >= 4.7) return 'top';
+    if ($projects >= 5) return 'talent';
+    return 'none';
+}
+
 if ($method === 'GET') {
     try {
         // Fetch user unlocked medals
@@ -97,8 +113,40 @@ if ($method === 'GET') {
             ];
         }, $all_medals);
 
-        echo json_encode(['data' => $response]);
+        // Badge tier
+        $b = $pdo->prepare("SELECT medalha_tipo, identidade_verificada_bool FROM badges WHERE freelancer_id = ? LIMIT 1");
+        $b->execute([$user['id']]);
+        $badge = $b->fetch(PDO::FETCH_ASSOC) ?: ['medalha_tipo' => 'none', 'identidade_verificada_bool' => 0];
 
+        echo json_encode(['data' => $response, 'badge' => $badge]);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+} elseif ($method === 'POST') {
+    try {
+        $targetId = isset($_POST['freelancer_id']) ? (int)$_POST['freelancer_id'] : (int)$user['id'];
+        if ($targetId <= 0) $targetId = (int)$user['id'];
+        $stats = get_profile_stats($pdo, $targetId);
+        $tier = tier_from_stats($stats['projects'], $stats['rating']);
+        $now = date('Y-m-d H:i:s');
+        $nextCheck = date('Y-m-d', strtotime('+30 days'));
+        $pdo->prepare("INSERT INTO badges (freelancer_id, medalha_tipo, concedida_em, proxima_verificacao) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE medalha_tipo = VALUES(medalha_tipo), concedida_em = VALUES(concedida_em), proxima_verificacao = VALUES(proxima_verificacao)")
+            ->execute([$targetId, $tier, $now, $nextCheck]);
+        $bonus = 0;
+        if ($tier === 'talent') $bonus = 30;
+        if ($tier === 'top') $bonus = 60;
+        if ($tier === 'top_plus') $bonus = 120;
+        $stmtW = $pdo->prepare("SELECT saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel, renovacao_em FROM connections_wallet WHERE freelancer_id = ? LIMIT 1");
+        $stmtW->execute([$targetId]);
+        $w = $stmtW->fetch(PDO::FETCH_ASSOC);
+        if ($w) {
+            $pdo->prepare("UPDATE connections_wallet SET saldo_medalha_bonus = ? WHERE freelancer_id = ?")->execute([$bonus, $targetId]);
+        } else {
+            $pdo->prepare("INSERT INTO connections_wallet (freelancer_id, saldo_plano_mensal, saldo_medalha_bonus, saldo_nao_expiravel, renovacao_em) VALUES (?, 0, ?, 0, ?)")->execute([$targetId, $bonus, date('Y-m-01', strtotime('first day of next month'))]);
+        }
+        echo json_encode(['ok' => true, 'tier' => $tier, 'bonus' => $bonus, 'stats' => $stats]);
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
