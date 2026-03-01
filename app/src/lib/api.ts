@@ -844,6 +844,38 @@ export async function apiMarkAllNotificationsRead(userId: string): Promise<{ ok:
   }
 }
 
+export async function apiKycSubmit(freelancerId: string, docs: { front: string; back: string }, selfie: string): Promise<{ ok: boolean; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const res = await fetch(`${base}/kyc.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'submit', freelancer_id: freelancerId, docs, selfie }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiKycStatus(freelancerId: string): Promise<{ ok: boolean; kyc?: any; verified?: boolean; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const res = await fetch(`${base}/kyc.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'status', freelancer_id: freelancerId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, kyc: data.kyc, verified: data.verified as boolean | undefined, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export async function apiDeleteNotification(userId: string, notificationId: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const data = await callNotificationsApi({ action: 'delete_notification', userId, notificationId });
