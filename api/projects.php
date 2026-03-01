@@ -17,6 +17,13 @@ try {
   if (!is_array($data)) $data = [];
   $action = $data['action'] ?? '';
 
+  $notify = function (int $userId, string $type, string $title, string $desc, ?string $link = null) use ($pdo): void {
+    try {
+      $pdo->prepare("INSERT INTO notifications (user_id, tipo, titulo, descricao, link) VALUES (?, ?, ?, ?, ?)")
+          ->execute([$userId, $type, $title, $desc, $link]);
+    } catch (Throwable $e) {}
+  };
+
   $allowedStatuses = [
     'Awaiting_Approval',
     'Open',
@@ -56,6 +63,7 @@ try {
     if (!is_numeric($projectId)) { json_response(['ok' => false, 'error' => 'Projeto inválido'], 400); exit; }
     $pdo->prepare("UPDATE projects SET status = 'Open', approved_at = NOW() WHERE id = ?")->execute([(int)$projectId]);
     $proj = $getProject($pdo, (int)$projectId);
+    if ($proj && isset($proj['client_id'])) $notify((int)$proj['client_id'], 'project', 'Projeto aprovado', 'Seu projeto foi aprovado e está público.', "/project/{$proj['id']}");
     json_response(['ok' => true, 'project' => $proj]);
     exit;
   }
@@ -67,6 +75,7 @@ try {
     // Opcional: persistir reason em tabela própria de moderação no futuro
     $pdo->prepare("UPDATE projects SET status = 'Rejected', closed_at = NOW() WHERE id = ?")->execute([(int)$projectId]);
     $proj = $getProject($pdo, (int)$projectId);
+    if ($proj && isset($proj['client_id'])) $notify((int)$proj['client_id'], 'project', 'Projeto reprovado', 'Seu projeto foi reprovado pela moderação.', "/projects");
     json_response(['ok' => true, 'project' => $proj, 'reason' => $reason]);
     exit;
   }
@@ -115,6 +124,14 @@ try {
       $pdo->prepare("UPDATE projects SET status = 'Closed', closed_at = NOW() WHERE id = ?")->execute([(int)$projectId]);
     }
     $proj = $getProject($pdo, (int)$projectId);
+    // Notify accepted freelancer, if any
+    try {
+      $st = $pdo->prepare("SELECT freelancer_id FROM proposals WHERE project_id = ? AND status = 'Accepted' ORDER BY id DESC LIMIT 1");
+      $st->execute([(int)$projectId]);
+      $r = $st->fetch();
+      if ($r) $notify((int)$r['freelancer_id'], 'project', 'Projeto cancelado', 'O cliente cancelou o projeto. Verifique a disputa ou mensagens.', "/project/{$projectId}");
+      if ($proj && isset($proj['client_id'])) $notify((int)$proj['client_id'], 'project', 'Projeto cancelado', 'Você cancelou o projeto.', "/project/{$projectId}");
+    } catch (Throwable $e) {}
     json_response(['ok' => true, 'project' => $proj]);
     exit;
   }

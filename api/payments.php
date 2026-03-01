@@ -4,6 +4,13 @@ require_once __DIR__ . '/db.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
+function notify_user(PDO $pdo, int $userId, string $type, string $title, string $desc, ?string $link = null): void {
+  try {
+    $pdo->prepare("INSERT INTO notifications (user_id, tipo, titulo, descricao, link) VALUES (?, ?, ?, ?, ?)")
+        ->execute([$userId, $type, $title, $desc, $link]);
+  } catch (Throwable $e) { /* noop */ }
+}
+
 function get_active_plan_tier(PDO $pdo, int $freelancerId): string {
   try {
     $stmt = $pdo->prepare("SELECT tipo_plano FROM plans WHERE freelancer_id = ? AND status = 'active' ORDER BY inicio DESC LIMIT 1");
@@ -58,6 +65,18 @@ try {
     if ($p) {
       $pdo->prepare("INSERT INTO payments_ledger (payment_id, project_id, tipo, valor) VALUES (?, ?, 'Hold', ?)")->execute([$paymentId, (int)$p['project_id'], (float)$p['valor']]);
       $pdo->prepare("UPDATE projects SET status = 'In_Progress' WHERE id = ?")->execute([(int)$p['project_id']]);
+      // Notify client and accepted freelancer if exists
+      $projId = (int)$p['project_id'];
+      $clientId = 0; $freelancerId = 0;
+      try {
+        $q = $pdo->prepare("SELECT cliente_id FROM projects WHERE id = ? LIMIT 1");
+        $q->execute([$projId]);
+        $row = $q->fetch(); if ($row) $clientId = (int)$row['cliente_id'];
+        $q2 = $pdo->prepare("SELECT freelancer_id FROM proposals WHERE project_id = ? AND status = 'Accepted' ORDER BY id DESC LIMIT 1");
+        $q2->execute([$projId]); $r2 = $q2->fetch(); if ($r2) $freelancerId = (int)$r2['freelancer_id'];
+      } catch (Throwable $e) {}
+      if ($clientId > 0) notify_user($pdo, $clientId, 'payment', 'Pagamento confirmado', 'O depósito do projeto foi confirmado e o trabalho pode iniciar.', "/project/{$projId}");
+      if ($freelancerId > 0) notify_user($pdo, $freelancerId, 'payment', 'Depósito confirmado', 'O cliente confirmou o depósito do projeto. Você já pode começar.', "/project/{$projId}");
     }
     json_response(['ok' => true]);
     exit;
@@ -102,6 +121,14 @@ try {
     $pdo->prepare("UPDATE payments SET status = 'Released', released_at = NOW() WHERE id = ?")->execute([$paymentId]);
     // Projeto vai para Awaiting_Release -> Closed. Aqui consideramos liberação final pelo cliente:
     $pdo->prepare("UPDATE projects SET status = 'Closed', closed_at = NOW() WHERE id = ?")->execute([$projectId]);
+    // Notify both
+    try {
+      $owner = $pdo->prepare("SELECT cliente_id FROM projects WHERE id = ? LIMIT 1");
+      $owner->execute([$projectId]);
+      $ownerId = (int)($owner->fetch()['cliente_id'] ?? 0);
+      if ($ownerId > 0) notify_user($pdo, $ownerId, 'payment', 'Pagamento liberado', 'Você liberou o pagamento ao freelancer.', "/project/{$projectId}");
+      if ($freelancerId > 0) notify_user($pdo, $freelancerId, 'payment', 'Pagamento recebido', 'O cliente liberou o pagamento. Parabéns!', "/project/{$projectId}");
+    } catch (Throwable $e) {}
     json_response(['ok' => true, 'fee' => $fee, 'payout' => $payout, 'plan' => $tier]);
     exit;
   }
@@ -119,6 +146,17 @@ try {
     $pdo->prepare("INSERT INTO payments_ledger (payment_id, project_id, tipo, valor) VALUES (?, ?, 'Refund', ?)")->execute([$paymentId, (int)$p['project_id'], $refundValue]);
     $pdo->prepare("UPDATE payments SET status = 'Refunded', refunded_at = NOW() WHERE id = ?")->execute([$paymentId]);
     $pdo->prepare("UPDATE projects SET status = 'Closed', closed_at = NOW() WHERE id = ?")->execute([(int)$p['project_id']]);
+    // Notify
+    try {
+      $projId = (int)$p['project_id'];
+      $owner = $pdo->prepare("SELECT cliente_id FROM projects WHERE id = ? LIMIT 1");
+      $owner->execute([$projId]);
+      $ownerId = (int)($owner->fetch()['cliente_id'] ?? 0);
+      $q2 = $pdo->prepare("SELECT freelancer_id FROM proposals WHERE project_id = ? AND status = 'Accepted' ORDER BY id DESC LIMIT 1");
+      $q2->execute([$projId]); $r2 = $q2->fetch(); $freelancerId = $r2 ? (int)$r2['freelancer_id'] : 0;
+      if ($ownerId > 0) notify_user($pdo, $ownerId, 'payment', 'Pagamento reembolsado', 'Você efetuou um reembolso do projeto.', "/project/{$projId}");
+      if ($freelancerId > 0) notify_user($pdo, $freelancerId, 'payment', 'Pagamento reembolsado', 'O cliente realizou um reembolso deste projeto.', "/project/{$projId}");
+    } catch (Throwable $e) {}
     json_response(['ok' => true, 'refunded' => $refundValue]);
     exit;
   }

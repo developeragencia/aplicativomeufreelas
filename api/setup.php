@@ -367,6 +367,20 @@ try {
       depois JSON NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // notifications
+    "CREATE TABLE IF NOT EXISTS notifications (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT UNSIGNED NOT NULL,
+      tipo ENUM('project','message','payment','review','system') NOT NULL DEFAULT 'system',
+      titulo VARCHAR(255) NOT NULL,
+      descricao VARCHAR(1024) NULL,
+      link VARCHAR(255) NULL,
+      is_read TINYINT(1) DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_notifications_user (user_id, is_read, created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
   ];
 
