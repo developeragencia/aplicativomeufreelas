@@ -628,6 +628,36 @@ export async function apiDeleteProject(projectId: string, userId: string): Promi
   }
 }
 
+export async function apiApproveProject(projectId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callProjectsApi({ action: 'approve_project', projectId });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch (e) {
+    console.error('apiApproveProject', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiRejectProject(projectId: string, reason?: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callProjectsApi({ action: 'reject_project', projectId, reason });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch (e) {
+    console.error('apiRejectProject', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiSetProjectStatus(projectId: string, status: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callProjectsApi({ action: 'set_status', projectId, status });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch (e) {
+    console.error('apiSetProjectStatus', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export async function apiGetProject(projectId: string): Promise<{ ok: boolean; project?: ApiProject; error?: string }> {
   try {
     if (!API_URL) return { ok: false, error: 'API não configurada' };
