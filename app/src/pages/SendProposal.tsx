@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { apiCreateProposal, apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi } from '../lib/api';
+import { apiCreateProposal, apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, apiConsumeConnection } from '../lib/api';
 import { 
   ArrowLeft, DollarSign, Clock,
   Calculator, AlertCircle
@@ -258,13 +258,12 @@ export default function SendProposal() {
         return;
       }
     } else {
-      // API call - assuming apiCreateProposal handles update or we need a new endpoint
-      // For now, let's assume create works as upsert or we just call create. 
-      // Ideally we should have apiUpdateProposal but user didn't provide one.
-      // We will try to use create and hope backend handles it, or just proceed.
-      // Actually, since we are "Improving", we should probably use a specific logic if API exists.
-      // But looking at provided context, we only have apiCreateProposal.
-      // Let's assume it upserts for now.
+      const debit = await apiConsumeConnection({ freelancer_id: String(user.id), project_id: projectId, kind: 'proposal' });
+      if (!debit.ok) {
+        setIsSubmitting(false);
+        alert(debit.error || 'Sem conexões disponíveis.');
+        return;
+      }
       const res = await apiCreateProposal({
         projectId,
         freelancerId: user.id,
@@ -321,6 +320,14 @@ export default function SendProposal() {
       return;
     }
     setQuestionLoading(true);
+    if (hasApi()) {
+      const debit = await apiConsumeConnection({ freelancer_id: String(user.id), project_id: project.id, kind: 'question' });
+      if (!debit.ok) {
+        setQuestionLoading(false);
+        alert(debit.error || 'Sem conexões disponíveis.');
+        return;
+      }
+    }
     const conv = await apiEnsureConversation(user.id, project.clientId, project.id);
     if (conv.ok && conv.conversationId) {
       await apiSendMessage(user.id, conv.conversationId, `Olá! Tenho uma dúvida sobre o projeto: "${project.title}".`);

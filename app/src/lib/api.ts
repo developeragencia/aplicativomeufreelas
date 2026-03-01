@@ -164,6 +164,22 @@ export const api = {
   delete: (endpoint: string) => request('DELETE', endpoint),
 };
 
+export async function apiConsumeConnection(payload: { freelancer_id: string; project_id?: string; kind: 'proposal' | 'question' }): Promise<{ ok: boolean; balance?: number; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const res = await fetch(`${base}/connections/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'consume', ...payload }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok || res.ok, balance: data.balance as number | undefined, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export async function apiPostForm(endpoint: string, form: FormData) {
   if (!API_URL) throw new Error('API_URL not configured');
   const base = API_URL.replace(/\/$/, '');
