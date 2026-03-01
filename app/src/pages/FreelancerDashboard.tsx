@@ -1,10 +1,21 @@
 import AppShell from '../components/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function FreelancerDashboard() {
-  const { user, createSecondaryAccount, switchAccountType } = useAuth();
+  const { user, isAuthenticated, createSecondaryAccount, switchAccountType } = useAuth();
+  const navigate = useNavigate();
   const [status, setStatus] = useState<{ ok?: string; err?: string }>({});
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!user) return null;
+
   const handleCreateClient = async () => {
     setStatus({});
     const ok = await createSecondaryAccount('client');

@@ -2,6 +2,21 @@
 require_once __DIR__ . '/../db.php';
 $pdo = db_get_pdo();
 $id = isset($_GET['id']) ? trim((string)$_GET['id']) : null;
+
+function sanitize_project_description(string $text): string {
+  // Remove telefones
+  $text = preg_replace('/\(?\d{2}\)?[\s\-]?\d{4,5}[\s\-]?\d{4}/', '', $text);
+  $text = preg_replace('/\+?55[\s\-]?\d{2}[\s\-]?\d{4,5}[\s\-]?\d{4}/', '', $text);
+  // Remove emails
+  $text = preg_replace('/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/', '', $text);
+  // Remove URLs
+  $text = preg_replace('/https?:\/\/[^\s]+/i', '', $text);
+  $text = preg_replace('/www\.[^\s]+/i', '', $text);
+  // Mascara valores monetários específicos
+  $text = preg_replace('/R?\$?\s*\d{1,3}(\.\d{3})*,\d{2}/', '[VALOR REMOVIDO]', $text);
+  return $text;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $raw = file_get_contents('php://input');
   $data = json_decode($raw ?: '{}', true);
@@ -9,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $title = isset($data['title']) ? trim((string)$data['title']) : '';
   $description = isset($data['description']) ? trim((string)$data['description']) : '';
   $category = isset($data['category']) ? trim((string)$data['category']) : '';
+  $subcategory = isset($data['subcategory']) ? trim((string)$data['subcategory']) : null;
   $skills = isset($data['skills']) && is_array($data['skills']) ? json_encode(array_values($data['skills'])) : json_encode([]);
   $experience = isset($data['experienceLevel']) ? (string)$data['experienceLevel'] : 'intermediate';
   $proposalDays = isset($data['proposalDays']) ? (string)$data['proposalDays'] : '30';
@@ -17,18 +33,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     json_response(['ok' => false, 'error' => 'Dados inválidos'], 400);
     exit;
   }
+  $description = sanitize_project_description($description);
   try {
-    $stmt = $pdo->prepare("INSERT INTO projects (titulo, descricao, categoria, nivel, status, created_at, client_id, client_name, budget, skills, proposalDays, visibility) VALUES (?, ?, ?, ?, 'Aberto', NOW(), ?, ?, 'Aberto', ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO projects (titulo, descricao, categoria, subcategoria, nivel, status, created_at, client_id, client_name, budget, skills, proposalDays, visibility) VALUES (?, ?, ?, ?, ?, 'Awaiting_Approval', NOW(), ?, ?, 'Aberto', ?, ?, ?)");
     $clientName = 'Cliente';
-    $stmt->execute([$title, $description, $category, $experience, $userId, $clientName, $skills, $proposalDays, $visibility]);
+    $stmt->execute([$title, $description, $category, $subcategory, $experience, $userId, $clientName, $skills, $proposalDays, $visibility]);
     $newId = $pdo->lastInsertId();
     $created = [
       'id' => $newId,
       'titulo' => $title,
       'descricao' => $description,
       'categoria' => $category,
+      'subcategoria' => $subcategory,
       'nivel' => $experience,
-      'status' => 'Aberto',
+      'status' => 'Aguardando aprovação',
       'created_at' => date('Y-m-d H:i:s'),
       'client_id' => $userId,
       'client_name' => $clientName,

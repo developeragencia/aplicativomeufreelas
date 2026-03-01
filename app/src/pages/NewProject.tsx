@@ -5,6 +5,7 @@ import { ArrowLeft, Briefcase, Check, ChevronDown, Globe, Lock, Paperclip, X } f
 import { getSortedSkills } from '../constants/skills';
 import { setSEO } from '../lib/seo';
 import { apiCreateProject, hasApi } from '../lib/api';
+import { sanitizeProjectContent } from '../utils/contentModerator';
 
 const categories = [
   'Administração & Contabilidade',
@@ -52,6 +53,7 @@ export default function NewProject() {
 
   const [formData, setFormData] = useState({
     category: '',
+    subcategory: '',
     title: '',
     description: '',
     selectedSkills: [] as string[],
@@ -132,8 +134,9 @@ export default function NewProject() {
     const payload = {
       userId: user!.id,
       category: formData.category,
+      subcategory: formData.subcategory,
       title: formData.title.trim(),
-      description: formData.description.trim(),
+      description: sanitizeProjectContent(formData.description.trim()),
       skills: formData.selectedSkills,
       experienceLevel: formData.experienceLevel,
       proposalDays: formData.proposalDays,
@@ -157,7 +160,7 @@ export default function NewProject() {
       clientId: user!.id,
       ...payload,
       files: files.map((f) => f.name),
-      status: 'Aberto',
+      status: 'Aguardando aprovação',
       proposals: 0,
       createdAt: new Date().toISOString(),
     };
@@ -201,6 +204,9 @@ export default function NewProject() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+          Evite incluir contatos (telefone, e‑mail, links) ou valores na descrição. O sistema remove informações externas para manter a segurança.
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Publique um projeto</h1>
 
         {successMessage && (
@@ -225,7 +231,7 @@ export default function NewProject() {
               <select
                 id="project-category"
                 value={formData.category}
-                onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value, subcategory: '' }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent appearance-none bg-white"
               >
                 <option value="">Selecione uma categoria</option>
@@ -238,6 +244,20 @@ export default function NewProject() {
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
           </div>
+          {/* Subcategoria (opcional por categoria) */}
+          {formData.category && (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <label htmlFor="project-subcategory" className="block text-lg font-medium text-gray-900 mb-3">Subcategoria <span className="text-gray-500 font-normal">(Opcional)</span></label>
+              <input
+                id="project-subcategory"
+                type="text"
+                value={formData.subcategory}
+                onChange={(e) => setFormData((prev) => ({ ...prev, subcategory: e.target.value }))}
+                placeholder="Ex.: Frontend, QA, Social Media..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-99blue focus:border-transparent"
+              />
+            </div>
+          )}
 
           <div className="bg-white rounded-xl shadow-sm p-6">
             <label htmlFor="project-title" className="block text-lg font-medium text-gray-900 mb-3">Dê um nome para o trabalho</label>

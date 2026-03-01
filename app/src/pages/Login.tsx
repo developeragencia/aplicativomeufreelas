@@ -19,6 +19,19 @@ export default function Login() {
   const [notVerifiedEmail, setNotVerifiedEmail] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState('');
 
+  useEffect(() => {
+    const stored = localStorage.getItem('meufreelas_user');
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        if (u && u.id) {
+          const dest = u.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard';
+          navigate(dest, { replace: true });
+        }
+      } catch {}
+    }
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

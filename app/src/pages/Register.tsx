@@ -23,6 +23,19 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
 
+  useEffect(() => {
+    const stored = localStorage.getItem('meufreelas_user');
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        if (u && u.id) {
+          const dest = u.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard';
+          navigate(dest, { replace: true });
+        }
+      } catch {}
+    }
+  }, [navigate]);
+
   const handleTypeSelection = (type: UserTypeOption) => {
     setUserType(type);
     setError('');
