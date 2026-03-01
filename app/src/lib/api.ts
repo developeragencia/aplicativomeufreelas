@@ -908,6 +908,15 @@ export async function apiReleasePayment(payload: {
   }
 }
 
+export async function apiRefundPayment(paymentId: string, amount?: number): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callPaymentsApi({ action: 'refund_payment', paymentId, amount });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export async function apiCreateCheckout(payload: {
   proposalId: string;
   clientId: string;
@@ -927,6 +936,15 @@ export async function apiCreateCheckout(payload: {
     };
   } catch (e) {
     console.error('apiCreateCheckout', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiConfirmPayment(paymentId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callPaymentsApi({ action: 'confirm_payment', paymentId });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
     return { ok: false, error: 'Falha de conexão' };
   }
 }
