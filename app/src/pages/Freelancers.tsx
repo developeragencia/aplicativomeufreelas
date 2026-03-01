@@ -24,6 +24,7 @@ interface Freelancer {
   recommendations: number;
   memberSince: string;
   ranking: number;
+  rankingScore?: number;
   isPremium: boolean;
   isPro: boolean;
   isVerified: boolean;
@@ -50,6 +51,7 @@ function mapApiFreelancer(f: ApiFreelancerPublic): Freelancer {
     recommendations: Number(f.recommendations) || 0,
     memberSince: f.memberSince || f.registeredAt || new Date().toISOString(),
     ranking: f.ranking || 0,
+    rankingScore: typeof (f as any).rankingScore === 'number' ? (f as any).rankingScore : Number((f as any).ranking_score || 0),
     isPremium: !!f.isPremium,
     isPro: !!f.isPro,
     isVerified: !!f.isVerified,
