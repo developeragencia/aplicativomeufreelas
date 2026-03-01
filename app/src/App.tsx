@@ -21,6 +21,9 @@ import Plans from './pages/Plans';
 import VerifiedIdentity from './pages/VerifiedIdentity';
 import Disputes from './pages/Disputes';
 import AdminModeration from './pages/AdminModeration';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminSanctions from './pages/AdminSanctions';
 import Invitations from './pages/Invitations';
 import Notifications from './pages/Notifications';
 import Ranking from './pages/Ranking';
@@ -97,6 +100,9 @@ function AppRoutes() {
       <Route path="/plans" element={<Plans />} />
       <Route path="/verified" element={<VerifiedIdentity />} />
       <Route path="/disputes" element={<Disputes />} />
+      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+      <Route path="/admin/sanctions" element={<AdminRoute><AdminSanctions /></AdminRoute>} />
       <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
       <Route path="/invitations" element={<Invitations />} />
       <Route path="/notifications" element={<Notifications />} />
