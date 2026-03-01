@@ -1,8 +1,22 @@
 <?php
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../_env.php';
-require_once __DIR__ . '/../vendor/autoload.php';
-use App\Mailer;
+// Carrega Mailer: usa vendor se existir, senão fallback simples
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+  require_once __DIR__ . '/../vendor/autoload.php';
+  if (class_exists('App\\Mailer')) {
+    class_alias('App\\Mailer', 'Mailer');
+  }
+}
+if (!class_exists('Mailer')) {
+  require_once __DIR__ . '/../_mailer.php';
+}
+
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, cf-turnstile-response, x-turnstile-token, Authorization');
+if ($method === 'OPTIONS') { http_response_code(204); exit; }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method !== 'POST') {
@@ -79,8 +93,8 @@ try {
   }
 
   $subject = 'Bem-vindo ao MeuFreelas';
-  $html = '<p>Olá, ' . htmlspecialchars($name) . '!</p><p>Conta criada com sucesso como ' . htmlspecialchars($role) . '.</p><p>Acesse: <a href="' . (env('FRONTEND_URL', 'https://meufreelas.com.br')) . '/auth">Entrar</a></p>';
-  Mailer::send($email, $name, $subject, $html);
+  $html = '<p>Olá, ' . htmlspecialchars($name) . '!</p><p>Conta criada com sucesso como ' . htmlspecialchars($role) . '.</p><p>Acesse: <a href="' . (env('FRONTEND_URL', 'https://meufreelas.com.br')) . '/login">Entrar</a></p>';
+  if (class_exists('Mailer')) { Mailer::send($email, $name, $subject, $html); }
 
   json_response(['ok' => true, 'user' => $user]);
 } catch (Throwable $e) {

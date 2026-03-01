@@ -97,6 +97,17 @@ try {
     $pdo->prepare('INSERT INTO user_accounts (user_id, role) VALUES (?, ?)')->execute([$userId, $role]);
     $pdo->prepare('INSERT INTO profiles_cliente (user_id, nome) VALUES (?, ?)')->execute([$userId, $name]);
     $id = $userId;
+    // Envia e-mail de boas-vindas via Mailer (fallback)
+    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+      require_once __DIR__ . '/../vendor/autoload.php';
+      if (class_exists('App\\Mailer')) { class_alias('App\\Mailer', 'Mailer'); }
+    }
+    if (!class_exists('Mailer')) {
+      require_once __DIR__ . '/../_mailer.php';
+    }
+    $subject = 'Bem-vindo ao MeuFreelas';
+    $html = '<p>Olá, ' . htmlspecialchars($name) . '!</p><p>Conta criada com sucesso via ' . htmlspecialchars($provider) . '.</p><p>Acesse: <a href="' . (env('FRONTEND_URL', 'https://meufreelas.com.br')) . '/login">Entrar</a></p>';
+    if (class_exists('Mailer')) { Mailer::send($email, $name, $subject, $html); }
   } else {
     $id = (int)$u['id'];
   }

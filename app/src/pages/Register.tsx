@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, Briefcase, ArrowRight, Chrome, Github } from 'lucide-react';
 import { setSEO } from '../lib/seo';
 import { TurnstileWidget, hasTurnstile } from '@/components/TurnstileWidget';
-import { apiOAuthStart } from '@/lib/api';
+import { apiOAuthStart, apiOAuthStatus, apiOAuthPublic } from '@/lib/api';
 
 type UserTypeOption = 'freelancer' | 'client';
 
@@ -42,6 +42,49 @@ export default function Register() {
     setStep(1);
   };
 
+  const startOAuth = async (p: 'google' | 'github') => {
+    setError('');
+    const r = await apiOAuthStart(p);
+    if (r.ok && r.url) { window.location.href = r.url; return; }
+    let url = '';
+    if (p === 'google') {
+      const cid = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID as string;
+      if (cid) {
+        const redirect = `${window.location.origin}/api/oauth/callback.php?provider=google`;
+        const params = new URLSearchParams({ client_id: cid, redirect_uri: redirect, response_type: 'code', scope: 'email profile', access_type: 'online', prompt: 'consent' });
+        url = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+      } else {
+        const pub = await apiOAuthPublic();
+        const gid = pub.google?.client_id;
+        const red = pub.google?.redirect_uri || `${window.location.origin}/api/oauth/callback.php?provider=google`;
+        if (gid) {
+          const params = new URLSearchParams({ client_id: gid, redirect_uri: red, response_type: 'code', scope: 'email profile', access_type: 'online', prompt: 'consent' });
+          url = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+        }
+      }
+    } else {
+      const cid = (import.meta as any).env?.VITE_GITHUB_CLIENT_ID as string;
+      if (cid) {
+        const redirect = `${window.location.origin}/api/oauth/callback.php?provider=github`;
+        const params = new URLSearchParams({ client_id: cid, redirect_uri: redirect, scope: 'user:email' });
+        url = 'https://github.com/login/oauth/authorize?' + params.toString();
+      } else {
+        const pub = await apiOAuthPublic();
+        const gid = pub.github?.client_id;
+        const red = pub.github?.redirect_uri || `${window.location.origin}/api/oauth/callback.php?provider=github`;
+        if (gid) {
+          const params = new URLSearchParams({ client_id: gid, redirect_uri: red, scope: 'user:email' });
+          url = 'https://github.com/login/oauth/authorize?' + params.toString();
+        }
+      }
+    }
+    if (url) { window.location.href = url; return; }
+    if (r.code === 'OAUTH_NOT_CONFIGURED') {
+      const st = await apiOAuthStatus();
+      if (st.ok && st.missing && st.missing.length) { setError(`Faltam variáveis: ${st.missing.join(', ')}`); return; }
+    }
+    setError(r.error || 'Falha ao iniciar login social.');
+  };
   useEffect(() => {
     setSEO({
       title: 'Cadastrar - MeuFreelas',
@@ -246,19 +289,11 @@ export default function Register() {
               {!successMessage && (
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => apiOAuthStart('google').then(r=>r.ok&&r.url?window.location.href=r.url:setError(r.error||'Falha ao iniciar login social.'))}
-                    className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                  <button type="button" onClick={()=>startOAuth('google')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     <Chrome className="w-5 h-5 mr-3 text-rose-500" />
                     Cadastrar com Google
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => apiOAuthStart('github').then(r=>r.ok&&r.url?window.location.href=r.url:setError(r.error||'Falha ao iniciar login social.'))}
-                    className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                  <button type="button" onClick={()=>startOAuth('github')} className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     <Github className="w-5 h-5 mr-3" />
                     Cadastrar com GitHub
                   </button>

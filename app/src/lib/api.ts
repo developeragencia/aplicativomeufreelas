@@ -94,6 +94,32 @@ export async function apiOAuthComplete(email: string): Promise<{ ok: boolean; us
   }
 }
 
+export async function apiOAuthStatus(): Promise<{ ok: boolean; missing?: string[]; frontend?: string; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const url = `${base}/oauth/start.php?action=status`;
+    const res = await fetch(url, { method: 'GET' });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, missing: (data.missing as string[]) || [], frontend: data.frontend as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiOAuthPublic(): Promise<{ ok: boolean; google?: { client_id: string; redirect_uri: string }; github?: { client_id: string; redirect_uri: string }; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const url = `${base}/oauth/start.php?action=public`;
+    const res = await fetch(url, { method: 'GET' });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, google: data.google, github: data.github };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 // Generic API helper
 async function request(method: string, endpoint: string, body?: any) {
   if (!API_URL) throw new Error('API_URL not configured');

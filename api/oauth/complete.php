@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../_env.php';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+if ($method === 'OPTIONS') { http_response_code(204); exit; }
 if ($method !== 'POST') { json_response(['ok' => false, 'error' => 'Método não permitido'], 405); exit; }
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);

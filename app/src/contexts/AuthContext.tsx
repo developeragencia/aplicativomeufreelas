@@ -64,18 +64,19 @@ function normalizeDisplayName(value: string): string {
 }
 
 function normalizeUser(raw: Record<string, unknown>): User | null {
-  const id = raw.id;
+  let id: unknown = raw.id;
   const email = raw.email;
   const name = raw.name;
   let type = raw.type;
   if (typeof type === 'string') type = type.toLowerCase() as UserType;
 
+  if (typeof id === 'number') id = String(id);
   if (typeof id !== 'string' || typeof email !== 'string' || typeof name !== 'string' || !isUserType(type)) {
     return null;
   }
 
   return {
-    id,
+    id: id as string,
     email,
     name: normalizeDisplayName(name),
     type: type as Exclude<UserType, null>,

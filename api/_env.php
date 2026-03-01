@@ -2,8 +2,10 @@
 function load_env(): array {
   $paths = [
     __DIR__ . '/.env',
+    __DIR__ . '/ENVIAR-PARA-HOSTINGER.api.env',
     dirname(__DIR__) . '/.env',
-    dirname(__DIR__) . '/.env.hostinger.completo'
+    dirname(__DIR__) . '/.env.hostinger.completo',
+    dirname(__DIR__) . '/ENVIAR-PARA-HOSTINGER.api.env',
   ];
   $env = [];
   foreach ($paths as $p) {
@@ -21,8 +23,17 @@ function load_env(): array {
     }
   }
   // Merge with environment variables provided by the host (Panel/Apache)
-  foreach (['DB_HOST','DB_PORT','DB_NAME','DB_USER','DB_PASS','DB_AUTO_CREATE',
-            'MYSQLHOST','MYSQLPORT','MYSQLDATABASE','MYSQLUSER','MYSQLPASSWORD'] as $k) {
+  foreach ([
+    // Database
+    'DB_HOST','DB_PORT','DB_NAME','DB_USER','DB_PASS','DB_AUTO_CREATE',
+    'MYSQLHOST','MYSQLPORT','MYSQLDATABASE','MYSQLUSER','MYSQLPASSWORD',
+    // OAuth / Frontend
+    'FRONTEND_URL',
+    'GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REDIRECT_URI',
+    'GITHUB_CLIENT_ID','GITHUB_CLIENT_SECRET','GITHUB_REDIRECT_URI',
+    // Optional: Turnstile
+    'TURNSTILE_SECRET_KEY','TURNSTILE_SITE_KEY',
+  ] as $k) {
     $val = getenv($k);
     if ($val !== false && $val !== null && $val !== '') {
       $env[$k] = $val;

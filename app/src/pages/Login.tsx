@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { apiResendActivation, hasApi, apiOAuthStart, apiOAuthComplete } from '../lib/api';
+import { apiResendActivation, hasApi, apiOAuthStart, apiOAuthComplete, apiOAuthStatus, apiOAuthPublic } from '../lib/api';
 import { Eye, EyeOff, Mail, Lock, Github, Chrome } from 'lucide-react';
 import { setSEO } from '../lib/seo';
 import { TurnstileWidget, hasTurnstile } from '@/components/TurnstileWidget';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, setAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -77,8 +77,45 @@ export default function Login() {
   const startOAuth = async (provider: 'google' | 'github') => {
     setError('');
     const res = await apiOAuthStart(provider);
-    if (res.ok && res.url) window.location.href = res.url;
-    else setError(res.error || 'Falha ao iniciar login social.');
+    if (res.ok && res.url) { window.location.href = res.url; return; }
+    let url = '';
+    if (provider === 'google') {
+      const cid = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID as string;
+      if (cid) {
+        const redirect = `${window.location.origin}/api/oauth/callback.php?provider=google`;
+        const params = new URLSearchParams({ client_id: cid, redirect_uri: redirect, response_type: 'code', scope: 'email profile', access_type: 'online', prompt: 'consent' });
+        url = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+      } else {
+        const pub = await apiOAuthPublic();
+        const gid = pub.google?.client_id;
+        const red = pub.google?.redirect_uri || `${window.location.origin}/api/oauth/callback.php?provider=google`;
+        if (gid) {
+          const params = new URLSearchParams({ client_id: gid, redirect_uri: red, response_type: 'code', scope: 'email profile', access_type: 'online', prompt: 'consent' });
+          url = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+        }
+      }
+    } else {
+      const cid = (import.meta as any).env?.VITE_GITHUB_CLIENT_ID as string;
+      if (cid) {
+        const redirect = `${window.location.origin}/api/oauth/callback.php?provider=github`;
+        const params = new URLSearchParams({ client_id: cid, redirect_uri: redirect, scope: 'user:email' });
+        url = 'https://github.com/login/oauth/authorize?' + params.toString();
+      } else {
+        const pub = await apiOAuthPublic();
+        const gid = pub.github?.client_id;
+        const red = pub.github?.redirect_uri || `${window.location.origin}/api/oauth/callback.php?provider=github`;
+        if (gid) {
+          const params = new URLSearchParams({ client_id: gid, redirect_uri: red, scope: 'user:email' });
+          url = 'https://github.com/login/oauth/authorize?' + params.toString();
+        }
+      }
+    }
+    if (url) { window.location.href = url; return; }
+    if (res.code === 'OAUTH_NOT_CONFIGURED') {
+      const st = await apiOAuthStatus();
+      if (st.ok && st.missing && st.missing.length) { setError(`Faltam variáveis: ${st.missing.join(', ')}`); return; }
+    }
+    setError(res.error || 'Falha ao iniciar login social.');
   };
 
   useEffect(() => {
@@ -95,11 +132,10 @@ export default function Login() {
     if (oauthEmail) {
       apiOAuthComplete(oauthEmail).then((res) => {
         if (res.ok && res.user) {
-          const ok = (useAuth() as any).setAuthenticated(res.user);
+          const ok = setAuthenticated(res.user);
           if (ok) {
-            const stored = localStorage.getItem('meufreelas_user');
-            const u = stored ? (JSON.parse(stored) as { type?: string }) : null;
-            const dest = u?.type === 'freelancer' ? '/freelancer/dashboard' : '/dashboard';
+            const t = (res.user as any)?.type;
+            const dest = t === 'freelancer' ? '/freelancer/dashboard' : '/dashboard';
             navigate(dest, { replace: true });
           }
         }
