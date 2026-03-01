@@ -1,161 +1,24 @@
-name: deploy
+name: Deploy to Hostinger via deploy_pull
+
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - '**'
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - name: install
-        working-directory: app
-        run: npm ci
-      - name: typecheck
-        working-directory: app
-        run: npm run typecheck
-      - name: lint
-        working-directory: app
-        run: npm run lint
-      - name: build
-        working-directory: app
-        run: npm run build
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trigger server deploy_pull
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-      - name: deploy-frontend
-        if: ${{ github.event_name == 'push' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: app/dist
-          server-dir: public_html
-          exclude: |
-            **/.env
-            **/.env.*
-      - name: deploy-public
-        if: ${{ github.event_name == 'push' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: app/public
-          server-dir: public_html
-          exclude: |
-            **/.env
-            **/.env.*
-      - name: deploy-api
-        if: ${{ github.event_name == 'push' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: api
-          server-dir: public_html/api
-          exclude: |
-            **/.env
-            **/.env.*
-      - name: write-deploy-token-file
-        if: ${{ secrets.DEPLOY_TOKEN != '' }}
+          DEPLOY_TOKEN: ${{ secrets.HOSTINGER_DEPLOY_TOKEN }}
         run: |
-          mkdir -p token
-          echo "${{ secrets.DEPLOY_TOKEN }}" > token/.deploy_token
-      - name: upload-deploy-token-file
-        if: ${{ secrets.DEPLOY_TOKEN != '' && github.event_name == 'push' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: token
-          server-dir: public_html/api
-      - name: write-api-env-from-repo
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          mkdir -p api-env
-          cp .env.hostinger.completo api-env/.env
-      - name: upload-api-env
-        if: ${{ github.event_name == 'push' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: api-env
-          server-dir: public_html/api
-      - name: upload-root-env-hostinger
-        if: ${{ github.event_name == 'push' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: .
-          server-dir: public_html
-          exclude: |
-            **
-            !.env.hostinger.completo
-      - name: deploy-fallback-http
-        if: ${{ secrets.DEPLOY_TOKEN != '' && github.event_name == 'push' }}
-        run: |
-          curl -sS "https://meufreelas.com.br/api/deploy_pull.php?token=${{ secrets.DEPLOY_TOKEN }}" || true
-      - name: verify-api-health
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -e
-          BODY=$(curl -sS "https://meufreelas.com.br/api/health.php")
-          echo "$BODY"
-          echo "$BODY" | grep -q '"ok":true'
-      - name: verify-api-projects
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -e
-          BODY=$(curl -sS "https://meufreelas.com.br/api/projects/?page=1&per_page=1")
-          echo "$BODY"
-          echo "$BODY" | grep -q '"ok":true'
-      - name: verify-api-freelancers
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -e
-          BODY=$(curl -sS "https://meufreelas.com.br/api/freelancers/?page=1&per_page=1")
-          echo "$BODY"
-          echo "$BODY" | grep -q '"ok":true'
-      - name: seed-test-data
-        if: ${{ github.event_name == 'push' && secrets.DEPLOY_TOKEN != '' }}
-        run: |
-          curl -sS "https://meufreelas.com.br/api/seed_test.php?token=${{ secrets.DEPLOY_TOKEN }}"
-      - name: verify-forgot-password
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -e
-          BODY=$(curl -sS -X POST -H "Content-Type: application/json" -d "{\"email\":\"cliente.teste@meufreelas.com.br\"}" "https://meufreelas.com.br/api/forgot_password.php")
-          echo "$BODY"
-          echo "$BODY" | grep -q '"ok":true'
-      - name: verify-reset-password
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          set -e
-          BODY=$(curl -sS -X POST -H "Content-Type: application/json" -d "{\"token\":\"dummy\",\"password\":\"Senha123!\"}" "https://meufreelas.com.br/api/reset_password.php")
-          echo "$BODY"
-          echo "$BODY" | grep -q '"ok":true'
+          if [ -z "$DEPLOY_TOKEN" ]; then
+            echo "Missing HOSTINGER_DEPLOY_TOKEN secret"
+            exit 1
+          fi
+          curl -sS "https://meufreelas.com.br/api/deploy_pull.php?token=${DEPLOY_TOKEN}" \
+            --fail --max-time 60 || exit 1
