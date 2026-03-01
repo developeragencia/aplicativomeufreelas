@@ -65,10 +65,19 @@ try {
 
   if ($action === 'release_payment') {
     $paymentId = isset($data['paymentId']) ? (int)$data['paymentId'] : 0;
-    if ($paymentId <= 0) { json_response(['ok' => false, 'error' => 'Pagamento inválido'], 400); exit; }
-    $stmt = $pdo->prepare("SELECT p.project_id, p.valor FROM payments p WHERE p.id = ?");
-    $stmt->execute([$paymentId]);
-    $pay = $stmt->fetch();
+    $projectIdParam = isset($data['projectId']) ? (int)$data['projectId'] : 0;
+    if ($paymentId <= 0 && $projectIdParam <= 0) { json_response(['ok' => false, 'error' => 'Requisição inválida'], 400); exit; }
+    if ($paymentId > 0) {
+      $stmt = $pdo->prepare("SELECT p.project_id, p.valor FROM payments p WHERE p.id = ?");
+      $stmt->execute([$paymentId]);
+    } else {
+      // Obter último pagamento confirmado do projeto
+      $stmt = $pdo->prepare("SELECT p.id, p.project_id, p.valor FROM payments p WHERE p.project_id = ? AND p.status IN ('Confirmed','Created') ORDER BY p.id DESC LIMIT 1");
+      $stmt->execute([$projectIdParam]);
+      $row = $stmt->fetch();
+      if ($row) $paymentId = (int)$row['id'];
+    }
+    $pay = isset($row) && $row ? $row : ($stmt->fetch() ?: null);
     if (!$pay) { json_response(['ok' => false, 'error' => 'Pagamento não encontrado'], 404); exit; }
     $projectId = (int)$pay['project_id'];
     $amount = (float)$pay['valor'];

@@ -599,6 +599,7 @@ export type ApiProject = {
   createdAt: string;
   updatedAt?: string;
   approvedAt?: string;
+  rawStatus?: string;
 };
 
 async function callProjectsApi(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -695,11 +696,18 @@ export async function apiGetProject(projectId: string): Promise<{ ok: boolean; p
       experienceLevel: String(it.nivel || 'intermediate'),
       proposalDays: '',
       visibility: 'public',
-      status: 'Aberto',
+      status: ((): any => {
+        const s = String(it.status || '').trim();
+        if (s === 'In_Progress') return 'Em andamento';
+        if (s === 'Closed') return 'Concluído';
+        if (s === 'Rejected') return 'Cancelado';
+        return 'Aberto';
+      })(),
       proposals: Number(it.proposals || 0),
       createdAt: String(it.created_at || new Date().toISOString()),
       updatedAt: String(it.updated_at || it.created_at || new Date().toISOString()),
       approvedAt: typeof it.approved_at === 'string' ? it.approved_at : undefined,
+      rawStatus: typeof it.status === 'string' ? it.status : undefined,
     };
     return { ok: true, project };
   } catch (e) {
@@ -961,6 +969,65 @@ export async function apiReleasePayment(payload: {
 export async function apiRefundPayment(paymentId: string, amount?: number): Promise<{ ok: boolean; error?: string }> {
   try {
     const data = await callPaymentsApi({ action: 'refund_payment', paymentId, amount });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiCreateEscrow(projectId: string, amount: number, method: 'pix' | 'boleto' | 'card' = 'pix'): Promise<{ ok: boolean; paymentId?: string; error?: string }> {
+  try {
+    const data = await callPaymentsApi({ action: 'create_escrow', projectId, amount, method });
+    return { ok: !!data.ok, paymentId: data.paymentId as string | undefined, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiReleasePaymentByProject(projectId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callPaymentsApi({ action: 'release_payment', projectId });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+async function callProjectsAction(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  const url = `${API_URL.replace(/\/$/, '')}/projects.php`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    credentials: 'omit',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+  return data as Record<string, unknown>;
+}
+
+export async function apiCancelProject(projectId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callProjectsAction({ action: 'cancel_project', projectId });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiReopenProject(projectId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callProjectsAction({ action: 'reopen_project', projectId });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiCloseProject(projectId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await callProjectsAction({ action: 'close_project', projectId });
     return { ok: !!data.ok, error: data.error as string | undefined };
   } catch {
     return { ok: false, error: 'Falha de conexão' };

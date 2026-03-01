@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Star, Clock, Heart, Flag, Send, MessageCircle, User, MapPin, Shield, ShieldCheck, FileText, ChevronDown, Calendar, DollarSign, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal } from '../lib/api';
+import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal, apiCreateEscrow, apiConfirmPayment, apiReleasePaymentByProject, apiCancelProject, apiReopenProject } from '../lib/api';
 import AppShell from '../components/AppShell';
 import Toast from '../components/Toast';
 import { setSEO } from '../lib/seo';
@@ -22,6 +22,7 @@ type ProjectView = {
   clientName: string;
   clientId: string;
   createdAt: string;
+  statusRaw?: string;
 };
 
 const CURRENT_WHATSAPP_ID = '8c5870363bc9ca76312b3b530fbb6cdf7363';
@@ -55,6 +56,7 @@ function mapProject(p: ApiProject): ProjectView {
     clientName: p.clientName || 'Cliente',
     clientId: p.clientId,
     createdAt: p.createdAt,
+    statusRaw: p.rawStatus,
   };
 }
 
@@ -323,6 +325,11 @@ export default function ProjectDetail() {
           <section className="lg:col-span-2">
             <h1 className="text-2xl md:text-3xl font-light text-gray-800 leading-tight">{project.title}</h1>
             <p className="text-sm text-gray-500 mt-2">{relativePublishedAt(project.createdAt)}</p>
+            {project.statusRaw && (
+              <p className="text-xs text-gray-500 mt-1">
+                Status: {project.statusRaw}
+              </p>
+            )}
 
             <h2 className="text-xl font-light text-gray-800 mt-6 mb-3">Descrição do Projeto:</h2>
             <p className="text-gray-700 whitespace-pre-line leading-7 text-sm md:text-base">{project.description}</p>
@@ -347,6 +354,83 @@ export default function ProjectDetail() {
             </div>
 
             <div className="bg-[#efefef] border border-gray-200 p-5 text-sm">
+              {/* Client actions */}
+              {user?.type === 'client' && String(user.id) === String(project.clientId) && hasApi() && (
+                <div className="mb-4">
+                  <h3 className="text-gray-700 mb-3">Ações do cliente</h3>
+                  <div className="space-y-2">
+                    {(!project.statusRaw || project.statusRaw === 'Open') && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const amountStr = window.prompt('Informe o valor do depósito (R$):', '100');
+                          if (!amountStr) return;
+                          const amount = parseFloat(amountStr.replace(',', '.'));
+                          if (!(amount > 0)) return;
+                          const esc = await apiCreateEscrow(project.id, amount, 'pix');
+                          if (!esc.ok || !esc.paymentId) {
+                            setToastMessage('Falha ao criar pagamento.');
+                            setShowSavedToast(true);
+                            setTimeout(() => setShowSavedToast(false), 1800);
+                            return;
+                          }
+                          await apiConfirmPayment(esc.paymentId);
+                          setToastMessage('Pagamento confirmado. Projeto em andamento.');
+                          setShowSavedToast(true);
+                          setTimeout(() => setShowSavedToast(false), 1800);
+                        }}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2"
+                      >
+                        Iniciar pagamento (depósito)
+                      </button>
+                    )}
+                    {project.statusRaw === 'Awaiting_Release' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const r = await apiReleasePaymentByProject(project.id);
+                          setToastMessage(r.ok ? 'Pagamento liberado ao freelancer.' : (r.error || 'Falha ao liberar pagamento.'));
+                          setShowSavedToast(true);
+                          setTimeout(() => setShowSavedToast(false), 1800);
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2"
+                      >
+                        Liberar pagamento
+                      </button>
+                    )}
+                    {project.statusRaw === 'In_Progress' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const ok = window.confirm('Tem certeza que deseja cancelar? Se estiver em andamento, abrirá disputa.');
+                          if (!ok) return;
+                          const r = await apiCancelProject(project.id);
+                          setToastMessage(r.ok ? 'Projeto cancelado.' : (r.error || 'Falha ao cancelar.'));
+                          setShowSavedToast(true);
+                          setTimeout(() => setShowSavedToast(false), 1800);
+                        }}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white py-2"
+                      >
+                        Cancelar projeto
+                      </button>
+                    )}
+                    {project.statusRaw === 'Closed' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const r = await apiReopenProject(project.id);
+                          setToastMessage(r.ok ? 'Projeto reaberto.' : (r.error || 'Falha ao reabrir.'));
+                          setShowSavedToast(true);
+                          setTimeout(() => setShowSavedToast(false), 1800);
+                        }}
+                        className="w-full bg-gray-700 hover:bg-gray-800 text-white py-2"
+                      >
+                        Reabrir projeto
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               <h3 className="text-gray-700 mb-3">Informações adicionais</h3>
               <div className="space-y-2 text-gray-700">
                 <div className="flex justify-between"><span>Categoria:</span><span>{project.category}</span></div>
