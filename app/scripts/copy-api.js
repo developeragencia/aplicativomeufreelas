@@ -30,10 +30,12 @@ function copyRecursive(src, dest) {
       fs.copyFileSync(srcPath, destPath);
     }
   }
-  if (fs.existsSync(path.join(apiSrc, '.env.example'))) {
-    fs.copyFileSync(path.join(apiSrc, '.env.example'), path.join(dest, '.env.example'));
-  }
-  console.log('copy-api: api/ copiada para dist/api/');
 }
 
 copyRecursive(apiSrc, apiDest);
+
+if (fs.existsSync(path.join(apiSrc, '.env.example'))) {
+  fs.copyFileSync(path.join(apiSrc, '.env.example'), path.join(apiDest, '.env.example'));
+}
+
+console.log('copy-api: api/ copiada para dist/api/');

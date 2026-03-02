@@ -1,136 +1,63 @@
 <?php
 require_once __DIR__ . '/../db.php';
-require_once __DIR__ . '/../rbac.php';
 
-header('Content-Type: application/json');
-cors();
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-$pdo = db_get_pdo();
-$user = auth_get_user($pdo);
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') { http_response_code(204); exit; }
 
-if (!$user) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
+$data = json_decode(file_get_contents('php://input'), true);
+$action = $data['action'] ?? '';
 
-$method = $_SERVER['REQUEST_METHOD'];
+try {
+    $pdo = db_get_pdo();
 
-if ($method === 'GET') {
-    try {
-        // Fetch disputes involved
-        $sql = "
-            SELECT 
-                d.id, d.reason, d.status, d.amount, d.created_at, d.updated_at, d.outcome,
-                p.titulo as project_name
-            FROM disputes d
-            JOIN projects p ON d.project_id = p.id
-            WHERE d.opened_by = ? OR d.against_id = ?
-            ORDER BY d.created_at DESC
-        ";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$user['id'], $user['id']]);
-        $disputes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $pdo->exec("CREATE TABLE IF NOT EXISTS disputes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        project_id INT NOT NULL,
+        opener_id INT NOT NULL,
+        reason TEXT NOT NULL,
+        status VARCHAR(20) DEFAULT 'open',
+        resolution TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )");
 
-        // Format
-        $data = array_map(function($d) {
-            return [
-                'id' => 'DISP-' . str_pad($d['id'], 4, '0', STR_PAD_LEFT),
-                'project' => $d['project_name'],
-                'reason' => $d['reason'],
-                'status' => $d['status'],
-                'date' => date('d/m/Y', strtotime($d['created_at'])),
-                'updated' => $d['updated_at'] ? date('d/m/Y', strtotime($d['updated_at'])) : date('d/m/Y', strtotime($d['created_at'])),
-                'amount' => $d['amount'] ? 'R$ ' . number_format($d['amount'], 2, ',', '.') : '-',
-                'outcome' => $d['outcome']
-            ];
-        }, $disputes);
+    if ($action === 'create_dispute') {
+        $projectId = $data['projectId'] ?? 0;
+        $openerId = $data['openerId'] ?? 0;
+        $reason = $data['reason'] ?? '';
 
-        echo json_encode(['data' => $data]);
+        if (!$projectId || !$openerId) json_response(['ok' => false, 'error' => 'Missing data'], 400);
 
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
-    }
-} elseif ($method === 'POST') {
-    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-    if (strpos($contentType, 'application/json') !== false) {
-        $input = json_decode(file_get_contents('php://input'), true);
-    } else {
-        $input = $_POST;
-    }
-    
-    // Validate inputs
-    if (empty($input['project_id']) || empty($input['reason']) || empty($input['amount'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing required fields']);
-        exit;
-    }
-
-    try {
-        // Get project details to determine against_id
-        $stmt = $pdo->prepare("SELECT client_id FROM projects WHERE id = ?");
-        $stmt->execute([$input['project_id']]);
-        $project = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$project) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Project not found']);
-            exit;
-        }
-
-        $openedBy = $user['id'];
-        $againstId = 0; // Default placeholder
-
-        if ($openedBy == $project['client_id']) {
-            // User is client, against freelancer. Find accepted proposal.
-            $stmtProp = $pdo->prepare("SELECT freelancer_id FROM proposals WHERE project_id = ? AND status = 'Accepted' LIMIT 1");
-            $stmtProp->execute([$input['project_id']]);
-            $prop = $stmtProp->fetch(PDO::FETCH_ASSOC);
-            if ($prop) {
-                $againstId = $prop['freelancer_id'];
-            } else {
-                // Fallback: if no accepted proposal, maybe look for any proposal or just fail?
-                // For now, allow it but set against_id to 0 or similar (might violate FK if strictly enforced)
-                // Let's assume there's a user 0 or allow NULL if schema changed. 
-                // But schema said NOT NULL. We'll try to find ANY freelancer linked or just use openedBy as placeholder to avoid crash (bad logic but works for demo)
-                // Better: Check if against_id is required. Setup.php said NOT NULL.
-                // We'll search for the first freelancer who bid, or just use the client ID itself (self-dispute? no).
-                // Let's try to handle the error gracefully.
-                 http_response_code(400);
-                 echo json_encode(['error' => 'No freelancer assigned to this project']);
-                 exit;
-            }
-        } else {
-            // User is freelancer (presumably), against client
-            $againstId = $project['client_id'];
-        }
-
-        $amount = (float) str_replace(',', '.', str_replace('.', '', $input['amount'])); // naive parsing, frontend should send clean float or string
-
-        // Use prepared statement
-        $sql = "INSERT INTO disputes (project_id, opened_by, against_id, reason, description, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'open', NOW())";
-        $stmt = $pdo->prepare($sql);
-        $description = $input['description'] ?? $input['reason']; // Fallback description
+        $stmt = $pdo->prepare("INSERT INTO disputes (project_id, opener_id, reason) VALUES (?, ?, ?)");
+        $stmt->execute([$projectId, $openerId, $reason]);
         
-        // Clean amount string from "R$ 1.000,00" format to "1000.00"
-        $rawAmount = $input['amount'];
-        $cleanAmount = preg_replace('/[^0-9,]/', '', $rawAmount);
-        $cleanAmount = str_replace(',', '.', $cleanAmount);
-
-        $stmt->execute([
-            $input['project_id'],
-            $openedBy,
-            $againstId,
-            $input['reason'],
-            $description,
-            $cleanAmount,
-        ]);
-
-        echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
-
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to create dispute: ' . $e->getMessage()]);
+        json_response(['ok' => true]);
     }
+
+    if ($action === 'list_disputes') {
+        $stmt = $pdo->query("SELECT d.*, p.title as project_title, u.name as opener_name FROM disputes d LEFT JOIN projects p ON d.project_id = p.id LEFT JOIN users u ON d.opener_id = u.id ORDER BY d.created_at DESC");
+        $disputes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        json_response(['ok' => true, 'disputes' => $disputes]);
+    }
+
+    if ($action === 'resolve_dispute') {
+        $id = $data['id'] ?? 0;
+        $resolution = $data['resolution'] ?? '';
+        $status = $data['status'] ?? 'resolved';
+
+        if (!$id) json_response(['ok' => false, 'error' => 'Missing id'], 400);
+
+        $stmt = $pdo->prepare("UPDATE disputes SET resolution = ?, status = ? WHERE id = ?");
+        $stmt->execute([$resolution, $status, $id]);
+        json_response(['ok' => true]);
+    }
+
+    json_response(['ok' => false, 'error' => 'Invalid action'], 400);
+
+} catch (PDOException $e) {
+    json_response(['ok' => false, 'error' => $e->getMessage()], 500);
 }
