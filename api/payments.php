@@ -40,6 +40,81 @@ try {
   if (!is_array($data)) $data = [];
   $action = $data['action'] ?? ($_GET['action'] ?? ($_POST['action'] ?? ''));
 
+  if ($action === 'list_payments') {
+    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
+    $userType = $data['userType'] ?? 'client';
+    if ($userId <= 0) { json_response(['ok' => false, 'error' => 'Usuário inválido'], 400); exit; }
+
+    $balance = 0.0;
+    $pending = 0.0;
+    $monthTotal = 0.0;
+    $transactions = [];
+
+    if ($userType === 'freelancer') {
+        $stmt = $pdo->prepare("SELECT SUM(valor) FROM payments_ledger WHERE user_id = ? AND tipo = 'Payout'");
+        $stmt->execute([$userId]);
+        $balance = (float)$stmt->fetchColumn();
+
+        $stmt = $pdo->prepare("SELECT SUM(p.valor) FROM payments p JOIN proposals prop ON p.project_id = prop.project_id WHERE prop.freelancer_id = ? AND prop.status = 'Accepted' AND p.status = 'Confirmed'");
+        $stmt->execute([$userId]);
+        $pending = (float)$stmt->fetchColumn();
+
+        $stmt = $pdo->prepare("SELECT SUM(valor) FROM payments_ledger WHERE user_id = ? AND tipo = 'Payout' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        $stmt->execute([$userId]);
+        $monthTotal = (float)$stmt->fetchColumn();
+
+        $stmt = $pdo->prepare("SELECT l.id, l.valor, l.created_at, l.tipo, p.titulo as project_title FROM payments_ledger l LEFT JOIN projects p ON l.project_id = p.id WHERE l.user_id = ? AND l.tipo = 'Payout' ORDER BY l.created_at DESC LIMIT 50");
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+            $transactions[] = [
+                'id' => $r['id'],
+                'description' => 'Pagamento recebido',
+                'amount' => 'R$ ' . number_format((float)$r['valor'], 2, ',', '.'),
+                'type' => 'entrada',
+                'status' => 'Concluído',
+                'date' => date('d/m/Y', strtotime($r['created_at'])),
+                'project' => $r['project_title']
+            ];
+        }
+    } else {
+        $stmt = $pdo->prepare("SELECT SUM(p.valor) FROM payments p JOIN projects proj ON p.project_id = proj.id WHERE proj.cliente_id = ? AND p.status = 'Confirmed'");
+        $stmt->execute([$userId]);
+        $pending = (float)$stmt->fetchColumn();
+
+        $stmt = $pdo->prepare("SELECT SUM(p.valor) FROM payments p JOIN projects proj ON p.project_id = proj.id WHERE proj.cliente_id = ? AND p.status = 'Released' AND p.released_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        $stmt->execute([$userId]);
+        $monthTotal = (float)$stmt->fetchColumn();
+
+        $stmt = $pdo->prepare("SELECT p.id, p.valor, p.created_at, p.status, proj.titulo as project_title FROM payments p JOIN projects proj ON p.project_id = proj.id WHERE proj.cliente_id = ? ORDER BY p.created_at DESC LIMIT 50");
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+            $transactions[] = [
+                'id' => $r['id'],
+                'description' => 'Pagamento de projeto',
+                'amount' => 'R$ ' . number_format((float)$r['valor'], 2, ',', '.'),
+                'type' => 'saida',
+                'rawStatus' => strtolower($r['status']),
+                'status' => $r['status'] === 'Released' ? 'Concluído' : ($r['status'] === 'Confirmed' ? 'Pendente' : 'Em processamento'),
+                'date' => date('d/m/Y', strtotime($r['created_at'])),
+                'project' => $r['project_title']
+            ];
+        }
+    }
+
+    json_response([
+        'ok' => true,
+        'summary' => [
+            'balance' => 'R$ ' . number_format($balance, 2, ',', '.'),
+            'pending' => 'R$ ' . number_format($pending, 2, ',', '.'),
+            'monthReceived' => 'R$ ' . number_format($monthTotal, 2, ',', '.')
+        ],
+        'transactions' => $transactions
+    ]);
+    exit;
+  }
+
   if ($action === 'create_checkout' || $action === 'create_escrow') {
     $projectId = isset($data['projectId']) ? (int)$data['projectId'] : 0;
     $amount = isset($data['amount']) ? (float)$data['amount'] : 0.0;
