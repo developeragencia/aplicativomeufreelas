@@ -32,6 +32,16 @@ import Connections from './pages/Connections';
 import MultiContracts from './pages/MultiContracts';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Novas importações para corrigir rotas faltantes
+import Payments from './pages/Payments';
+import Favorites from './pages/Favorites';
+import MyProfile from './pages/MyProfile';
+import EditProfile from './pages/EditProfile';
+import Settings from './pages/Settings';
+import Messages from './pages/Messages';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
+
 let storageSanitized = false;
 
 function sanitizeLocalStorageOnce(): void {
@@ -99,6 +109,7 @@ function AppRoutes() {
       <Route path="/freelancer/dashboard" element={<FreelancerDashboard />} />
       <Route path="/plans" element={<Plans />} />
       <Route path="/verified" element={<VerifiedIdentity />} />
+      <Route path="/verified-identity" element={<VerifiedIdentity />} />
       <Route path="/disputes" element={<Disputes />} />
       <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
@@ -110,6 +121,19 @@ function AppRoutes() {
       <Route path="/medals" element={<Medals />} />
       <Route path="/connections" element={<Connections />} />
       <Route path="/multi-contracts" element={<MultiContracts />} />
+
+      {/* Rotas adicionadas para corrigir navegação */}
+      <Route path="/payments" element={<Payments />} />
+      <Route path="/favorites" element={<Favorites />} />
+      <Route path="/profile" element={<MyProfile />} />
+      <Route path="/profile/edit" element={<EditProfile />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/messages" element={<Messages />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfUse />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/help" element={<HelpCenter />} />
+
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

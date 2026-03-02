@@ -232,7 +232,7 @@ export default function Freelancers() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
            <div>
              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Encontre Freelancers</h1>
-             <p className="text-gray-500 mt-1">{filteredFreelancers.length} profissionais encontrados</p>
+             <p className="text-gray-500 mt-1">{hasApi() ? totalServer : freelancers.length} profissionais encontrados</p>
            </div>
            <div className="flex items-center gap-3">
              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
