@@ -127,6 +127,9 @@ export default function UserProfile() {
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
+                        {(user.isPremium || user.isPro) && (
+                            <Crown className="w-8 h-8 text-amber-500 fill-amber-100" />
+                        )}
                         <h1 className="text-3xl font-bold text-gray-900 leading-tight">{user.name}</h1>
                         {/* Always show Verified if true */}
                         {user.isVerified && (
@@ -135,7 +138,7 @@ export default function UserProfile() {
                         {/* Show Premium Badge */}
                         {(user.isPremium || user.isPro) && (
                           <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1">
-                            <Crown className="w-3 h-3 fill-current" /> TOP FREELANCER PLUS
+                            TOP FREELANCER PLUS
                           </span>
                         )}
                       </div>
@@ -266,13 +269,7 @@ export default function UserProfile() {
                 {/* Details Card */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="space-y-4">
-                        {isFreelancer && (
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Valor Hora</h4>
-                                {/* Mocking or using if available */}
-                                <p className="text-2xl font-bold text-gray-900">R$ {user.hourlyRate || '0,00'}</p>
-                            </div>
-                        )}
+
                         
                         <div>
                             <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Localização</h4>
