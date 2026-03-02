@@ -61,7 +61,7 @@ export default function MyProfile() {
               apiListReviews(user.id),
             ]);
             const proposals = proposalsRes.ok && proposalsRes.proposals ? proposalsRes.proposals : [];
-            const projectsCompleted = proposals.filter((p) => p.status === 'Aceita' || p.status === 'Concluída').length;
+            const projectsCompleted = proposals.filter((p) => (p.status as string) === 'Aceita' || (p.status as string) === 'Concluída').length;
             
             let rating = user.rating || 0;
             let ratingCount = 0;

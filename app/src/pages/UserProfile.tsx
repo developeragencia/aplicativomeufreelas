@@ -130,7 +130,7 @@ export default function UserProfile() {
                         <h1 className="text-3xl font-bold text-gray-900 leading-tight">{user.name}</h1>
                         {/* Always show Verified if true */}
                         {user.isVerified && (
-                          <Shield className="w-6 h-6 text-blue-500 fill-blue-50" title="Identidade Verificada" />
+                          <span title="Identidade Verificada"><Shield className="w-6 h-6 text-blue-500 fill-blue-50" /></span>
                         )}
                         {/* Show Premium Badge */}
                         {(user.isPremium || user.isPro) && (
