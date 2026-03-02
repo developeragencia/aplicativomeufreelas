@@ -14,7 +14,7 @@ $return_var = 0;
 
 // Force fetch and reset
 // Ensure we are in the correct directory (optional, but good practice if script is in subfolder)
-// chdir(__DIR__ . '/..'); 
+chdir(__DIR__ . '/..'); 
 
 exec('git fetch --all 2>&1', $output);
 exec('git reset --hard origin/main 2>&1', $output);
