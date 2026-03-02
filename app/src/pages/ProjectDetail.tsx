@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Star, Clock, Heart, Flag, Send, MessageCircle, User, MapPin, Shield, ShieldCheck, FileText, ChevronDown, Calendar, DollarSign, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal, apiCreateEscrow, apiConfirmPayment, apiReleasePaymentByProject, apiCancelProject, apiReopenProject } from '../lib/api';
+import { apiEnsureConversation, apiGetProject, apiListProposals, apiSendMessage, hasApi, type ApiProject, type ApiProposal, apiCreateEscrow, apiConfirmPayment, apiReleasePaymentByProject, apiCancelProject, apiReopenProject, apiCreateReview } from '../lib/api';
 import AppShell from '../components/AppShell';
 import Toast from '../components/Toast';
 import { setSEO } from '../lib/seo';
@@ -116,6 +116,46 @@ export default function ProjectDetail() {
   const [reportReason, setReportReason] = useState('');
   const [proposalsPage, setProposalsPage] = useState(1);
   const proposalsPerPage = 5;
+
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const acceptedProposal = useMemo(() => proposals.find(p => p.status === 'Aceita'), [proposals]);
+
+  const canReview = useMemo(() => {
+    if (!project || project.statusRaw !== 'Closed' || !user || !acceptedProposal) return false;
+    const isClient = String(user.id) === String(project.clientId);
+    const isFreelancer = String(user.id) === String(acceptedProposal.freelancerId);
+    return isClient || isFreelancer;
+  }, [project, user, acceptedProposal]);
+
+  const handleReviewSubmit = async () => {
+    if (!project || !user || !acceptedProposal) return;
+    setIsSubmittingReview(true);
+    
+    const isClient = String(user.id) === String(project.clientId);
+    const toUserId = isClient ? acceptedProposal.freelancerId : project.clientId;
+    
+    const res = await apiCreateReview({
+      projectId: project.id,
+      fromUserId: user.id,
+      toUserId,
+      rating: reviewRating,
+      comment: reviewComment
+    });
+
+    setIsSubmittingReview(false);
+    if (res.ok) {
+      setToastMessage('Avaliação enviada com sucesso!');
+      setShowSavedToast(true);
+      setShowReviewModal(false);
+      setTimeout(() => setShowSavedToast(false), 3000);
+    } else {
+      alert(res.error || 'Erro ao enviar avaliação.');
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -308,7 +348,51 @@ export default function ProjectDetail() {
             </aside>
           </div>
         </div>
-      </AppShell>
+        {showReviewModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded shadow p-5">
+            <h3 className="text-gray-800 font-semibold mb-3">Avaliar {String(user?.id) === String(project.clientId) ? 'Freelancer' : 'Cliente'}</h3>
+            <div className="flex gap-2 mb-4 justify-center">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewRating(star)}
+                  className={`text-2xl focus:outline-none transition-colors ${star <= reviewRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <label className="block text-sm text-gray-600 mb-2">Comentário</label>
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              className="w-full border border-gray-300 px-3 py-2 text-sm mb-4 h-24 resize-none rounded"
+              placeholder="Descreva sua experiência..."
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowReviewModal(false)}
+                className="px-4 py-2 border border-gray-300 text-sm rounded hover:bg-gray-50"
+                disabled={isSubmittingReview}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleReviewSubmit}
+                disabled={isSubmittingReview}
+                className="px-4 py-2 bg-99blue text-white text-sm rounded hover:bg-sky-700 disabled:opacity-50"
+              >
+                {isSubmittingReview ? 'Enviando...' : 'Enviar Avaliação'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </AppShell>
     );
   }
 
@@ -453,6 +537,18 @@ export default function ProjectDetail() {
                       </button>
                     )}
                   </div>
+                </div>
+              )}
+              {canReview && (
+                <div className="mb-4">
+                  <h3 className="text-gray-700 mb-3">Avaliação</h3>
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 flex items-center justify-center gap-2"
+                  >
+                    <Star className="w-4 h-4" />
+                    Avaliar {String(user?.id) === String(project.clientId) ? 'Freelancer' : 'Cliente'}
+                  </button>
                 </div>
               )}
               <h3 className="text-gray-700 mb-3">Informações adicionais</h3>

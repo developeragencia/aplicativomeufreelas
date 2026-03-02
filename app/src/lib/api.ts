@@ -1143,12 +1143,39 @@ export type ApiReview = {
   projectTitle: string;
 };
 
-export async function apiListReviews(userId: string): Promise<{ ok: boolean; reviews?: ApiReview[]; error?: string }> {
+async function callReviewsApi(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
   if (!API_URL) return { ok: false, error: 'API não configurada' };
+  const url = `${API_URL.replace(/\/$/, '')}/reviews.php`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    credentials: 'omit',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: (data?.error as string) || `Erro ${res.status}` };
+  return data as Record<string, unknown>;
+}
+
+export async function apiCreateReview(payload: {
+  projectId: string;
+  fromUserId: string;
+  toUserId: string;
+  rating: number;
+  comment: string;
+}): Promise<{ ok: boolean; error?: string }> {
   try {
-    const url = `${API_URL.replace(/\/$/, '')}/reviews.php?userId=${encodeURIComponent(userId)}`;
-    const res = await fetch(url, { credentials: 'omit' });
-    const data = await res.json().catch(() => ({}));
+    const data = await callReviewsApi({ action: 'create_review', ...payload });
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch (e) {
+    console.error('apiCreateReview', e);
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiListReviews(userId: string): Promise<{ ok: boolean; reviews?: ApiReview[]; error?: string }> {
+  try {
+    const data = await callReviewsApi({ action: 'list_reviews', userId });
     return {
       ok: !!data.ok,
       reviews: (data.reviews as ApiReview[] | undefined) || [],

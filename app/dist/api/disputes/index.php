@@ -53,7 +53,12 @@ if ($method === 'GET') {
         echo json_encode(['error' => $e->getMessage()]);
     }
 } elseif ($method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (strpos($contentType, 'application/json') !== false) {
+        $input = json_decode(file_get_contents('php://input'), true);
+    } else {
+        $input = $_POST;
+    }
     
     // Validate inputs
     if (empty($input['project_id']) || empty($input['reason']) || empty($input['amount'])) {
