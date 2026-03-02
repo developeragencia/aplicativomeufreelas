@@ -2,7 +2,7 @@ import AppShell from '../components/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { apiListNotifications } from '@/lib/api';
+import { apiListNotifications, apiListProjects, apiListProposals } from '@/lib/api';
 
 export default function ClientDashboard() {
   const { user, isAuthenticated, createSecondaryAccount, switchAccountType } = useAuth();
@@ -10,6 +10,11 @@ export default function ClientDashboard() {
   const [status, setStatus] = useState<{ ok?: string; err?: string }>({});
   const [events, setEvents] = useState<Array<{ id: string; title: string; description?: string; link?: string; date?: string }>>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [stats, setStats] = useState({
+    activeProjects: 0,
+    proposalsReceived: 0,
+    invitationsSent: 0
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -18,19 +23,41 @@ export default function ClientDashboard() {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    async function loadEvents() {
+    async function loadData() {
       if (!user?.id) return;
+      
       setLoadingEvents(true);
-      const res = await apiListNotifications(String(user.id));
-      setLoadingEvents(false);
-      if (res.ok && res.notifications) {
-        const list = (res.notifications as any[]).filter((n) => n.type === 'project').slice(0, 6);
+      
+      // Load Notifications
+      const resNotif = await apiListNotifications(String(user.id));
+      if (resNotif.ok && resNotif.notifications) {
+        const list = (resNotif.notifications as any[]).filter((n) => n.type === 'project').slice(0, 6);
         setEvents(list);
       } else {
         setEvents([]);
       }
+
+      // Load Projects Stats
+      const resProj = await apiListProjects({ clientId: user.id });
+      const activeProjects = resProj.ok && resProj.projects 
+        ? resProj.projects.filter((p: any) => p.status === 'In_Progress' || p.status === 'Aberto').length 
+        : 0;
+
+      // Load Proposals Stats
+      const resProp = await apiListProposals({ clientId: user.id });
+      const proposalsReceived = resProp.ok && resProp.proposals 
+        ? resProp.proposals.filter(p => p.status === 'Pendente').length 
+        : 0;
+
+      setStats({
+        activeProjects,
+        proposalsReceived,
+        invitationsSent: 0 // TODO: Implement invitations API
+      });
+
+      setLoadingEvents(false);
     }
-    void loadEvents();
+    void loadData();
   }, [user?.id]);
 
   if (!user) return null;
@@ -74,15 +101,15 @@ export default function ClientDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Projetos</h2>
-            <p className="text-sm text-gray-500">0 ativos</p>
+            <p className="text-sm text-gray-500">{stats.activeProjects} ativos</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Propostas recebidas</h2>
-            <p className="text-sm text-gray-500">0 novas</p>
+            <p className="text-sm text-gray-500">{stats.proposalsReceived} novas</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Convites</h2>
-            <p className="text-sm text-gray-500">0 enviados</p>
+            <p className="text-sm text-gray-500">{stats.invitationsSent} enviados</p>
           </div>
         </div>
         <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6">

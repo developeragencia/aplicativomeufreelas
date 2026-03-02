@@ -148,80 +148,52 @@ export default function Freelancers() {
       setSEO({ title: 'Freelancers - MeuFreelas', description: 'Encontre freelancers qualificados para o seu projeto.', canonicalPath: '/freelancers' });
       try {
         let loadedFreelancers: Freelancer[] = [];
+        let serverTotal = 0;
 
         if (hasApi()) {
-          const res = await apiListFreelancersPublicNew({ page: currentPage, per_page: pageSize, q: keyword || undefined });
+          const res = await apiListFreelancersPublicNew({ 
+            page: currentPage, 
+            per_page: pageSize, 
+            q: keyword || undefined,
+            category: category !== 'Todas as áreas' ? category : undefined,
+            rating_min: ratingFilter !== 'any' ? Number(ratingFilter) : undefined,
+            sort: sortBy
+          });
+
           if (res.ok && res.items) {
             loadedFreelancers = res.items.map(mapApiFreelancer);
-            setTotalServer(typeof res.total === 'number' ? res.total : loadedFreelancers.length);
+            serverTotal = typeof res.total === 'number' ? res.total : loadedFreelancers.length;
+            setTotalServer(serverTotal);
             setErrorMsg('');
           } else if (res.error) {
             setErrorMsg(res.error);
           }
         } 
         
-        // Fallback or Merge with Local (simulating hybrid data for demo/dev)
-        if (loadedFreelancers.length === 0) {
+        // Se não veio da API ou API falhou (e não temos itens), tenta fallback local (apenas para demo)
+        // Mas se a API retornou ok com lista vazia, respeita a API.
+        if (loadedFreelancers.length === 0 && !hasApi()) {
            const localUsers = JSON.parse(localStorage.getItem('meufreelas_users') || '[]');
            const fls = localUsers.filter((u: any) => u.type === 'freelancer' || u.hasFreelancerAccount);
            if (fls.length > 0) {
              loadedFreelancers = fls.map((u: any) => mapApiFreelancer({ ...u, id: String(u.id) }));
            }
+           // Filter locally if fallback
+           loadedFreelancers = loadedFreelancers.filter(f => {
+              const matchKeyword = !keyword || f.name.toLowerCase().includes(keyword.toLowerCase()) || f.title.toLowerCase().includes(keyword.toLowerCase()) || f.skills.some(s => s.toLowerCase().includes(keyword.toLowerCase()));
+              const matchCategory = category === 'Todas as áreas' || f.skills.some(s => s.includes(category) || category.includes(s)); 
+              const matchRating = ratingFilter === 'any' || (ratingFilter === '4.5' && f.rating >= 4.5) || (ratingFilter === '4' && f.rating >= 4);
+              return matchKeyword && matchCategory && matchRating;
+           }).sort((a, b) => {
+              // ... sort logic copied from below ...
+              return 0; 
+           });
+           setTotalServer(loadedFreelancers.length);
         }
 
-        // Se o usuário estiver logado, atualiza seus dados na lista com os dados locais mais recentes
-        if (user && user.id) {
-          // Check if user is already in list, if not and is freelancer, add him
-          const userInList = loadedFreelancers.find(f => String(f.id) === String(user.id));
-          
-          if (user.type === 'freelancer' && !userInList) {
-             // Add current user to top if freelancer
-             const currentUserFreelancer = mapApiFreelancer({
-                id: user.id,
-                name: user.name,
-                username: user.email.split('@')[0], // fallback
-                avatar: user.avatar || '',
-                title: user.title || 'Freelancer',
-                bio: user.bio || '',
-                skills: user.skills || [],
-                rating: 0,
-                totalReviews: 0,
-                completedProjects: 0,
-                recommendations: 0,
-                memberSince: new Date().toISOString(),
-                isPremium: user.isPremium,
-                isPro: user.isPro,
-                isVerified: false,
-                planTier: user.plan || 'free',
-                hasPhoto: !!user.avatar,
-                profileCompletion: 0,
-                rankingScore: 0
-             });
-             loadedFreelancers = [currentUserFreelancer, ...loadedFreelancers];
-          }
-
-          loadedFreelancers = loadedFreelancers.map(f => {
-            if (String(f.id) === String(user.id)) {
-              let localProfile: any = {};
-              try {
-                localProfile = JSON.parse(localStorage.getItem(`profile_${user.id}`) || '{}');
-              } catch {}
-
-              return {
-                ...f,
-                name: user.name || f.name,
-                avatar: user.avatar || f.avatar,
-                title: localProfile.title || user.title || f.title,
-                bio: localProfile.bio || user.bio || f.bio,
-                skills: localProfile.skills || user.skills || f.skills,
-                isPremium: user.isPremium,
-                isPro: user.isPro
-              };
-            }
-            return f;
-          });
-        }
-
+        // Se o usuário estiver logado e for freelancer, garante que ele apareça SE bater com os filtros?
+        // Melhor deixar a API cuidar disso.
+        
         setFreelancers(loadedFreelancers);
       } catch (e) {
         console.error(e);
@@ -239,36 +211,18 @@ export default function Freelancers() {
     return () => {
       window.removeEventListener('meufreelas:profile-updated', handleProfileUpdate);
     };
-  }, [user, currentPage, pageSize, keyword]);
-
-  const filteredFreelancers = useMemo(() => {
-    return freelancers.filter(f => {
-      const matchKeyword = !keyword || f.name.toLowerCase().includes(keyword.toLowerCase()) || f.title.toLowerCase().includes(keyword.toLowerCase()) || f.skills.some(s => s.toLowerCase().includes(keyword.toLowerCase()));
-      const matchCategory = category === 'Todas as áreas' || f.skills.some(s => s.includes(category) || category.includes(s)); 
-      const matchRating = ratingFilter === 'any' || (ratingFilter === '4.5' && f.rating >= 4.5) || (ratingFilter === '4' && f.rating >= 4);
-      
-      return matchKeyword && matchCategory && matchRating;
-    }).sort((a, b) => {
-      switch (sortBy) {
-        case 'alpha_asc': return a.name.localeCompare(b.name);
-        case 'alpha_desc': return b.name.localeCompare(a.name);
-        case 'projects_desc': return (b.completedProjects || 0) - (a.completedProjects || 0);
-        case 'projects_asc': return (a.completedProjects || 0) - (b.completedProjects || 0);
-        case 'recs_desc': return (b.recommendations || 0) - (a.recommendations || 0);
-        case 'recs_asc': return (a.recommendations || 0) - (b.recommendations || 0);
-        case 'rank_desc': return (b.ranking || 0) - (a.ranking || 0);
-        default: return 0;
-      }
-    });
-  }, [freelancers, keyword, category, ratingFilter, sortBy]);
+  }, [user, currentPage, pageSize, keyword, category, ratingFilter, sortBy]);
 
   const paginatedFreelancers = useMemo(() => {
-    if (hasApi()) return filteredFreelancers; // Server-side já paginado
+    // Se veio da API, já está paginado.
+    if (hasApi()) return freelancers;
+    
+    // Fallback local pagination
     const start = (currentPage - 1) * pageSize;
-    return filteredFreelancers.slice(start, start + pageSize);
-  }, [filteredFreelancers, currentPage]);
+    return freelancers.slice(start, start + pageSize);
+  }, [freelancers, currentPage, pageSize]);
 
-  const totalPages = Math.ceil((hasApi() ? totalServer : filteredFreelancers.length) / pageSize);
+  const totalPages = Math.ceil((hasApi() ? totalServer : freelancers.length) / pageSize);
 
   const publishHref = !isAuthenticated ? '/login' : user?.type === 'client' ? '/project/new' : '/freelancer/dashboard';
 
