@@ -618,6 +618,7 @@ async function callProjectsApi(payload: Record<string, unknown>): Promise<Record
 
 export async function apiListProjects(payload: {
   clientId?: string;
+  freelancerId?: string;
   status?: string;
   search?: string;
   category?: string;

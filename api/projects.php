@@ -44,16 +44,28 @@ try {
   if ($action === 'list_projects') {
     $status = $data['status'] ?? null;
     $clientId = $data['clientId'] ?? null;
+    $freelancerId = $data['freelancerId'] ?? null;
     $params = [];
     $where = [];
-    if ($status) { $where[] = 'status = ?'; $params[] = $status; }
-    if ($clientId) { $where[] = 'cliente_id = ?'; $params[] = $clientId; }
+    
     $sql = "SELECT p.id, p.titulo, p.categoria, p.subcategoria, p.nivel, p.status, p.created_at, p.cliente_id AS client_id, pc.nome AS client_name, p.descricao FROM projects p LEFT JOIN profiles_cliente pc ON pc.user_id = p.cliente_id";
+
+    if ($freelancerId) {
+        $sql .= " JOIN proposals prop ON p.id = prop.project_id";
+        $where[] = "prop.freelancer_id = ?";
+        $params[] = $freelancerId;
+        $where[] = "prop.status = 'Aceita'";
+    }
+
+    if ($status) { $where[] = 'p.status = ?'; $params[] = $status; }
+    if ($clientId) { $where[] = 'p.cliente_id = ?'; $params[] = $clientId; }
+    
     if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
-    $sql .= ' ORDER BY created_at DESC LIMIT 100';
+    $sql .= ' ORDER BY p.created_at DESC LIMIT 100';
+    
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    $rows = $stmt->fetchAll();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     json_response(['ok' => true, 'projects' => $rows]);
     exit;
   }

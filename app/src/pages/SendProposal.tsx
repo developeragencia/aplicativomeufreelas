@@ -65,49 +65,12 @@ export default function SendProposal() {
     }
     async function loadProject() {
       if (!projectId) return;
-      if (!hasApi()) {
-        try {
-          const raw = JSON.parse(localStorage.getItem('meufreelas_projects') || '[]');
-          const list = Array.isArray(raw) ? raw : [];
-          const found = list.find((p: any) => String(p.id) === String(projectId));
-          if (!found) return;
-          const minimumOffer = detectMinimumOffer(found.category, found.budget);
-          setProject({
-            id: String(found.id),
-            title: String(found.title || ''),
-            description: String(found.description || ''),
-            budget: String(found.budget || 'A combinar'),
-            clientId: String(found.clientId || ''),
-            clientName: String(found.clientName || 'Cliente'),
-            category: String(found.category || 'Outra'),
-            minOffer: minimumOffer,
-          });
-          if (!offer) setOffer(minimumOffer.toFixed(2));
-          const localProps = JSON.parse(localStorage.getItem('meufreelas_proposals') || '[]');
-          const foundProposal = Array.isArray(localProps)
-            ? localProps.find((pp: any) => String(pp.projectId) === String(projectId) && String(pp.freelancerId) === String(user?.id))
-            : null;
-          
-          if (foundProposal) {
-            setHasExistingProposal(true);
-            // Pre-fill form
-            const numericValue = foundProposal.value.replace(/[^\d,.-]/g, '').replace('R$', '').trim();
-            setOffer(numericValue);
-            setFinalOffer((parseFloat(numericValue) * 1.25).toFixed(2));
-            setDuration(foundProposal.deliveryDays);
-            setDetails(foundProposal.message);
-          }
-          return;
-        } catch {
-          return;
-        }
-      }
       const res = await apiGetProject(projectId);
       if (!res.ok || !res.project) return;
       
       // Check for existing proposal via API
       try {
-        const propsRes = await apiListProposals({ projectId, freelancerId: user.id });
+        const propsRes = await apiListProposals({ projectId, freelancerId: user?.id });
         if (propsRes.ok && propsRes.proposals && propsRes.proposals.length > 0) {
           const prop = propsRes.proposals[0];
           setHasExistingProposal(true);
@@ -139,7 +102,7 @@ export default function SendProposal() {
       }
     }
     loadProject();
-  }, [projectId, isAuthenticated, navigate]);
+  }, [projectId, isAuthenticated, navigate, user]);
 
   // Second useEffect removed as it is redundant with loadProject
   

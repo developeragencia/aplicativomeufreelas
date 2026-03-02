@@ -5,6 +5,7 @@ import Pagination from '../components/Pagination';
 import EmptyState from '../components/EmptyState';
 import { useAuth } from '../contexts/AuthContext';
 import { setSEO } from '../lib/seo';
+import { apiListProposals } from '../lib/api';
 
 type ProposalItem = {
   id: string;
@@ -16,24 +17,6 @@ type ProposalItem = {
   createdAt: string;
 };
 
-function parseLocal(): ProposalItem[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem('meufreelas_proposals') || '[]');
-    const arr = Array.isArray(raw) ? raw : [];
-    return arr.map((p: any) => ({
-      id: String(p.id || Date.now()),
-      projectId: String(p.projectId || ''),
-      projectTitle: String(p.projectTitle || 'Projeto'),
-      value: String(p.value || '—'),
-      deliveryDays: String(p.deliveryDays || '—'),
-      status: (p.status as ProposalItem['status']) || 'Pendente',
-      createdAt: String(p.createdAt || new Date().toISOString()),
-    }));
-  } catch {
-    return [];
-  }
-}
-
 export default function MyProposals() {
   const { user, isAuthenticated } = useAuth();
   const [items, setItems] = useState<ProposalItem[]>([]);
@@ -42,11 +25,34 @@ export default function MyProposals() {
 
   useEffect(() => {
     setSEO({ title: 'Minhas Propostas - MeuFreelas', description: 'Acompanhe suas propostas enviadas.', canonicalPath: '/my-proposals' });
-    setLoading(true);
-    const list = parseLocal().filter((p) => !!p.projectId);
-    setItems(list);
-    setLoading(false);
-  }, []);
+    
+    async function load() {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        const res = await apiListProposals({ freelancerId: user.id });
+        if (res.ok && res.proposals) {
+          setItems(res.proposals.map(p => ({
+            id: p.id,
+            projectId: p.projectId,
+            projectTitle: p.projectTitle,
+            value: p.value,
+            deliveryDays: p.deliveryDays,
+            status: p.status,
+            createdAt: p.createdAt
+          })));
+        } else {
+          setItems([]);
+        }
+      } catch (error) {
+        console.error('Failed to load proposals', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    load();
+  }, [user]);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.type !== 'freelancer' && !user?.hasFreelancerAccount) return <Navigate to="/project/new" replace />;
