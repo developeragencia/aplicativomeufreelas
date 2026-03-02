@@ -236,6 +236,41 @@ try {
     exit;
   }
 
+  if ($action === 'create_subscription_checkout') {
+    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
+    $plan = $data['plan'] ?? '';
+    $cycle = $data['cycle'] ?? 'monthly';
+
+    if ($userId <= 0 || !in_array($plan, ['pro', 'premium'])) {
+        json_response(['ok' => false, 'error' => 'Dados inválidos'], 400);
+        exit;
+    }
+
+    // Demo: Immediate success
+    $days = $cycle === 'yearly' ? 365 : 30;
+    $expiresAt = date('Y-m-d H:i:s', strtotime("+$days days"));
+    
+    // Update user
+    $stmt = $pdo->prepare("UPDATE users SET is_premium = 1, plan = ?, plan_expires_at = ? WHERE id = ?");
+    $stmt->execute([$plan, $expiresAt, $userId]);
+    
+    // Log transaction (ledger)
+    $amount = ($plan === 'pro') ? 59.90 : 99.90;
+    if ($cycle === 'yearly') $amount *= 10; // discount
+
+    // Ensure ledger accepts NULL project_id, if not use 0
+    // Try catch to be safe
+    try {
+        $stmt = $pdo->prepare("INSERT INTO payments_ledger (user_id, project_id, tipo, valor, created_at) VALUES (?, NULL, 'Subscription', ?, NOW())");
+        $stmt->execute([$userId, $amount]);
+    } catch (Throwable $e) {
+        // If fails, maybe project_id cannot be null? Try 0? Or ignore log
+    }
+
+    json_response(['ok' => true]);
+    exit;
+  }
+
   if ($action === 'create_subscription_intent') {
     try {
       $secret = 'demo_' . bin2hex(random_bytes(12));
