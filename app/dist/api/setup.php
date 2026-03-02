@@ -168,17 +168,7 @@ try {
       UNIQUE KEY uniq_user_medal (user_id, medal_slug)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 
-    // connections_ledger (transactions for connections)
-    "CREATE TABLE IF NOT EXISTS connections_ledger (
-      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-      user_id BIGINT UNSIGNED NOT NULL,
-      amount INT NOT NULL,
-      description VARCHAR(255) NOT NULL,
-      type ENUM('usage','refill','bonus') NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      INDEX idx_conn_user (user_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    
 
     // squads (multi-contract teams)
     "CREATE TABLE IF NOT EXISTS squads (
@@ -367,6 +357,20 @@ try {
       depois JSON NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+    // notifications
+    "CREATE TABLE IF NOT EXISTS notifications (
+      id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+      user_id BIGINT UNSIGNED NOT NULL,
+      tipo ENUM('project','message','payment','review','system') NOT NULL DEFAULT 'system',
+      titulo VARCHAR(255) NOT NULL,
+      descricao VARCHAR(1024) NULL,
+      link VARCHAR(255) NULL,
+      is_read TINYINT(1) DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_notifications_user (user_id, is_read, created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
   ];
 
@@ -386,7 +390,37 @@ try {
   foreach ($results as $r) {
     $createdFlags[] = $r['ok'];
   }
-  json_response(['ok' => true, 'created' => $createdFlags, 'details' => $results]);
+
+  // Admin auto-create simples (sem token): mesmo padrão dos outros painéis
+  $adminEmail = env('ADMIN_EMAIL', 'admin@meufreelas.com.br');
+  $adminPass  = env('ADMIN_PASSWORD', 'SenhaAdmin#2026!');
+  $adminForce = env('ADMIN_FORCE_PASSWORD', '0') === '1';
+  $adminInfo = null;
+  try {
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $stmt->execute([$adminEmail]);
+    $existingId = $stmt->fetchColumn();
+    $hash = password_hash($adminPass, PASSWORD_DEFAULT);
+    if ($existingId) {
+      if ($adminForce) {
+        $pdo->prepare('UPDATE users SET role = ?, password_hash = ?, status = ? WHERE id = ?')
+            ->execute(['admin', $hash, 'active', (int)$existingId]);
+        $adminInfo = ['updated' => true, 'id' => (int)$existingId, 'email' => $adminEmail, 'forced' => true];
+      } else {
+        $pdo->prepare('UPDATE users SET role = ?, status = ? WHERE id = ?')
+            ->execute(['admin', 'active', (int)$existingId]);
+        $adminInfo = ['kept_password' => true, 'id' => (int)$existingId, 'email' => $adminEmail];
+      }
+    } else {
+      $pdo->prepare('INSERT INTO users (role, email, password_hash, status) VALUES (?, ?, ?, ?)')
+          ->execute(['admin', $adminEmail, $hash, 'active']);
+      $adminInfo = ['created' => true, 'id' => (int)$pdo->lastInsertId(), 'email' => $adminEmail];
+    }
+  } catch (Throwable $e) {
+    $adminInfo = ['error' => 'admin_create_failed'];
+  }
+
+  json_response(['ok' => true, 'created' => $createdFlags, 'details' => $results, 'admin' => $adminInfo]);
 } catch (Throwable $e) {
   json_response(['ok' => false, 'error' => $e->getMessage()], 500);
 }

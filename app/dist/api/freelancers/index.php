@@ -37,9 +37,15 @@ if ($id) {
         pf.habilidades,
         pf.avaliacoes_avg,
         pf.projetos_concluidos,
-        pf.recomendacao_pct
+        pf.recomendacao_pct,
+        r.score as ranking_score,
+        r.position as ranking_position,
+        b.identidade_verificada_bool,
+        b.medalha_tipo
       FROM users u
       LEFT JOIN profiles_freelancer pf ON pf.user_id = u.id
+      LEFT JOIN ranking r ON r.user_id = u.id AND r.period = 'weekly'
+      LEFT JOIN badges b ON b.freelancer_id = u.id
       WHERE u.id = ?
       LIMIT 1
     ");
@@ -67,10 +73,11 @@ if ($id) {
         'completedProjects' => intval($r['projetos_concluidos'] ?? 0),
         'recommendations' => intval($r['recomendacao_pct'] ?? 0),
         'memberSince' => '',
-        'ranking' => 0,
+        'ranking' => intval($r['ranking_position'] ?? 0),
+        'rankingScore' => intval($r['ranking_score'] ?? 0),
         'isPremium' => false,
         'isPro' => false,
-        'isVerified' => false,
+        'isVerified' => intval($r['identidade_verificada_bool'] ?? 0) === 1,
         'city' => null,
         'state' => null,
         'country' => null,
@@ -93,11 +100,17 @@ $primaryQuery = "
     pf.habilidades,
     pf.avaliacoes_avg,
     pf.projetos_concluidos,
-    pf.recomendacao_pct
+    pf.recomendacao_pct,
+    r.score as ranking_score,
+    r.position as ranking_position,
+    b.identidade_verificada_bool,
+    b.medalha_tipo
   FROM users u
   LEFT JOIN profiles_freelancer pf ON pf.user_id = u.id
+  LEFT JOIN ranking r ON r.user_id = u.id AND r.period = 'weekly'
+  LEFT JOIN badges b ON b.freelancer_id = u.id
   $sqlWhereFreel
-  ORDER BY pf.avaliacoes_avg DESC, u.id DESC
+  ORDER BY COALESCE(r.score, 0) DESC, pf.avaliacoes_avg DESC, u.id DESC
   LIMIT ? OFFSET ?
 ";
 $fallbackQuery = "
@@ -156,10 +169,11 @@ foreach ($rows as $r) {
     'completedProjects' => intval($r['projetos_concluidos'] ?? 0),
     'recommendations' => intval($r['recomendacao_pct'] ?? 0),
     'memberSince' => '',
-    'ranking' => 0,
+    'ranking' => intval($r['ranking_position'] ?? 0),
+    'rankingScore' => intval($r['ranking_score'] ?? 0),
     'isPremium' => false,
     'isPro' => false,
-    'isVerified' => false,
+    'isVerified' => intval($r['identidade_verificada_bool'] ?? 0) === 1,
     'city' => null,
     'state' => null,
     'country' => null,
