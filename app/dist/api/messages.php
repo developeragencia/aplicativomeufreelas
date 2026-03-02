@@ -9,8 +9,12 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') { http_response_code(204); exit; }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$rawInput = file_get_contents('php://input');
+$data = json_decode($rawInput, true);
 $action = $data['action'] ?? '';
+
+// Debug log (remove in production if sensitive)
+file_put_contents('debug_messages.log', date('Y-m-d H:i:s') . " Action: " . $action . " Raw: " . $rawInput . "\n", FILE_APPEND);
 
 try {
     $pdo = db_get_pdo();

@@ -111,22 +111,24 @@ export default function SendProposal() {
     const value = parseFloat(offer);
     if (!value) return { gross: 0, fee: 0, net: 0 };
     
-    // Taxa do 99freelas: 10% para free, 7% para pro, 5% para premium
-    const feeRate = 0.10; // Simplificado
-    const fee = value * feeRate;
-    const net = value - fee;
+    // Taxa do Meufreelas: 20% sobre o valor total (padrão)
+    // Se o freelancer quer receber 'value' (net), então:
+    // Net = Gross * (1 - feeRate)
+    // Gross = Net / (1 - feeRate)
+    const feeRate = 0.20; 
+    const gross = value / (1 - feeRate);
+    const fee = gross - value;
     
-    return { gross: value, fee, net };
+    return { gross, fee, net: value };
   };
 
   const handleOfferChange = (val: string) => {
     setOffer(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
-      // Final = Offer + 25% (example logic based on previous context, usually platform adds fee on top)
-      // Actually standard: Final = Offer / (1 - fee_rate)? Or Final = Offer * 1.X?
-      // Let's stick to the simple logic seen in previous code: Offer * 1.25
-      setFinalOffer((num * 1.25).toFixed(2));
+      // Se eu quero receber X, o cliente paga X / 0.8 (para cobrir os 20%)
+      const gross = num / 0.8;
+      setFinalOffer(gross.toFixed(2));
     } else {
       setFinalOffer('');
     }
@@ -136,8 +138,9 @@ export default function SendProposal() {
     setFinalOffer(val);
     const num = parseFloat(val);
     if (!isNaN(num)) {
-      // Offer = Final / 1.25
-      setOffer((num / 1.25).toFixed(2));
+      // Se o cliente paga Y, eu recebo Y * 0.8
+      const net = num * 0.8;
+      setOffer(net.toFixed(2));
     } else {
       setOffer('');
     }
@@ -469,22 +472,18 @@ export default function SendProposal() {
                   )}
 
                   {offer && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-600">Sua oferta:</span>
-                        <span className="font-medium">R$ {parseFloat(offer).toFixed(2)}</span>
+                        <span className="text-gray-600">O cliente pagará:</span>
+                        <span className="font-medium">R$ {offerCalc.gross.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-600">Taxa da plataforma (10%):</span>
+                        <span className="text-gray-600">Taxa de serviço (20%):</span>
                         <span className="text-red-500">- R$ {offerCalc.fee.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between font-medium pt-2 border-t border-blue-200">
-                        <span>Você receberá:</span>
+                      <div className="flex justify-between font-bold pt-3 border-t border-blue-200 mt-2 text-base">
+                        <span className="text-gray-800">Você receberá:</span>
                         <span className="text-green-600">R$ {offerCalc.net.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm mt-2">
-                        <span className="text-gray-600">Oferta sugerida do nicho:</span>
-                        <span className="font-medium">R$ {finalSuggested.toFixed(2)}</span>
                       </div>
                     </div>
                   )}
