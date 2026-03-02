@@ -1,68 +1,92 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-if ($method !== 'POST') {
-  json_response(['ok' => false, 'error' => 'Método não permitido'], 405);
-  exit;
-}
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') { http_response_code(204); exit; }
+
+$data = json_decode(file_get_contents('php://input'), true);
+$action = $data['action'] ?? '';
 
 try {
-  $pdo = db_get_pdo();
-  $raw = file_get_contents('php://input');
-  $data = json_decode($raw ?: '{}', true);
-  if (!is_array($data)) $data = [];
-  $action = $data['action'] ?? '';
+    $pdo = db_get_pdo();
 
-  if ($action === 'list_notifications') {
-    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
-    if ($userId <= 0) { json_response(['ok' => false, 'error' => 'ID inválido'], 400); exit; }
-    $stmt = $pdo->prepare("SELECT id, tipo AS type, titulo AS title, descricao AS description, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS date, is_read AS isRead, link FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 100");
-    $stmt->execute([$userId]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($rows as &$r) { $r['isRead'] = (bool)$r['isRead']; }
-    json_response(['ok' => true, 'notifications' => $rows]);
-    exit;
-  }
+    // Ensure table exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type VARCHAR(50),
+        title VARCHAR(255),
+        description TEXT,
+        link VARCHAR(255),
+        is_read TINYINT(1) DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )");
 
-  if ($action === 'mark_read') {
-    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
-    $notificationId = isset($data['notificationId']) ? (int)$data['notificationId'] : 0;
-    if ($userId <= 0 || $notificationId <= 0) { json_response(['ok' => false, 'error' => 'Dados inválidos'], 400); exit; }
-    $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?")->execute([$notificationId, $userId]);
-    json_response(['ok' => true]);
-    exit;
-  }
+    if ($action === 'list_notifications') {
+        $userId = $data['userId'] ?? '';
+        if (!$userId) { json_response(['ok' => false, 'error' => 'ID inválido'], 400); exit; }
 
-  if ($action === 'mark_all_read') {
-    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
-    if ($userId <= 0) { json_response(['ok' => false, 'error' => 'ID inválido'], 400); exit; }
-    $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?")->execute([$userId]);
-    json_response(['ok' => true]);
-    exit;
-  }
+        $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50");
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-  if ($action === 'delete_notification') {
-    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
-    $notificationId = isset($data['notificationId']) ? (int)$data['notificationId'] : 0;
-    if ($userId <= 0 || $notificationId <= 0) { json_response(['ok' => false, 'error' => 'Dados inválidos'], 400); exit; }
-    $pdo->prepare("DELETE FROM notifications WHERE id = ? AND user_id = ?")->execute([$notificationId, $userId]);
-    json_response(['ok' => true]);
-    exit;
-  }
+        $notifications = [];
+        foreach ($rows as $r) {
+            $notifications[] = [
+                'id' => $r['id'],
+                'type' => $r['type'],
+                'title' => $r['title'],
+                'description' => $r['description'],
+                'link' => $r['link'],
+                'isRead' => (bool)$r['is_read'],
+                'date' => $r['created_at']
+            ];
+        }
 
-  if ($action === 'clear_notifications') {
-    $userId = isset($data['userId']) ? (int)$data['userId'] : 0;
-    if ($userId <= 0) { json_response(['ok' => false, 'error' => 'ID inválido'], 400); exit; }
-    $pdo->prepare("DELETE FROM notifications WHERE user_id = ?")->execute([$userId]);
-    json_response(['ok' => true]);
-    exit;
-  }
+        json_response(['ok' => true, 'notifications' => $notifications]);
+        exit;
+    }
 
-  json_response(['ok' => false, 'error' => 'Ação inválida'], 400);
+    if ($action === 'mark_read') {
+        $userId = $data['userId'] ?? '';
+        $notificationId = $data['notificationId'] ?? '';
+        if (!$userId || !$notificationId) { json_response(['ok' => false], 400); exit; }
+
+        $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$notificationId, $userId]);
+        json_response(['ok' => true]);
+        exit;
+    }
+
+    if ($action === 'mark_all_read') {
+        $userId = $data['userId'] ?? '';
+        if (!$userId) { json_response(['ok' => false], 400); exit; }
+
+        $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        json_response(['ok' => true]);
+        exit;
+    }
+
+    if ($action === 'delete_notification') {
+        $userId = $data['userId'] ?? '';
+        $notificationId = $data['notificationId'] ?? '';
+        if (!$userId || !$notificationId) { json_response(['ok' => false], 400); exit; }
+
+        $stmt = $pdo->prepare("DELETE FROM notifications WHERE id = ? AND user_id = ?");
+        $stmt->execute([$notificationId, $userId]);
+        json_response(['ok' => true]);
+        exit;
+    }
+
+    json_response(['ok' => false, 'error' => 'Ação inválida'], 400);
+
 } catch (Throwable $e) {
-  json_response(['ok' => false, 'error' => 'Falha de servidor'], 500);
+    json_response(['ok' => false, 'error' => 'Erro interno: ' . $e->getMessage()], 500);
 }

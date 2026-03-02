@@ -113,47 +113,79 @@ export default function AdminUsers() {
     setCurrentPage(1);
   };
 
-  const handleAddUser = () => {
-    const newUser: UserData = {
-      id: Date.now().toString(),
-      ...formData,
-      registeredAt: new Date().toISOString(),
-      verified: false
-    };
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers.filter(u => !['1','2','3','4','5','6'].includes(u.id))));
-    setShowAddModal(false);
-    resetForm();
+  const handleAddUser = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await api.post('admin/manage_users.php', {
+        action: 'create_user',
+        admin_id: user.id,
+        ...formData
+      });
+      if (res.data && res.data.ok) {
+        loadUsers();
+        setShowAddModal(false);
+        resetForm();
+      } else {
+        alert(res.data?.error || 'Erro ao criar usuário');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleEditUser = () => {
-    if (!selectedUser) return;
-    const updatedUsers = users.map(u => 
-      u.id === selectedUser.id ? { ...u, ...formData } : u
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers.filter(u => !['1','2','3','4','5','6'].includes(u.id))));
-    setShowEditModal(false);
-    setSelectedUser(null);
-    resetForm();
+  const handleEditUser = async () => {
+    if (!selectedUser || !user?.id) return;
+    try {
+      const res = await api.post('admin/manage_users.php', {
+        action: 'update_user',
+        admin_id: user.id,
+        id: selectedUser.id,
+        ...formData
+      });
+      if (res.data && res.data.ok) {
+        loadUsers();
+        setShowEditModal(false);
+        setSelectedUser(null);
+        resetForm();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleDeleteUser = () => {
-    if (!selectedUser) return;
-    const updatedUsers = users.filter(u => u.id !== selectedUser.id);
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers.filter(u => !['1','2','3','4','5','6'].includes(u.id))));
-    setShowDeleteModal(false);
-    setSelectedUser(null);
+  const handleDeleteUser = async () => {
+    if (!selectedUser || !user?.id) return;
+    try {
+      const res = await api.post('admin/manage_users.php', {
+        action: 'delete_user',
+        admin_id: user.id,
+        id: selectedUser.id
+      });
+      if (res.data && res.data.ok) {
+        loadUsers();
+        setShowDeleteModal(false);
+        setSelectedUser(null);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleToggleStatus = (userId: string, newStatus: UserData['status']) => {
-    const updatedUsers = users.map(u => 
-      u.id === userId ? { ...u, status: newStatus } : u
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers.filter(u => !['1','2','3','4','5','6'].includes(u.id))));
+  const handleToggleStatus = async (userId: string, newStatus: UserData['status']) => {
+    if (!user?.id) return;
+    try {
+      const res = await api.post('admin/manage_users.php', {
+        action: 'toggle_status',
+        admin_id: user.id,
+        id: userId,
+        status: newStatus
+      });
+      if (res.data && res.data.ok) {
+        loadUsers();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const resetForm = () => {
