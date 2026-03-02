@@ -20,7 +20,8 @@ interface Project {
 }
 
 export default function SendProposal() {
-  const { projectId } = useParams();
+  const { id, projectId } = useParams();
+  const pid = projectId || id;
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
@@ -64,13 +65,13 @@ export default function SendProposal() {
       return;
     }
     async function loadProject() {
-      if (!projectId) return;
-      const res = await apiGetProject(projectId);
+      if (!pid) return;
+      const res = await apiGetProject(pid);
       if (!res.ok || !res.project) return;
       
       // Check for existing proposal via API
       try {
-        const propsRes = await apiListProposals({ projectId, freelancerId: user?.id });
+        const propsRes = await apiListProposals({ projectId: pid, freelancerId: user?.id });
         if (propsRes.ok && propsRes.proposals && propsRes.proposals.length > 0) {
           const prop = propsRes.proposals[0];
           setHasExistingProposal(true);
@@ -102,7 +103,7 @@ export default function SendProposal() {
       }
     }
     loadProject();
-  }, [projectId, isAuthenticated, navigate, user]);
+  }, [pid, isAuthenticated, navigate, user]);
 
   // Second useEffect removed as it is redundant with loadProject
   
@@ -173,7 +174,7 @@ export default function SendProposal() {
 
     setIsSubmitting(true);
 
-    if (!projectId || !user?.id) {
+    if (!pid || !user?.id) {
       setIsSubmitting(false);
       alert('Projeto inválido.');
       return;
@@ -187,7 +188,7 @@ export default function SendProposal() {
         if (hasExistingProposal) {
           // Update existing
           list = list.map((p: any) => {
-            if (String(p.projectId) === String(projectId) && String(p.freelancerId) === String(user.id)) {
+            if (String(p.projectId) === String(pid) && String(p.freelancerId) === String(user.id)) {
               return {
                 ...p,
                 value: `R$ ${parseFloat(offer).toFixed(2)}`,
@@ -202,7 +203,7 @@ export default function SendProposal() {
           // Create new
           list.push({
             id: Date.now().toString(),
-            projectId,
+            projectId: pid,
             projectTitle: project?.title || '',
             projectStatus: 'Aberto',
             clientId: project?.clientId || '',
@@ -223,14 +224,14 @@ export default function SendProposal() {
         return;
       }
     } else {
-      const debit = await apiConsumeConnection({ freelancer_id: String(user.id), project_id: projectId, kind: 'proposal' });
+      const debit = await apiConsumeConnection({ freelancer_id: String(user.id), project_id: pid, kind: 'proposal' });
       if (!debit.ok) {
         setIsSubmitting(false);
         alert(debit.error || 'Sem conexões disponíveis.');
         return;
       }
       const res = await apiCreateProposal({
-        projectId,
+        projectId: pid,
         freelancerId: user.id,
         amount: `R$ ${parseFloat(offer).toFixed(2)}`,
         deliveryDays: duration,
@@ -244,7 +245,7 @@ export default function SendProposal() {
     }
 
     if (project?.clientId && hasApi()) {
-      const conv = await apiEnsureConversation(user.id, project.clientId, projectId);
+      const conv = await apiEnsureConversation(user.id, project.clientId, pid);
       if (conv.ok && conv.conversationId) {
         // Enviar proposta
         await apiSendMessage(

@@ -41,6 +41,7 @@ import Settings from './pages/Settings';
 import Messages from './pages/Messages';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
+import SendProposal from './pages/SendProposal';
 
 let storageSanitized = false;
 
@@ -101,6 +102,7 @@ function AppRoutes() {
       <Route path="/user/:id" element={<UserProfile />} />
       <Route path="/ajuda" element={<HelpCenter />} />
       <Route path="/project/new" element={<NewProject />} />
+      <Route path="/project/bid/:id" element={<SendProposal />} />
       <Route path="/my-projects" element={<MyProjects />} />
       <Route path="/my-proposals" element={<MyProposals />} />
       <Route path="/como-funciona" element={<HowItWorks />} />
