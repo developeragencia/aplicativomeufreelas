@@ -904,6 +904,54 @@ export async function apiClearNotifications(userId: string): Promise<{ ok: boole
   }
 }
 
+// Admin Moderation
+export async function apiGetPendingProfiles(): Promise<{ ok: boolean; profiles?: any[]; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    // Fetch pending profiles
+    const res = await fetch(`${base}/admin/moderation.php?action=pending_profiles`, { credentials: 'omit' });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, profiles: (data.profiles as any[]) || [], error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiApproveProfile(id: string): Promise<{ ok: boolean; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const res = await fetch(`${base}/admin/moderation.php?action=approve_profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `id=${encodeURIComponent(id)}`,
+      credentials: 'omit'
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
+export async function apiRejectProfile(id: string): Promise<{ ok: boolean; error?: string }> {
+  if (!API_URL) return { ok: false, error: 'API não configurada' };
+  try {
+    const base = API_URL.replace(/\/$/, '');
+    const res = await fetch(`${base}/admin/moderation.php?action=reject_profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `id=${encodeURIComponent(id)}`,
+      credentials: 'omit'
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: !!data.ok, error: data.error as string | undefined };
+  } catch {
+    return { ok: false, error: 'Falha de conexão' };
+  }
+}
+
 export type ApiPaymentTransaction = {
   id: string;
   description: string;
