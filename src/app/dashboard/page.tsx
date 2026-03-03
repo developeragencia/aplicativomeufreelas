@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import StarRating from "@/components/StarRating";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import StarRating from "../../components/StarRating";
 
 const stats = [
   {
@@ -99,126 +98,42 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Profile Section */}
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="font-medium text-gray-800">Meu perfil</h2>
-                <Link href="#" className="text-[#1bafe1] text-sm flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                  Editar
-                </Link>
-              </div>
-              <div className="p-4">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-16 h-16 bg-[#1bafe1] rounded flex items-center justify-center text-white text-2xl font-bold">
-                    S
-                  </div>
-                  <div>
-                    <Link href="#" className="text-[#1bafe1] font-medium">Salatiel M</Link>
-                    <div className="flex items-center gap-1 mt-1">
-                      <StarRating rating={0} size="sm" />
-                      <span className="text-xs text-gray-500">(0 avaliacoes)</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Profile Completion */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">Complete seu perfil</h2>
+                  <span className="text-sm text-gray-500">15%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                  <div className="bg-[#1bafe1] h-2.5 rounded-full" style={{ width: "15%" }}></div>
+                </div>
+                <div className="space-y-4">
+                  {profileCompletion.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                      <span className="text-gray-700">{item.label}</span>
+                      <button className="text-[#1bafe1] text-sm hover:underline">+ Adicionar</button>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Membro basico.{" "}
-                      <Link href="#" className="text-[#1bafe1] font-medium">Seja premium</Link>.
-                    </p>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Profile Completion */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">Perfil preenchido (25%)</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-[#1bafe1] h-2 rounded-full" style={{ width: "25%" }}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-gray-800 mb-2">Complete:</p>
-                  <ul className="space-y-1">
-                    {profileCompletion.map((item, index) => (
-                      <li key={index} className="text-sm text-gray-600">
-                        • {item.label} (+ {item.percentage}%)
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Connections Section */}
-              <div className="border-t border-gray-200 p-4">
-                <h3 className="font-medium text-gray-800 mb-3">Minhas conexoes</h3>
-                <p className="text-sm text-gray-500">Nenhuma conexao encontrada.</p>
               </div>
             </div>
 
             {/* Right Column */}
             <div className="space-y-6">
-              {/* My Projects */}
-              <div className="bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                  <h2 className="font-medium text-gray-800">Meus projetos</h2>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-end mb-4">
-                    <select className="border border-gray-300 rounded px-3 py-1 text-sm">
-                      <option>Todos</option>
-                      <option>Ativos</option>
-                      <option>Concluidos</option>
-                    </select>
-                  </div>
-                  <p className="text-center text-[#e74c3c] py-8">
-                    Nenhum projeto foi encontrado.{" "}
-                    <Link href="/projetos" className="text-[#1bafe1]">Buscar Projetos</Link>.
-                  </p>
-                </div>
-              </div>
-
-              {/* My Proposals */}
-              <div className="bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                  <h2 className="font-medium text-gray-800">Minhas propostas</h2>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-end mb-4">
-                    <select className="border border-gray-300 rounded px-3 py-1 text-sm">
-                      <option>Todas</option>
-                      <option>Pendentes</option>
-                      <option>Aceitas</option>
-                      <option>Rejeitadas</option>
-                    </select>
-                  </div>
-                  <p className="text-center text-[#e74c3c] py-8">
-                    Nenhuma proposta foi encontrada.{" "}
-                    <Link href="/projetos" className="text-[#1bafe1]">Buscar Projetos</Link>.
-                  </p>
-                </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Disponibilidade</h3>
+                <p className="text-gray-600 text-sm mb-4">Defina sua disponibilidade para receber convites de projetos.</p>
+                <button className="w-full border border-[#1bafe1] text-[#1bafe1] py-2 rounded hover:bg-[#1bafe1] hover:text-white transition-colors">
+                  Alterar disponibilidade
+                </button>
               </div>
             </div>
           </div>
         </div>
       </main>
-
-      {/* Help Button */}
-      <div className="fixed bottom-6 right-6">
-        <button className="bg-[#1bafe1] text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 hover:bg-[#2595cb] transition-colors">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-          </svg>
-          Ajuda
-        </button>
-      </div>
-
       <Footer />
     </div>
   );

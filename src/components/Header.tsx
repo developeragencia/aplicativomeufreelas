@@ -27,7 +27,7 @@ export default function Header() {
           <Link href="/" className="flex-shrink-0">
             <div className="flex items-center">
               <span className="text-white text-2xl font-bold">
-                <span className="text-[#1bafe1]">99</span>free<span className="text-[#1bafe1]">las</span>
+                Meu<span className="text-[#1bafe1]">Freelas</span>
               </span>
             </div>
           </Link>
