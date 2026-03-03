@@ -28,7 +28,7 @@ export default function ProfileCard() {
       <div className="flex items-center justify-between p-4 border-b border-[#e0e0e0]">
         <h3 className="text-base font-semibold text-[#333]">Meu perfil</h3>
         <Link
-          to="/editar-perfil"
+          href="/editar-perfil"
           className="flex items-center gap-1 text-sm text-[#00a8cc] hover:text-[#0088aa] link-hover"
         >
           <Edit className="w-3 h-3" />
@@ -62,7 +62,7 @@ export default function ProfileCard() {
             {/* Membership */}
             <p className="text-sm text-[#666]">
               Membro básico.{' '}
-              <Link to="/minhas-assinaturas" className="text-[#00a8cc] hover:text-[#0088aa] link-hover">
+              <Link href="/minhas-assinaturas" className="text-[#00a8cc] hover:text-[#0088aa] link-hover">
                 Seja premium.
               </Link>
             </p>

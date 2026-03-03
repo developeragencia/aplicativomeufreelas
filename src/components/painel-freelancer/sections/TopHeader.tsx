@@ -10,7 +10,7 @@ export default function TopHeader() {
       <div className="max-w-[1200px] mx-auto h-full flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center">
-          <Link to="/" className="flex items-center text-white no-underline">
+          <Link href="/" className="flex items-center text-white no-underline">
             <span className="text-2xl font-bold">99</span>
             <span className="text-2xl font-light text-gray-300">freelas</span>
           </Link>
@@ -35,13 +35,13 @@ export default function TopHeader() {
                 onMouseEnter={() => setProjectsDropdownOpen(true)}
                 onMouseLeave={() => setProjectsDropdownOpen(false)}
               >
-                <Link to="/buscar-projetos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link href="/buscar-projetos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Buscar projetos
                 </Link>
-                <Link to="/meus-projetos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link href="/meus-projetos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Meus projetos
                 </Link>
-                <Link to="/projetos-salvos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link href="/projetos-salvos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Projetos salvos
                 </Link>
               </div>
@@ -56,7 +56,7 @@ export default function TopHeader() {
               className="w-full h-9 pl-4 pr-10 rounded text-sm text-gray-700 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-[#00a8cc]"
             />
             <Link
-              to="/buscar-projetos"
+              href="/buscar-projetos"
               className="absolute right-0 top-0 h-full px-3 bg-[#5cb85c] hover:bg-[#4cae4c] rounded-r transition-colors duration-200 flex items-center"
             >
               <Search className="w-4 h-4 text-white" />

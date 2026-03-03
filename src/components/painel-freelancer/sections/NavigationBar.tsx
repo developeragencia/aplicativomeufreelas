@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 
 interface NavItem {
@@ -136,7 +137,7 @@ export default function NavigationBar() {
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
-                          to={child.href}
+                          href={child.href}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#00a8cc] transition-colors duration-200"
                           onClick={() => setActiveDropdown(null)}
                         >
@@ -148,11 +149,11 @@ export default function NavigationBar() {
                 </>
               ) : (
                 <Link
-                  to={item.href}
+                  href={item.href}
                   className={`
                     block px-4 py-2 text-sm font-medium text-white rounded
                     transition-all duration-200
-                    ${location.pathname === item.href ? 'bg-[#0088aa]' : 'hover:bg-white/10'}
+                    ${pathname === item.href ? 'bg-[#0088aa]' : 'hover:bg-white/10'}
                   `}
                 >
                   {item.label}
