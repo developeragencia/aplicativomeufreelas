@@ -106,213 +106,53 @@ export default function ProjetosPage() {
                     ))}
                   </ul>
                 </div>
-
-          {/* Projects List */}
-          <div className="flex-grow">
-            <h1 className="text-2xl font-semibold mb-6">Projetos Recentes</h1>
-            <div className="space-y-4">
-              {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  );
-}
-    title: "Criar loja shopify em tema de camisetas de time",
-    category: "Vendas & Marketing",
-  },
-];
-                        <input type="checkbox" className="rounded border-gray-300" />
-                        Projetos em destaque
-                      </label>
-                    </li>
-                    <li>
-                      <label className="flex items-center gap-2 text-gray-600">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                        Projetos urgentes
-                      </label>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Publication Date */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Data da publicacao</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li><button className="text-[#1bafe1]">Qualquer hora</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Menos de 24 horas atras</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Menos de 3 dias atras</button></li>
-                  </ul>
-                </div>
-
-                {/* Ranking */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Ranking do cliente</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li><button className="text-[#1bafe1]">Qualquer ranking</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">5 estrelas</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 4.5 estrelas</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 4 estrelas</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Sem feedback</button></li>
-                  </ul>
-                </div>
-
-                {/* Experience Level */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Nivel de experiencia</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li><button className="text-[#1bafe1]">Todos os niveis de experiencia</button></li>
-                    <li>
-                      <label className="flex items-center gap-2 text-gray-600">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                        Iniciante
-                      </label>
-                    </li>
-                    <li>
-                      <label className="flex items-center gap-2 text-gray-600">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                        Intermediario
-                      </label>
-                    </li>
-                    <li>
-                      <label className="flex items-center gap-2 text-gray-600">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                        Especialista
-                      </label>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Reset Button */}
-                <button className="w-full bg-[#1bafe1] text-white py-2 rounded font-medium hover:bg-[#2595cb] transition-colors">
-                  Resetar Filtros
-                </button>
               </div>
             </aside>
 
-            {/* Project List */}
-            <div className="flex-1">
-              {/* Sort and Pagination */}
-              <div className="flex items-center justify-between mb-4">
-                <select className="border border-gray-300 rounded px-3 py-2 text-sm">
-                  <option>Relevancia</option>
-                  <option>Data de publicacao</option>
-                  <option>Propostas</option>
-                </select>
-                <div className="flex items-center gap-1">
-                  <button className="w-8 h-8 bg-[#1bafe1] text-white rounded text-sm">1</button>
-                  <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 text-sm">2</button>
-                  <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 text-sm">3</button>
-                  <span className="text-gray-400 px-1">...</span>
-                  <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                    Ultima
-                  </button>
-                </div>
-              </div>
-
-              {/* Project Cards */}
+            {/* Projects List */}
+            <div className="flex-grow">
               <div className="space-y-0 border border-gray-200 rounded-lg overflow-hidden">
-                {mockProjects.map((project, index) => (
-                  <div
-                    key={project.id}
-                    className={`bg-white p-5 relative ${index !== mockProjects.length - 1 ? 'border-b border-gray-200' : ''}`}
-                  >
-                    {/* Featured Star */}
-                    {project.isFeatured && (
-                      <div className="absolute top-4 right-4">
-                        <svg className="w-8 h-8 text-[#f1b42a]" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                      </div>
-                    )}
-
-                    {/* Title */}
-                    <Link
-                      href={`/projeto/${project.id}`}
-                      className="text-[#1bafe1] font-medium text-lg hover:underline block mb-2 pr-12"
+                {loading ? (
+                  <div className="p-10 text-center">Carregando projetos...</div>
+                ) : (
+                  projects.map((project, index) => (
+                    <div
+                      key={project.id}
+                      className={`bg-white p-5 relative ${index !== projects.length - 1 ? 'border-b border-gray-200' : ''}`}
                     >
-                      {project.title}
-                    </Link>
+                      <Link
+                        href={`/projeto/${project.id}`}
+                        className="text-[#1bafe1] font-medium text-lg hover:underline block mb-2 pr-12"
+                      >
+                        {project.title}
+                      </Link>
 
-                    {/* Meta Info */}
-                    <p className="text-sm text-gray-600 mb-3">
-                      {project.category} | {project.level} | Publicado: <strong>{project.publishedAt}</strong> |
-                      Tempo restante: <strong>{project.timeRemaining}</strong> |
-                      Propostas: <strong>{project.proposals}</strong> |
-                      Interessados: <strong>{project.interested}</strong>
-                    </p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {project.category} | {project.status} | Publicado: <strong>Hoje</strong> |
+                        Orcamento: <strong>R${project.budget_min} - R${project.budget_max}</strong> |
+                        Propostas: <strong>{project.proposals_count}</strong>
+                      </p>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-700 mb-3 whitespace-pre-line line-clamp-4">
-                      {project.description}
-                    </p>
+                      <p className="text-sm text-gray-700 mb-3 whitespace-pre-line line-clamp-4">
+                        {project.description}
+                      </p>
 
-                    {/* Skills */}
-                    {project.skills && project.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {project.skills.map((skill) => (
-                          <Link
-                            key={skill}
-                            href={`/projetos?q=${skill.toLowerCase()}`}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded border border-gray-200 hover:bg-gray-200"
-                          >
-                            {skill}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Client Info */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 font-medium">Cliente:</span>
-                      {project.client.name ? (
-                        <Link href="#" className="text-[#1bafe1] text-sm hover:underline">
-                          {project.client.name}
+                      <div className="mt-3">
+                        <Link
+                          href={`/projeto/${project.id}`}
+                          className="text-[#1bafe1] hover:underline text-sm font-medium"
+                        >
+                          Ver detalhes do projeto &gt;
                         </Link>
-                      ) : null}
-                      <div className="flex items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Image
-                            key={star}
-                            src={project.client.reviews > 0 && star <= Math.round(project.client.rating)
-                              ? "https://ext.same-assets.com/2120427335/2069117945.png"
-                              : "https://ext.same-assets.com/2120427335/1639383837.png"
-                            }
-                            alt="star"
-                            width={14}
-                            height={14}
-                          />
-                        ))}
                       </div>
-                      <span className="text-xs text-gray-500">
-                        {project.client.reviews > 0
-                          ? `(${project.client.reviews} avaliacoes)`
-                          : "(Sem feedback)"}
-                      </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bottom Pagination */}
-              <div className="flex items-center justify-center gap-1 mt-8">
-                <button className="w-8 h-8 bg-[#1bafe1] text-white rounded text-sm">1</button>
-                <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 text-sm">2</button>
-                <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 text-sm">3</button>
-                <span className="text-gray-400 px-1">...</span>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                  Ultima
-                </button>
+                  ))
+                )}
               </div>
             </div>
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
