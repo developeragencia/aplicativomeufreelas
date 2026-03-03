@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-cyan: #1bafe1;
+  --primary-cyan-dark: #2595cb;
+  --dark-header: #47484d;
+  --dark-gray: #383e42;
+  --gold-premium: #d0a734;
+  --star-gold: #f1b42a;
+  --green-accent: #2eadaa;
+  --text-gray: #69727e;
+  --border-gray: #e0e0e0;
+  --bg-light: #f3f2f3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 10% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 25%;
+    --primary: 195 82% 49%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 195 10% 95%;
+    --secondary-foreground: 220 10% 25%;
+    --muted: 195 10% 95%;
+    --muted-foreground: 220 5% 45%;
+    --accent: 195 82% 49%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 90%;
+    --input: 220 10% 90%;
+    --ring: 195 82% 49%;
+    --radius: 0.375rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Animation for typewriter effect */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.typewriter-cursor {
+  animation: blink 1s infinite;
+}
+
+/* Star ratings */
+.star-filled {
+  color: #f1b42a;
+}
+
+.star-empty {
+  color: #ccc;
+}
+
+/* Premium badge glow */
+.premium-badge {
+  filter: drop-shadow(0 0 2px rgba(208, 167, 52, 0.5));
+}

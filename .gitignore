@@ -1,23 +1,41 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Build e artefatos (permitir commit do dist para deploy)
-# app/dist/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Ambiente - nunca commitar segredos
-.env
-.env.*
-api/.env
-.env.hostinger.completo
+# testing
+/coverage
 
-# Dependências locais
-node_modules/
+# next.js
+/.next/
+/out/
 
-# Editor/OS
-.vscode/
-.idea/
+# production
+/build
+
+# misc
 .DS_Store
-Thumbs.db
+*.pem
 
-# Exceções específicas
-api/vendor/stripe/stripe-php/README.md
-ENVIAR-PARA-HOSTINGER.api.env
-ENVIAR-PARA-HOSTINGER.app.env
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

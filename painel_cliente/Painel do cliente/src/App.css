@@ -1,0 +1,25 @@
+/* App-specific styles */
+
+/* Ensure smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove default margins */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Animation initial states */
+.animate-fade-in-up {
+  opacity: 0;
+}
+
+.animate-fade-in {
+  opacity: 0;
+}
+
+.animate-slide-down {
+  opacity: 0;
+}

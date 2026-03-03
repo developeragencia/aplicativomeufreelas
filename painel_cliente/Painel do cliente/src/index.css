@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 96%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 195 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 28% 24%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 195 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 195 100% 45%;
+    --radius: 0.25rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Custom 99Freelas colors */
+    --freelas-primary: #00A8E8;
+    --freelas-primary-dark: #0088C8;
+    --freelas-header: #2D3E50;
+    --freelas-success: #4CAF50;
+    --freelas-purple: #9C27B0;
+    --freelas-teal: #00BCD4;
+    --freelas-orange: #FF5722;
+    --freelas-text: #333333;
+    --freelas-text-secondary: #666666;
+    --freelas-text-muted: #999999;
+    --freelas-border: #E0E0E0;
+    --freelas-bg: #F5F5F5;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+}
+
+@layer utilities {
+  .shadow-card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .shadow-card-hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .shadow-dropdown {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Animation utilities */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+/* Stagger delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Progress bar animation */
+.progress-bar-animate {
+  transition: width 0.8s ease-out;
+}
