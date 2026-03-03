@@ -98,157 +98,45 @@ const mockFreelancers: Freelancer[] = [
     title: "Publicitario",
     rating: 4.88,
     reviews: 290,
-    ranking: 8,
-    projectsCompleted: 282,
-    recommendations: 284,
-    registeredSince: "09/07/2020",
-    description: "Sou Giacomo Trezza, um profissional de marketing com oito anos de experiencia na industria. Ao longo dos anos, tenho me dedicado a aprimorar minhas habilidades em diversas areas.",
-    skills: ["Design de Blogs", "Design de Logotipo", "Design de Website", "Adobe Photoshop"],
-    isPremium: true,
-    isVerified: true,
-    isTopFreelancer: true,
-  },
-];
-
-export default function FreelancersPage() {
-  const [selectedCategory, setSelectedCategory] = useState("Todas as areas");
-  const [searchQuery, setSearchQuery] = useState("");
+  }, []);
+  if (loading) {
+    return <div className="flex justify-center p-10">Carregando...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl font-light text-gray-800">Resultado da pesquisa</h1>
-              <p className="text-gray-600">2123905 freelancers foram encontrados</p>
-            </div>
-            <Link
-              href="/publicar-projeto"
-              className="bg-[#1bafe1] text-white px-6 py-2 rounded font-medium hover:bg-[#2595cb] transition-colors text-center"
-            >
-              Publique um projeto. E gratis.
-            </Link>
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar Filters */}
-            <aside className="w-full lg:w-64 flex-shrink-0">
-              <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
-                {/* Search */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Palavras-chaves</h3>
-                  <div className="flex">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Ex. Web Designer, Redi"
-                      className="flex-1 border border-gray-300 rounded-l px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1bafe1]"
-                    />
-                    <button className="bg-[#1bafe1] text-white px-3 py-2 rounded-r">
-                      Ok
-                    </button>
-                  </div>
-                </div>
-
-                {/* Categories */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Areas de interesse</h3>
-                  <ul className="space-y-2">
-                    {categories.map((category) => (
-                      <li key={category}>
-                        <button
-                          onClick={() => setSelectedCategory(category)}
-                          className={`text-sm ${
-                            selectedCategory === category
-                              ? "text-[#1bafe1] font-medium"
-                              : "text-gray-600 hover:text-[#1bafe1]"
-                          }`}
-                        >
-                          {category}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Ranking Filter */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Ranking</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li><button className="text-[#1bafe1]">Qualquer ranking</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">5 estrelas</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 4.5 estrelas</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 4 estrelas</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Sem feedback</button></li>
-                  </ul>
-                </div>
-
-                {/* Recommendations Filter */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Quantidade de recomendacoes</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li><button className="text-[#1bafe1]">Qualquer quantidade</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 5</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 10</button></li>
-                    <li><button className="text-gray-600 hover:text-[#1bafe1]">Pelo menos 15</button></li>
-                  </ul>
-                </div>
-
-                {/* Reset Button */}
-                <button className="w-full bg-[#1bafe1] text-white py-2 rounded font-medium hover:bg-[#2595cb] transition-colors">
-                  Resetar Filtros
-                </button>
-              </div>
-            </aside>
-
-            {/* Freelancer List */}
-            <div className="flex-1">
-              {/* Sort and Pagination */}
-              <div className="flex items-center justify-between mb-4">
-                <select className="border border-gray-300 rounded px-3 py-2 text-sm">
-                  <option>Relevancia</option>
-                  <option>Ranking</option>
-                  <option>Projetos concluidos</option>
-                  <option>Avaliacao</option>
-                </select>
-                <div className="flex items-center gap-2">
-                  <button className="w-8 h-8 bg-[#1bafe1] text-white rounded">1</button>
-                  <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50">2</button>
-                  <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50">3</button>
-                  <span className="text-gray-400">...</span>
-                  <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                    Ultima
-                  </button>
-                </div>
-              </div>
-
-              {/* Freelancer Cards */}
-              <div className="space-y-4">
-                {mockFreelancers.map((freelancer) => (
-                  <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <aside className="w-full md:w-64 flex-shrink-0">
+            <div className="bg-white rounded-lg shadow p-4 mb-4">
+              <h3 className="font-semibold text-gray-700 mb-3">Categorias</h3>
+              <ul className="space-y-2">
+                {categories.map((cat, index) => (
+                  <li key={index}>
+                    <Link
+                      href="#"
+                      className="text-sm text-gray-600 hover:text-[#1bafe1] block py-1"
+                    >
+                      {cat.name}
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
+            </div>
+          </aside>
 
-              {/* Bottom Pagination */}
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <button className="w-8 h-8 bg-[#1bafe1] text-white rounded">1</button>
-                <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50">2</button>
-                <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50">3</button>
-                <span className="text-gray-400">...</span>
-                <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                  Ultima
-                </button>
-              </div>
+          {/* Freelancers List */}
+          <div className="flex-grow">
+            <div className="space-y-4">
+              {freelancers.map((freelancer) => (
+                <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+              ))}
             </div>
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

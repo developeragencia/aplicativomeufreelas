@@ -1,132 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import StarRating from "@/components/StarRating";
-
-const categories = [
-  "Todas as categorias",
-  "Administracao & Contabilidade",
-  "Advogados & Leis",
-  "Atendimento ao Consumidor",
-  "Design & Criacao",
-  "Educacao & Consultoria",
-  "Engenharia & Arquitetura",
-  "Escrita",
-  "Fotografia & AudioVisual",
-  "Suporte Administrativo",
-  "Traducao",
-  "Vendas & Marketing",
-  "Web, Mobile & Software",
-];
+import ProjectCard from "@/components/ProjectCard";
 
 interface Project {
   id: string;
   title: string;
-  category: string;
-  level: string;
-  publishedAt: string;
-  timeRemaining: string;
-  proposals: number;
-  interested: number;
   description: string;
-  skills?: string[];
-  client: {
-    name: string;
-    rating: number;
-    reviews: number;
-  };
-  isFeatured?: boolean;
+  category: string;
+  budget_min: string;
+  budget_max: string;
+  deadline: string;
+  status: string;
+  proposals_count: number;
 }
 
-const mockProjects: Project[] = [
-  {
-    id: "otimizacao-google-meu-negocio-732690",
-    title: "Otimizacao e gestao do perfil no Google Meu Negocio",
-    category: "Marketing Digital",
-    level: "Intermediario",
-    publishedAt: "1 dia atras",
-    timeRemaining: "28 dias e 7 horas",
-    proposals: 45,
-    interested: 48,
-    description: "Caros, gostaria de receber orcamentos de profissionais com experiencia comprovada em otimizacao e gestao do perfil no Google Meu Negocio, de modo que minha pagina apareca entre as primeiras na pesquisa do Google.\n\nSegue link da minha pagina: https://share.google/i3PtDzfH8DXMAo7vQ\n\nDesde ja agradeco aos interessados.",
-    client: { name: "Victor S.", rating: 4.5, reviews: 3 },
-    isFeatured: true,
-  },
-  {
-    id: "implantacao-bitrix24-sum-732641",
-    title: "Implantacao Bitrix24 - Sum",
-    category: "Marketing Digital",
-    level: "Especialista",
-    publishedAt: "1 dia atras",
-    timeRemaining: "5 dias e 4 horas",
-    proposals: 9,
-    interested: 13,
-    description: "Implantacao do Bitrix24 para a Sum.\n\n• Configuracao do CRM completo, incluindo funis de vendas e base de clientes.\n• Criacao de base de precos e de produtos/servicos para geracao automatica de orcamentos.\n• Automacao de processos, incluindo calculos de impostos, descontos e fluxos de trabalho internos.",
-    skills: ["CRM"],
-    client: { name: "Felipe M.", rating: 0, reviews: 0 },
-    isFeatured: true,
-  },
-  {
-    id: "logotipo-empresa-estofos-733192",
-    title: "Titulo: Preciso de um logotipo para a minha empresa de estofos",
-    category: "Logotipos",
-    level: "Iniciante",
-    publishedAt: "12 minutos atras",
-    timeRemaining: "29 dias e 23 horas",
-    proposals: 0,
-    interested: 0,
-    description: "Procuro um designer grafico criativo para criar um logotipo profissional para a minha empresa de estofos. O logotipo deve ser limpo, exclusivo e adequado para branding e marketing.\n\nPor favor, envie o seu portfolio e o prazo de entrega estimado.",
-    client: { name: "", rating: 0, reviews: 0 },
-    isFeatured: true,
-  },
-  {
-    id: "designer-grafico-projetos-visuais-733191",
-    title: "Precisa-se de designer grafico criativo para projetos visuais profissionais",
-    category: "Logotipos",
-    level: "Iniciante",
-    publishedAt: "15 minutos atras",
-    timeRemaining: "29 dias e 23 horas",
-    proposals: 0,
-    interested: 0,
-    description: "Designer Grafico Criativo Necessario para Projetos Visuais Profissionais\n\nDescricao\nBusco um designer grafico talentoso e criativo para criar designs visuais de alta qualidade para minha marca. Este projeto exige alguem com um olhar apurado para detalhes e a capacidade de transformar ideias em designs modernos, limpos e profissionais.",
-    client: { name: "", rating: 0, reviews: 0 },
-    isFeatured: true,
-  },
-  {
-    id: "loja-shopify-camisetas-733188",
-    title: "Criar loja shopify em tema de camisetas de time",
-    category: "Vendas & Marketing",
-    level: "Iniciante",
-    publishedAt: "1 hora atras",
-    timeRemaining: "2 dias e 22 horas",
-    proposals: 1,
-    interested: 2,
-    description: "Seria uma loja clone na qual ja tenho o modelo e tudo certo, so copiar layout banner e configurar certinho. Seria uma loja na shopify mesmo..\nalgo simples pra quem sabe\ntenho urgencia no projeto",
-    client: { name: "", rating: 0, reviews: 0 },
-    isFeatured: true,
-  },
-  {
-    id: "ebooks-biblicos-colorir-733182",
-    title: "Criacao de ebooks biblicos para colorir",
-    category: "Escrita & Conteudo",
-    level: "Intermediario",
-    publishedAt: "2 horas atras",
-    timeRemaining: "29 dias e 21 horas",
-    proposals: 1,
-    interested: 2,
-    description: "JA TENHO UM PRE-PROJETO PARA SER REFORMULADO URGENTE.\n\nQuero iniciar as vendas antes da Pascoa.\n\nDesejo reformular um material criado com ia. Sao livros de colorir biblicos para alfabetizar, colorir e aprender sobre a vida de Jesus.\nUma opcao para vender na Pascoa",
-    client: { name: "", rating: 0, reviews: 0 },
-    isFeatured: true,
-  },
-];
-
 export default function ProjetosPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("Todas as categorias");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch categories
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories.php`)
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Erro ao carregar categorias", err));
+
+    // Fetch projects
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects.php`)
+      .then(res => res.json())
+      .then(data => {
+        setProjects(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Erro ao carregar projetos", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -138,7 +55,7 @@ export default function ProjetosPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-light text-gray-800">Resultado da pesquisa</h1>
-              <p className="text-gray-600">1721 projetos foram encontrados</p>
+              <p className="text-gray-600">{projects.length} projetos foram encontrados</p>
             </div>
             <Link
               href="/publicar-projeto"
@@ -173,30 +90,42 @@ export default function ProjetosPage() {
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-800 mb-3">Categorias</h3>
                   <ul className="space-y-2">
-                    {categories.map((category) => (
-                      <li key={category}>
+                    {categories.map((category, index) => (
+                      <li key={index}>
                         <button
-                          onClick={() => setSelectedCategory(category)}
+                          onClick={() => setSelectedCategory(category.name)}
                           className={`text-sm text-left w-full ${
-                            selectedCategory === category
+                            selectedCategory === category.name
                               ? "text-[#1bafe1] font-medium"
                               : "text-gray-600 hover:text-[#1bafe1]"
                           }`}
                         >
-                          {category}
+                          {category.name}
                         </button>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Project Type */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3">Tipo de projeto</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li><button className="text-[#1bafe1]">Todos os projetos</button></li>
-                    <li>
-                      <label className="flex items-center gap-2 text-gray-600">
+          {/* Projects List */}
+          <div className="flex-grow">
+            <h1 className="text-2xl font-semibold mb-6">Projetos Recentes</h1>
+            <div className="space-y-4">
+              {projects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+    title: "Criar loja shopify em tema de camisetas de time",
+    category: "Vendas & Marketing",
+  },
+];
                         <input type="checkbox" className="rounded border-gray-300" />
                         Projetos em destaque
                       </label>

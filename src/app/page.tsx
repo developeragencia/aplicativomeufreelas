@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import TypewriterText from "@/components/TypewriterText";
+import { useEffect, useState } from "react";
 
 const typewriterTexts = [
   "desenhar o seu website",
@@ -20,52 +21,17 @@ const stats = [
   { value: "R$26,348,091.79", label: "pago aos freelancers" },
 ];
 
-const categories = [
-  {
-    title: "Desenhar o seu",
-    highlight: "website",
-    image: "https://ext.same-assets.com/2120427335/1405917825.jpeg",
-    href: "/freelancers?categoria=web-mobile-e-software",
-    color: "from-cyan-500/80",
-  },
-  {
-    title: "Escrever o seu",
-    highlight: "conteudo",
-    image: "https://ext.same-assets.com/2120427335/1904798042.jpeg",
-    href: "/freelancers?categoria=escrita",
-    color: "from-pink-500/80",
-  },
-  {
-    title: "Desenvolver o seu",
-    highlight: "codigo",
-    image: "https://ext.same-assets.com/2120427335/348272423.jpeg",
-    href: "/freelancers?categoria=web-mobile-e-software",
-    color: "from-purple-500/80",
-  },
-  {
-    title: "Melhorar o seu",
-    highlight: "SEO",
-    image: "https://ext.same-assets.com/2120427335/3541932027.jpeg",
-    href: "/freelancers?categoria=vendas-e-marketing",
-    color: "from-blue-500/80",
-  },
-  {
-    title: "Desenhar o seu",
-    highlight: "logotipo",
-    image: "https://ext.same-assets.com/2120427335/2472793749.png",
-    href: "/freelancers?categoria=design-e-criacao",
-    color: "from-pink-400/80",
-  },
-  {
-    title: "Criar o seu",
-    highlight: "video",
-    image: "https://ext.same-assets.com/2120427335/1073371386.png",
-    href: "/freelancers?categoria=fotografia-e-audiovisual",
-    color: "from-amber-500/80",
-  },
-];
+export default function Home() {
+  const [categories, setCategories] = useState<any[]>([]);
 
-const howItWorks = [
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories.php`)
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Erro ao carregar categorias", err));
+  }, []);
+
+  const howItWorks = [
   {
     icon: (
       <svg className="w-16 h-16 text-[#1bafe1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,20 +163,23 @@ export default function HomePage() {
             {categories.map((category, index) => (
               <Link
                 key={index}
-                href={category.href}
-                className="relative group overflow-hidden rounded-lg aspect-[4/3]"
+                href={`/freelancers?categoria=${category.slug}`}
+                className="relative group overflow-hidden rounded-lg aspect-[4/3] block"
               >
-                <Image
-                  src={category.image}
-                  alt={category.highlight}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className={`absolute inset-0 bg-gradient-to-t ${category.color} to-transparent`} />
-                <div className="absolute inset-0 flex items-center justify-center">
+                {category.image_url ? (
+                  <Image
+                    src={category.image_url}
+                    alt={category.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${category.color || 'from-gray-400 to-gray-600'}`} />
+                )}
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+                <div className="absolute inset-0 flex items-center justify-center p-4">
                   <div className="text-white text-center">
-                    <p className="text-lg">{category.title}</p>
-                    <p className="text-2xl font-bold">{category.highlight}</p>
+                    <p className="text-xl font-bold shadow-black drop-shadow-md">{category.name}</p>
                   </div>
                 </div>
               </Link>

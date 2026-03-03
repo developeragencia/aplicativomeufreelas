@@ -54,8 +54,8 @@ export default function FreelancerProfilePage() {
               <div className="flex-shrink-0">
                 <div className="relative w-48 h-48 rounded overflow-hidden">
                   <Image
-                    src="https://ext.same-assets.com/2120427335/1631370877.jpeg"
-                    alt="Rafael P."
+                    src={freelancer.avatar}
+                    alt={freelancer.name}
                     fill
                     className="object-cover"
                   />
@@ -68,35 +68,41 @@ export default function FreelancerProfilePage() {
                   <div>
                     {/* Name and badges */}
                     <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <Image
-                        src="https://ext.same-assets.com/2120427335/253051279.png"
-                        alt="Premium"
-                        width={24}
-                        height={24}
-                        className="premium-badge"
-                      />
-                      <h1 className="text-2xl font-semibold text-gray-800">
-                        Rafael P.
-                      </h1>
-                      <Image
-                        src="https://ext.same-assets.com/2120427335/333311740.png"
-                        alt="Verificado"
-                        width={20}
-                        height={20}
-                      />
-                      <span className="bg-[#1bafe1] text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                      {freelancer.isPremium && (
                         <Image
-                          src="https://ext.same-assets.com/2120427335/2296782752.svg"
-                          alt="Top"
-                          width={12}
-                          height={12}
+                          src="https://ext.same-assets.com/2120427335/253051279.png"
+                          alt="Premium"
+                          width={24}
+                          height={24}
+                          className="premium-badge"
                         />
-                        TOP FREELANCER PLUS
-                      </span>
+                      )}
+                      <h1 className="text-2xl font-semibold text-gray-800">
+                        {freelancer.name}
+                      </h1>
+                      {freelancer.isVerified && (
+                        <Image
+                          src="https://ext.same-assets.com/2120427335/333311740.png"
+                          alt="Verificado"
+                          width={20}
+                          height={20}
+                        />
+                      )}
+                      {freelancer.isTopFreelancer && (
+                        <span className="bg-[#1bafe1] text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                          <Image
+                            src="https://ext.same-assets.com/2120427335/2296782752.svg"
+                            alt="Top"
+                            width={12}
+                            height={12}
+                          />
+                          TOP FREELANCER PLUS
+                        </span>
+                      )}
                     </div>
 
                     {/* Title */}
-                    <p className="text-gray-600 mb-2">Publicitario Criativo</p>
+                    <p className="text-gray-600 mb-2">{freelancer.title}</p>
 
                     {/* Rating */}
                     <div className="flex items-center gap-2 mb-3">
@@ -106,10 +112,10 @@ export default function FreelancerProfilePage() {
 
                     {/* Stats */}
                     <p className="text-sm text-gray-600 mb-4">
-                      Ranking: <strong>1</strong> |
-                      Projetos concluidos: <strong>1540</strong> |
-                      Recomendacoes: <strong>1481</strong> |
-                      Registrado desde: <strong>17/10/2018</strong>
+                      Ranking: <strong>{freelancer.ranking}</strong> |
+                      Projetos concluidos: <strong>{freelancer.projectsCompleted}</strong> |
+                      Recomendacoes: <strong>{freelancer.recommendations}</strong> |
+                      Registrado desde: <strong>{freelancer.registeredSince}</strong>
                     </p>
 
                     {/* Badges */}
@@ -139,20 +145,7 @@ export default function FreelancerProfilePage() {
             <div className="mt-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Sobre mim:</h2>
               <div className="text-gray-700 space-y-4">
-                <p>
-                  Cansado da mesmice de sempre? Da mesma velha publicidade em todo canto?
-                  De textos sempre iguais, que qualquer pessoa le por ai? Seja bem-vindo,
-                  me chamo Rafael e busco ha 5 anos surpreender todos os clientes em todas
-                  areas em que trabalho: redacao, criacao, planejamento, edicao de audio e
-                  video, alem da criacao de personagem 2D com a devida atencao aos desejos
-                  do cliente, para alem de alcancar a expectativa, a superar.
-                </p>
-                <p>
-                  Trabalhei desde agencias de publicidade e faculdades a e-commerce. Procuro
-                  a todo momento me superar em cada trabalho, sempre respeitando os prazos e
-                  tendo uma otima comunicacao com o cliente, pois e vital a comunicacao para
-                  estabelecer a confianca e entender o que cada cliente deseja com o trabalho.
-                </p>
+                <p>{freelancer.description}</p>
               </div>
             </div>
 
@@ -160,7 +153,7 @@ export default function FreelancerProfilePage() {
             <div className="mt-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Habilidades:</h2>
               <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
+                {freelancer.skills.map((skill) => (
                   <span
                     key={skill}
                     className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded border border-gray-200"
