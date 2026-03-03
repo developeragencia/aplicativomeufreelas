@@ -21,7 +21,7 @@ const stats = [
   { value: "R$26,348,091.79", label: "pago aos freelancers" },
 ];
 
-export default function Home() {
+export default function HomePage() {
   const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
