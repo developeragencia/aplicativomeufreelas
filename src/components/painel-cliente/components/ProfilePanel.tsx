@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Pencil, Star } from 'lucide-react';
-import { currentUser } from '@/data/mockData';
+import { currentUser } from '../data/mockData';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
