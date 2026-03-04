@@ -96,7 +96,7 @@ const mockFreelancers: Freelancer[] = [
 
 export default function FreelancersPage() {
   const [freelancers, setFreelancers] = useState<Freelancer[]>(mockFreelancers);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<{ name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
