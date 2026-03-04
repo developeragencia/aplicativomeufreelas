@@ -43,7 +43,7 @@ export default function ProjectsPanel({ isOpen, onToggle }: ProjectsPanelProps) 
           <div className="text-center py-8">
             <p className="text-sm text-[#666]">
               Nenhum projeto foi encontrado.{' '}
-              <Link to="/buscar-projetos" className="text-[#00a8cc] hover:text-[#0088aa] link-hover">
+              <Link href="/buscar-projetos" className="text-[#00a8cc] hover:text-[#0088aa] link-hover">
                 Buscar Projetos.
               </Link>
             </p>

@@ -43,7 +43,7 @@ export default function ProposalsPanel({ isOpen, onToggle }: ProposalsPanelProps
           <div className="text-center py-8">
             <p className="text-sm text-[#666]">
               Nenhuma proposta foi encontrada.{' '}
-              <Link to="/buscar-projetos" className="text-[#00a8cc] hover:text-[#0088aa] link-hover">
+              <Link href="/buscar-projetos" className="text-[#00a8cc] hover:text-[#0088aa] link-hover">
                 Buscar Projetos.
               </Link>
             </p>

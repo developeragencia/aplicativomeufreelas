@@ -29,7 +29,7 @@ export default function ConnectionsCard() {
 
         {/* Button */}
         <Link
-          to="/minhas-assinaturas"
+          href="/minhas-assinaturas"
           className="inline-block w-full sm:w-auto px-4 py-2 bg-[#00a8cc] hover:bg-[#0088aa] text-white text-sm font-medium rounded btn-hover transition-colors duration-200 text-center"
         >
           Assinar plano
