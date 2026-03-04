@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -21,17 +23,7 @@ const stats = [
   { value: "R$26,348,091.79", label: "pago aos freelancers" },
 ];
 
-export default function HomePage() {
-  const [categories, setCategories] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories.php`)
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error("Erro ao carregar categorias", err));
-  }, []);
-
-  const howItWorks = [
+const howItWorks = [
   {
     icon: (
       <svg className="w-16 h-16 text-[#1bafe1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,6 +73,15 @@ const testimonials = [
 ];
 
 export default function HomePage() {
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories.php`)
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Erro ao carregar categorias", err));
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
