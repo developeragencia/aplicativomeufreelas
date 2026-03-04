@@ -6,8 +6,8 @@ NEXT_PUBLIC_API_URL=https://meufreelas.com.br/api
 # Configurações do Banco de Dados
 DB_HOST=localhost
 DB_NAME=u456789_meufreelas
-DB_USER=u456789_user
-DB_PASS=password
+DB_USER=u456789_meufreelas27
+DB_PASS=Conselhos9509883
 
 # Chaves de Autenticação (OAuth) - Substitua pelos valores reais do Google/GitHub
 GOOGLE_CLIENT_ID=seu_google_client_id_aqui

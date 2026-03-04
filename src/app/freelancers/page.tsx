@@ -1,26 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FreelancerCard, { Freelancer } from "@/components/FreelancerCard";
-
-const categories = [
-  "Todas as areas",
-  "Administracao & Contabilidade",
-  "Advogados & Leis",
-  "Atendimento ao Consumidor",
-  "Design & Criacao",
-  "Educacao & Consultoria",
-  "Engenharia & Arquitetura",
-  "Escrita",
-  "Fotografia & AudioVisual",
-  "Suporte Administrativo",
-  "Traducao",
-  "Vendas & Marketing",
-  "Web, Mobile & Software",
-];
 
 const mockFreelancers: Freelancer[] = [
   {
@@ -98,10 +82,36 @@ const mockFreelancers: Freelancer[] = [
     title: "Publicitario",
     rating: 4.88,
     reviews: 290,
-  }, []);
-  if (loading) {
-    return <div className="flex justify-center p-10">Carregando...</div>;
+    ranking: 5,
+    projectsCompleted: 280,
+    recommendations: 285,
+    registeredSince: "10/02/2019",
+    description: "Publicitario com experiencia em midias sociais e campanhas digitais.",
+    skills: ["Marketing Digital", "Facebook Ads", "Google Ads"],
+    isPremium: false,
+    isVerified: true,
+    isTopFreelancer: false,
   }
+];
+
+export default function FreelancersPage() {
+  const [freelancers, setFreelancers] = useState<Freelancer[]>(mockFreelancers);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch categories
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories.php`)
+      .then(res => res.json())
+      .then(data => {
+        setCategories(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Erro ao carregar categorias", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -130,9 +140,13 @@ const mockFreelancers: Freelancer[] = [
           {/* Freelancers List */}
           <div className="flex-grow">
             <div className="space-y-4">
-              {freelancers.map((freelancer) => (
-                <FreelancerCard key={freelancer.id} freelancer={freelancer} />
-              ))}
+              {loading ? (
+                <div className="text-center py-10">Carregando freelancers...</div>
+              ) : (
+                freelancers.map((freelancer) => (
+                  <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+                ))
+              )}
             </div>
           </div>
         </div>
