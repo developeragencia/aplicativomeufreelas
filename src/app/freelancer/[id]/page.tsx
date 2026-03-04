@@ -1,24 +1,126 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StarRating from "@/components/StarRating";
+
+const mockFreelancers = [
+  {
+    id: "rafael-jenei",
+    name: "Rafael Pires Jenei",
+    avatar: "https://ext.same-assets.com/2120427335/1631370877.jpeg",
+    title: "Publicitario Criativo",
+    rating: 4.82,
+    reviews: 1539,
+    ranking: 1,
+    projectsCompleted: 1542,
+    recommendations: 1482,
+    registeredSince: "17/10/2018",
+    description: "Cansado da mesmice de sempre? Da mesma velha publicidade em todo canto? De textos sempre iguais, que qualquer pessoa le por ai? Seja bem-vindo, me chamo Rafael e busco ha 5 anos surpreender todos os clientes em todas areas em que trabalho: redacao, criacao, planejamento, edicao de audio e video.",
+    skills: ["Adobe Premiere", "Animacao", "Criacao de Campanhas", "Criacao de Personagens"],
+    isPremium: true,
+    isVerified: true,
+    isTopFreelancer: true,
+  },
+  {
+    id: "bruno-quintino",
+    name: "Bruno Quintino",
+    avatar: "https://ext.same-assets.com/2120427335/28885143.jpeg",
+    title: "Especialista em Logo/Identidade Visual",
+    rating: 4.89,
+    reviews: 546,
+    ranking: 2,
+    projectsCompleted: 529,
+    recommendations: 534,
+    registeredSince: "26/07/2016",
+    description: "Tive meu primeiro contato com o design em 2010, onde tive oportunidade de trabalhar em um jornal impresso, executando tarefas de diagramacao de arte final, passei por algumas graficas e empresas de comunicacao visual no decorrer dos anos.",
+    skills: ["Arte-Final", "Blender 3D", "Corel Draw", "Design 3D"],
+    isPremium: true,
+    isVerified: true,
+    isTopFreelancer: true,
+  },
+  {
+    id: "daniel-neves",
+    name: "Daniel Neves",
+    avatar: "https://ext.same-assets.com/2120427335/3051219835.jpeg",
+    title: "Brand Designer | Especialista em Logotipos e Identidade Visual",
+    rating: 4.9,
+    reviews: 325,
+    ranking: 3,
+    projectsCompleted: 323,
+    recommendations: 322,
+    registeredSince: "09/01/2021",
+    description: "Desde 2018, atuo no mercado de design grafico, acumulando experiencias em algumas das mais renomadas agencias de publicidade do Brasil. Minha trajetoria me proporcionou uma solida expertise em areas fundamentais para construcao de marcas.",
+    skills: ["Adobe Premiere", "Adobe Photoshop", "Adobe Photoshop CS5", "Sony Vegas"],
+    isPremium: true,
+    isVerified: true,
+    isTopFreelancer: true,
+  },
+  {
+    id: "dickinson-dwizard",
+    name: "Dickinson Dwizard",
+    avatar: "https://ext.same-assets.com/2120427335/1752904728.jpeg",
+    title: "Designer & Marketing",
+    rating: 4.94,
+    reviews: 513,
+    ranking: 4,
+    projectsCompleted: 509,
+    recommendations: 511,
+    registeredSince: "01/05/2018",
+    description: "Somos Especialistas em Logomarcas, Identidade Visual, Rotulos e Embalagens. Consultoria e Registro no INPI. Criamos Sites, landingpages, Trafego Pago e tudo o que voce precisar.",
+    skills: ["Corel Draw", "Adobe Photoshop", "Design de Cartao de Visita", "Comunicacao Visual"],
+    isPremium: true,
+    isVerified: true,
+    isTopFreelancer: true,
+  },
+  {
+    id: "giacomo-trezza",
+    name: "Giacomo Silvestre De Abreu Trezza",
+    avatar: "https://ext.same-assets.com/2120427335/539674227.jpeg",
+    title: "Publicitario",
+    rating: 4.88,
+    reviews: 290,
+    ranking: 5,
+    projectsCompleted: 280,
+    recommendations: 285,
+    registeredSince: "10/02/2019",
+    description: "Publicitario com experiencia em midias sociais e campanhas digitais.",
+    skills: ["Marketing Digital", "Facebook Ads", "Google Ads"],
+    isPremium: false,
+    isVerified: true,
+    isTopFreelancer: false,
+  }
+];
 
 const badges = [
   { icon: "https://ext.same-assets.com/2120427335/248523270.png", title: "Badge 1" },
   { icon: "https://ext.same-assets.com/2120427335/1590215995.png", title: "Badge 2" },
 ];
 
-const skills = [
-  "Adobe Premiere", "Animacao", "Criacao de Campanhas", "Criacao de Personagens",
-  "Adobe After Effects", "Criacao", "Edicao", "Edicao de Fotografia",
-  "Edicao de Imagens", "Edicao de Textos", "Adobe Illustrator", "Ilustracao",
-  "Manipulacao de Imagens", "Adobe Photoshop", "Redacao", "Redacao Publicitaria",
-];
-
 export default function FreelancerProfilePage() {
+  const params = useParams();
+  const [freelancer, setFreelancer] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (params.id) {
+      // Simulate fetch or find in mock
+      const found = mockFreelancers.find(f => f.id === params.id);
+      if (found) {
+        setFreelancer(found);
+      }
+      setLoading(false);
+    }
+  }, [params.id]);
+
+  if (loading) return <div className="flex justify-center p-10">Carregando...</div>;
+  if (!freelancer) return <div className="flex justify-center p-10">Freelancer não encontrado</div>;
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
@@ -101,125 +203,76 @@ export default function FreelancerProfilePage() {
                       )}
                     </div>
 
-                    {/* Title */}
-                    <p className="text-gray-600 mb-2">{freelancer.title}</p>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <StarRating rating={4.82} size="md" />
-                      <span className="text-sm text-gray-500">(4.82 - 1538 avaliacoes)</span>
+                    <h2 className="text-lg text-gray-600 mb-2">{freelancer.title}</h2>
+                    
+                    <div className="flex items-center gap-2 mb-4">
+                      <StarRating rating={freelancer.rating} />
+                      <span className="text-gray-500 text-sm">
+                        ({freelancer.reviews} avaliações)
+                      </span>
                     </div>
 
-                    {/* Stats */}
-                    <p className="text-sm text-gray-600 mb-4">
-                      Ranking: <strong>{freelancer.ranking}</strong> |
-                      Projetos concluidos: <strong>{freelancer.projectsCompleted}</strong> |
-                      Recomendacoes: <strong>{freelancer.recommendations}</strong> |
-                      Registrado desde: <strong>{freelancer.registeredSince}</strong>
-                    </p>
-
-                    {/* Badges */}
-                    <div className="flex gap-2">
-                      {badges.map((badge, index) => (
-                        <Image
-                          key={index}
-                          src={badge.icon}
-                          alt={badge.title}
-                          width={32}
-                          height={32}
-                          className="rounded"
-                        />
-                      ))}
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-semibold block">{freelancer.ranking}º</span>
+                        <span className="text-xs">Ranking</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold block">{freelancer.projectsCompleted}</span>
+                        <span className="text-xs">Projetos concluidos</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold block">{freelancer.recommendations}</span>
+                        <span className="text-xs">Recomendacoes</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold block">{freelancer.registeredSince}</span>
+                        <span className="text-xs">Na plataforma desde</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Report Button */}
-                  <button className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 transition-colors">
-                    Denunciar
-                  </button>
+                  <div className="flex gap-2">
+                     {badges.map((badge, index) => (
+                        <Image 
+                          key={index} 
+                          src={badge.icon} 
+                          alt={badge.title} 
+                          width={40} 
+                          height={40} 
+                          title={badge.title}
+                        />
+                     ))}
+                  </div>
+                </div>
+
+                <hr className="my-6 border-gray-100" />
+
+                <div>
+                  <h3 className="font-semibold text-gray-800 mb-2">Sobre mim</h3>
+                  <p className="text-gray-600 leading-relaxed text-sm">
+                    {freelancer.description}
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="font-semibold text-gray-800 mb-2">Habilidades</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {freelancer.skills.map((skill: string, index: number) => (
+                      <span
+                        key={index}
+                        className="bg-gray-100 text-gray-600 px-3 py-1 rounded text-xs"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* About */}
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Sobre mim:</h2>
-              <div className="text-gray-700 space-y-4">
-                <p>{freelancer.description}</p>
-              </div>
-            </div>
-
-            {/* Skills */}
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Habilidades:</h2>
-              <div className="flex flex-wrap gap-2">
-                {freelancer.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded border border-gray-200"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Portfolio */}
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Portfolio:</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((item) => (
-                  <div
-                    key={item}
-                    className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center"
-                  >
-                    <span className="text-gray-400">Imagem {item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Avaliacoes recentes:
-              </h2>
-              <div className="space-y-4">
-                {[1, 2, 3].map((review) => (
-                  <div key={review} className="border-b border-gray-200 pb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <StarRating rating={5} size="sm" />
-                      <span className="text-sm text-gray-500">ha 2 dias</span>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      Excelente profissional! Entregou o projeto antes do prazo e
-                      com qualidade excepcional. Recomendo muito!
-                    </p>
-                    <p className="text-sm text-[#1bafe1] mt-1">- Cliente Satisfeito</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Contact CTA */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <Link
-                href="#"
-                className="flex-1 bg-[#1bafe1] text-white py-3 rounded font-medium hover:bg-[#2595cb] transition-colors text-center"
-              >
-                Enviar Mensagem
-              </Link>
-              <Link
-                href="#"
-                className="flex-1 border-2 border-[#1bafe1] text-[#1bafe1] py-3 rounded font-medium hover:bg-[#1bafe1] hover:text-white transition-colors text-center"
-              >
-                Convidar para Projeto
-              </Link>
             </div>
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
